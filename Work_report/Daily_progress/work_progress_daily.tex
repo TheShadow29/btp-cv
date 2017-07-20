@@ -6,7 +6,11 @@
 \usepackage{pdflscape}
 \usepackage{listings}
 \usepackage{hyperref}
-% \usepackage{titlesec}
+\usepackage{float}
+\usepackage{caption}
+\usepackage{subcaption}
+% \usepackage{siunitx}
+% \sisetup{round-mode=places,round-precision=2}
 
 \newcommand{\ra}{$\rightarrow$}
 
@@ -22,5 +26,48 @@
 \tableofcontents
 \newpage
 \section{Daily Progress}
+\subsection{Week 1 : July 17 - July 23}
+\subsubsection{July 17 : Monday}
+Accomplished :
+\begin{itemize}
+\item Met prof and discussed basic project about deep learning and image co-segmentation.
+\item Prof asked to mail and contact sayan banerjee.
+\end{itemize}
+
+\subsubsection{July 18 : Tuesday}
+Accomplished :
+\begin{itemize}
+\item Mailed Sayan banerjee, but seems like he has a fever, and also didn't give/suggest any papers unfortunately.
+\item Only saw one image cosegmentation paper by Inria, but didn't have the time to read it.
+\end{itemize}
+
+\subsubsection{July 19 : Wednesday}
+Accomplished :
+\begin{itemize}
+\item Dowloaded a few papers to read.
+\item Init git repository and added basic work report format (from viterbi internship project).
+\end{itemize}
+
+\subsubsection{July 20 : Thursday}
+Target :
+\begin{itemize}
+\item Try to meet up with Prof/ Sayan and discuss about possible extensions.
+\item Brainstorm ideas as and when time permits.
+\item Read as many papers as possible. Complete in-depth reading is not required, simple reading of abstract and reading the relevant papers should be enough.
+\end{itemize}
+
+Accomplished :
+\begin{itemize}
+\item Read the 3 papers :
+  \begin{itemize}
+  \item Discriminative clustering for image co-segmentation \cite{5539868}: abstract gives basic definition of image co-segmentation as well as says unsupervised segmentation of image into foreground and background regions is still a challenging task. Should be worth reading. Images are also as requried.
+  \item Automatic Image Co-segmentation using geometric saliency \cite{7025663}: says co-labelling of multiple images is a complex process, instead suggests segmentation on individual images but based on a saliency map obtained by fusing saliency maps of groups of similar images. Images are also as required. Since it is anyways small, should be worth reading.
+  \item Unsupervised 3D shape segementation and co-segmentation via deep learning \cite{SHU201639}: should have been the most related but turns out they do something quite different (at least from first look). They try to automatically segment a single 3D shape or co-segment family of 3D shape. For this they use pre-decompose 3D shape into primitive patches to compute various low level features, then learn high level features in an unsupervised style from low level features based on deep learning, and finally either segmentation or co-segmentation results are fot by patch clustering in high level feature space. The input images are 3D and not 2D as originally required, as such the paper is on Comptuer graphics apparently. But it should be interesting to read the deep learning part of it, i.e. how did they learn the high level features in the unsupervised style from low level features.
+  \end{itemize}
+\end{itemize}
+
+\bibliography{./papers.bib}
+\bibliographystyle{ieeetr}
+% \nocite{*}
 
 \end{document}

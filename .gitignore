@@ -1,5 +1,8 @@
+# Tex
 *auto/
 *.aux
 *.log
 *.out
 *.toc
+*.bbl
+*.blg
