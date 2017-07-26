@@ -97,9 +97,89 @@ Adaptive common target searching strategy that can deal with any numbers of targ
 \item Get an adaptive threshold.
 \end{itemize}
 
-
 \section{Video Object Co-segmentation by Regulated Maximum Weight Cliques}
 \cite{Zhang2014}
+
+\subsection{Abstract}
+\begin{itemize}
+\item Novel approach for object co-segmentation in arbitrary videos by sampling, tracking, and matching [OP] via a Regulated Maximum Weight Clique [RMWC] extraction scheme.
+\item Achieves good results by pruning away noisy segments in video through selection of [OP] tracklets athat are spatially salient and temporally consistent, and by iteratively extracting weighted groupings of objects with similar shape and appearance (with-in and across videos).
+\item Approach is general and handles : multiple objects, temporary occlusions, objects going in and out of view, also doesn't make any prior assumption on the commonality of the objects in the video collection.
+\item Keywords : Video Segmentation, Co-segmentation
+\end{itemize}
+
+\subsection{Introduction and Related Work}
+Goal is to discover and segment objects from a video collection in an unsupervised manner.
+
+\begin{itemize}
+\item Video Co-segmentation is natural extension of Image Co-segmentation.
+\item In general for video cos, appearance info to group pixels in a spatio-temporal grpah and/or employ motion segmentation techniques to separate objects by using motion cues.
+\item Previous work use strong assumptions of single class of object common to all videos.
+\item The work has the following advantages :
+  \begin{itemize}
+  \item Employs object tracklets as opposed to pixel-level or region-level to perform clustering. The eprceptual grouping of pixels before matching reduces segement fragmentation and leads to a simpler matching problem.
+  \item No approximate solution. [RMWC] has an optimal solution. Using only object tracklets keeps the computation cost low.
+  \item Can handle occlusions, or objects going in and out of the video because the object tracklets are temporally local and there is no requirements for the object to continuously remain in the field of view of the video. Also no limit on teh number of object classes in the each video and number of common object clases in teh video collection. Therefore more general.
+  \item Different from [MWC], in that it is regulated by intra-clique consistency term, as a result produces more global consistency.
+  \end{itemize}
+\end{itemize}
+
+\subsection{Regulated Maximum Weight Clique based Video Co-segmentation}
+\subsubsection{Framework}
+Two stages :
+\begin{enumerate}
+\item Object Tracklet Generation : generate [OP] for each frame and use each of them as a starting point and track the object proposals backward and forward trhoughout the whole video seq, and generate reliable tracklets from the track set and perform non-maxima suppression to remove noisy or overlapping proposals.
+\item Multiple Objects Co-segmentation by Regulated Maximum Weight Cliques : Tracklets as node, and the nodes are weighted by tracklet similarity, and edges with weight below a threshold are removed. [RMWC] to find objects ranked by score which is a combination of intra-group consistency and Video Object scores.
+\end{enumerate}
+
+\subsubsection{Object Tracklets Generation}
+\begin{itemize}
+\item Generate a number of [OP]. Each proposal has a Video Object Score : combination of motion and appearance. $$S^{object}(x) = A(x) + M(x)$$
+\item $A(x)$ : appearance score described directly by algo. High for regions with closed boundary in space, different appearance from its surroundings and is salient.
+\item $M(x)$ : motion score defined as the average frob norm of optical flow gradient around the boundary of object proposal.
+\item Efficient Object Proposal Tracking :
+  \begin{itemize}
+  \item Track every object proposal from each frame backward and forwar to form a number of tracks for the object.
+  \item Combined color (color histograms to model appearance)+ location(overlap ratio) + shape similarity (contour of region in normalized polar coordinates and sampling it from 0 - 360 deg to form a vector) and then dot product for the first and last.
+  \item Greedy tracking : most similar object proposal is selected to be tracked down, computationally requires fnding index of max value in a specific row of the similarity matrix and hence economical.
+  \end{itemize}
+\item Non-maximum Suppression [NMS] for Object Proposal Tracks :
+  \begin{itemize}
+  \item Need to prune duplicate (near-duplicate) tracks.
+  \item Video Object score for one track is obtained, and see $R_{overlap} > 0.5$ and remove them.
+  \item After [NMS] small percentage of total tracks are retained, and to ensure validity of the track associations, remove associations that are 1.5 std from the mean track similarity.
+  \end{itemize}
+\end{itemize}
+
+\subsubsection{Multiple Object Co-segmentation by [RMWC]}
+After object tracklets are obtained, need salient object groupings in the video collection. Grouping problem is formulated as Regulated Maximum Weight Clique.
+
+\begin{itemize}
+\item Clique Problems :
+  \begin{itemize}
+  \item Given G = (V,E,W), a clique is complete subgraph of G, i.e. one whose vertices are pairwise adjacent.
+  \item Maximal Clique is a complete subgraph not contained in any other complete subgraph.
+  \item Finding all maximal Clique is NP-hard. Maximum Clique problem is to find the  Maximum complete subgraph and Maximum Weight Clique problem deals with finding the Clique with max weight.
+  \end{itemize}
+\item Problem Constraints :
+  \begin{itemize}
+  \item Object Proposal Tracklets [OPT] : similar appearance both in video and across video, for in-video L channel used, for across a,b also used.
+  \item Shape of same object would not change in the same video, and hence used for building tracklets of same objects in a video.
+  \item Dominant object =$>$ high Video Object Score [VOS]
+  \item Tracklets generated by an object should have low variation.
+  \end{itemize}
+\item Graph Structure :
+  \begin{itemize}
+  \item Object tracklets [OT] are nodes, inter and intra video edges created as described above.
+  \item Weak edges removed by a threshold.
+  \end{itemize}
+\item RMWC :
+  \begin{itemize}
+  \item Get weight of node.
+  \item According to formulation : Clique that has the highest score represents the object with largest combined score of inter-object consistency and objectness. Use NP hard formulation, but doesn't hinder its usage, as number of tracklets are limited, and takes less than a second on standard laptop.
+  \end{itemize}
+\end{itemize}
+
 \section{Object-Based Multiple Foreground Video Co-Segmentation via Multi-State Selection Graph}
 \cite{7120111}
 
