@@ -1,0 +1,113 @@
+\documentclass{article}
+\usepackage[a4paper, tmargin=1in, bmargin=1in]{geometry}
+\usepackage[utf8]{inputenc}
+\usepackage{graphicx}
+\usepackage{parskip}
+\usepackage{pdflscape}
+\usepackage{listings}
+\usepackage{hyperref}
+\usepackage{float}
+\usepackage{caption}
+\usepackage{subcaption}
+% \usepackage{siunitx}
+% \sisetup{round-mode=places,round-precision=2}
+
+\newcommand{\ra}{$\rightarrow$}
+
+
+\title{Paper Reviews}
+\author{
+  Arka Sadhu}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\tableofcontents
+\newpage
+
+\section{Unsupervised Co-segmentation for Indefinite Number of Common Foreground Objects}
+\cite{7401081}
+\subsection{Abstract}
+\begin{itemize}
+\item Co-segmentation addresses the problem of simultaneously extracting the common targets appeared in Multiple images.
+\item Keywords : Co-segmentation, multi-object discovery, adaptive feature, loopy belief propagation
+\end{itemize}
+
+\subsection{Introduction}
+The paper extends the previous proposal Selection based Co-segmentation[PSCS] methods with the 3 major contributions :
+\begin{itemize}
+\item Key problem in [PSCS] is mining consistent information shared by the common targets. May require manual selection of features, or feature learning performed beforehand. Here : (simple and effective) self-adaptive feature selection strategy is introduced.
+\item Many assume each image contains a single common target and fail for multiple common targets images to extract all targets. Here proposal selection based Unsupervised Co-segmentation [PSUCS] is introduced.
+\item For multiple common targets, multi-class co-segmentation approaches do not do so well because of significant appearance variance and the inconsistent number of common targets, also some combinational common trgets are usually splitted into multiple pieces. Here : an adaptive strategy that can handle Indefinite number of common targets involved cases, where each image may contain different number of common targets.
+\end{itemize}
+
+\subsection{Problem Formulation}
+\begin{itemize}
+\item Image set $I = {I_i}, i = {1...M}$, images may contain different number of targets, goal is to extract all common targets.
+\item Given $I_i$ generate proposal set $P_i = {p_i^k}, k = {1...K_i}$, set large value for $K$, to make sure that the object proposal set covers all potential common targets.
+\item Cos for indefinite number of common targets is transformed into a labeling problem, given $p_i^k$, $x_i^k = 1$ for foreground, else $0$.
+\item Union set is viewed as final segmentation result $$R_i = \bigcup \{p_i^k | x_i^k, k \le K_i\}$$
+\item Here, the labeling problem in a completely connected network., where each object proposal [OP] is a node, and connected with weighted edges.
+\item \underline{Multiple OP of each image is conducted separately}, but closely related to other images of the collection.
+\item For each image $I_i$, choose a proposal in every selecting loop to be the real foreground, and in choosing the new loop, we remove the node of the previous proposal to make sure this new proposal would be considered a target, whether this will be chosen as a target depends totally on the labels of other images.
+\item \textbf{Therefore}, segmentation problem of image of $I_i$ finally becomes finding an optimal labeling set $x_i = \{x_i^k|k = 1...K_i; x_k \in \{0,1\}\}$ by max the energy function (refer to the paper) : function of weights of the edges and some other constraints.
+\item Weight is non-zero and numerically equal to a similarity score between the proposals (to be introduced later). The constraints mean, for each image only one proposal could be selected per loop, and every proposal in image $I_i$ can be selected only once throughout the selection procedure.
+\item The formulation is based on the fact that common targets have same characters, and maximizing overall similarity with additional constraint we can make sure newly chosen object proposal is the most similar one to the chosen proposal of the other image. This can be solved via greedy optimization.
+\end{itemize}
+
+\subsection{Co-segmentation for Indefinite Number of Common Targets}
+Key is to adaptively determining the number of targets, which require fully extracting teh potential targets and then mining the conistent relationships shared by teh common targets.
+
+\subsubsection{Overall Framework}
+\begin{enumerate}
+\item Category independent OP generated.
+\item Connected graph with all proposals as nodes and edge weights as proposal similarities.
+\item For reliable similarity, adaptive feature weight selection algorithm.
+\item Multiple common targets [MCT] searching, where [MCT] are extracted for each individual image.
+\item Terminal condition designed as the common target judging criterion.
+\item After termination, simply collect selected proposals.
+\end{enumerate}
+
+\subsubsection{Object Proposals Generation}
+\begin{enumerate}
+\item Very important, directly impacts the performance of Co-segmentation.
+\item Measurement of the proposal pool contains mainly two aspects :
+  \begin{itemize}
+  \item Diversity : cover as many objects as possible.
+  \item Representativeness : as few candidates as possible for each object.
+  \end{itemize}
+\item After a large number of proposals are achieved, a scoring mechanism that combines appearance features and overlap penalty is raised for proposal ranking. There is problem of the proposal containing a local part, but the proposed method could make up for such loss by conducting multiple targets searching.
+\end{enumerate}
+
+\subsubsection{Weighted Graph Construction}
+\begin{itemize}
+\item Usual way : measuring similarity between every two proposals.
+\item Choosing fixed features for similarity is not a good option. Adopting a flexible and reliable proposal similarity measurement. Here : Unsupervised self-adaptive similarity measurement is introduced for calculating edge weights. Highly efficient and easy to implement. Example in two images colors might be same, in two other images color might be drastically different.
+\item Use iterative weights setting mechanism for the features. Initial proposal labels using loopy belief algo previously, and then iterating to maximize a function.
+\item The intuitive intention : encourage selected common targets to be globally consistent while keping a low variance to make the similarity metric more reasonable and representative.
+\end{itemize}
+
+\subsubsection{Common Targets Multi-Search Strategy}
+Adaptive common target searching strategy that can deal with any numbers of targets.
+
+\begin{itemize}
+\item For more common targets , remove previously discovered ones from the candidate pool.
+\item Initialize labels $x^{*}$ from prev algo. Basically selecting most likely common targets, by removing the prev most likely common target.
+\item Get an adaptive threshold.
+\end{itemize}
+
+
+\section{Video Object Co-segmentation by Regulated Maximum Weight Cliques}
+\cite{Zhang2014}
+\section{Object-Based Multiple Foreground Video Co-Segmentation via Multi-State Selection Graph}
+\cite{7120111}
+
+\bibliography{../Daily_progress/papers.bib}
+\bibliographystyle{ieeetr}
+
+%\nocite{*}
+
+
+
+\end{document}
