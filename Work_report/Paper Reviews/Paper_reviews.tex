@@ -9,13 +9,15 @@
 \usepackage{float}
 \usepackage{caption}
 \usepackage{subcaption}
+\usepackage{amssymb}
+
 % \usepackage{siunitx}
 % \sisetup{round-mode=places,round-precision=2}
 
 \newcommand{\ra}{$\rightarrow$}
 
 
-\title{Paper Reviews}
+\title{Paper Summaries}
 \author{
   Arka Sadhu}
 \date{\today}
@@ -182,6 +184,84 @@ After object tracklets are obtained, need salient object groupings in the video 
 
 \section{Object-Based Multiple Foreground Video Co-Segmentation via Multi-State Selection Graph}
 \cite{7120111}
+\subsection{Abstract}
+\begin{itemize}
+\item Multiple foreground Video Co-segmentation for a set of videos.
+\item Foreground object in each frame considering intra-video coherence of the fg as well as fg consistency among teh different videos in the set.
+\item Multiple foreground handled by multi-state selection graph, node is a video frame, can take multiple labels that correspond to different objects. Also indicator matrix to handle incorrect classification of irrelevant regions.
+\item Iterative algo to optimize the function.
+\item Index terms : Video Co-segmentation, Multiple Foregrounds, object-based Segmentation
+\end{itemize}
+
+\subsection{Introduction}
+\begin{itemize}
+\item Video foreground Co-segmentation aims at jointly extracting the main common objects present in a given set of videos.
+\item Low level may not accurately discriminate fg and bg. Also object based method for single video do not exploit joint info between the videos. Here : handle Multiple fg object in Multiple videos.
+\item OP as basic pre-processing. Mid-level features result in more robus and meaningful separation of fg and bg.
+\item Graph : nodes is video frames, state : to indicate which object proposal is chosen.
+\item Edges between adjacent frames in a video so as to enforce spatio-temporal smoothness of the trajectory of the fg object, while edges beetween frames of different videos are added to emasure foreground consistency.
+\item Multi state selection graph [MSG] for multiple states of the nodes to handle multiple Foregrounds. The basic subgraph is replicated multiple times with each replicated subgraph representing a particular foreground object. Can be optimized using existing methods.
+\item Relax the condition of existence of the common foreground in all the videos, the method will segment unrelated regions in place of the missing object, and use and indicator matrix to correctly deal with the missing common objects.
+\end{itemize}
+
+\subsection{Multi-state selection Graph}
+\begin{itemize}
+\item Object in a video is a fg if :
+  \begin{itemize}
+  \item High appearance contrast relative to the bg.
+  \item Trajectory of fg object across consecutive video frames is smooth, appearnace and shape are also similar across frames.
+  \item In a video fg object appers in each frame.
+  \item Additional constraint : on common fg object that they maintain a consistent appearance across different videos.
+  \end{itemize}
+\item Basic subgraph G = (V, E). Define energy function, $\psi$ for nodes, $\phi$ for edges, and $u_n$ a state taken by each node n in a discrete space. Configuration of states can be done by minimizing the energy function. We seek multiple solutions that are as independent as possible. Introduce a diversity term and define a new optimization problem for MSG.
+\item Replicate the basic subgraph K-1 times, to get a total of K, diversity term is incorporated as the edges between teh corresponding nodes in the basic subgraphs, and combined into a unified graph to get a new energy function and it shares the same formulation as the standard graph, so it can be solved directly by existing energy minimization methods to yiedl all of the multiple states at once.
+\end{itemize}
+
+\subsection{Object Based Video Co-segmentation}
+Suppose V videos, and each video consists of $T_v$ frames. In the MSG, intra-video edges placed between the nodes of adjacent frames, and inter-video edges are fully connected.
+
+\subsubsection{MSG for Video Co-segmentation}
+\begin{itemize}
+\item MSG selects same number of states for each node, i.e. the object must appear in each frame of each video. Assumption doesn't hold in general. Use indicator matrix $Y \in \mathbb{R}^{V \times K}$, with $y_{vk} = 1$ to denote video v contains object k.
+\item Get a new energy function with $y_{vk}$.
+\end{itemize}
+
+\subsubsection{Term Definitions}
+\begin{itemize}
+\item Unary Term :
+  \begin{itemize}
+  \item $\Psi(.)$ combines three factors (objectness score, motion score, saliency score) for determining the likelihood that an object candidate is the Foreground. Saliency score is considered since the object may not always be moving. Co-saliency is different from saliency : discovers common saliency among multiple images.
+  \item Here : compute co-saliency map for each frme and then calculate the mean co-saliency value for each candidate region as the saliency score $S(u)$.
+  \end{itemize}
+\item Intra Video Term :
+  \begin{itemize}
+  \item $\Phi_a(., .)$ provides a spatio temporal smoothness constraint between neighboring frames in an individual video.
+  \item Uses estimated based on iou with wrapped region w.r.t optical flow mapping.
+  \end{itemize}
+\item Inter-video Term :
+  \begin{itemize}
+  \item $\Phi_b(.,.)$ measures Foreground consistency among the videos, considering $\chi^2$ color distances of color histograms and HOG descirptors.
+  \end{itemize}
+\item Diversity Term :
+  \begin{itemize}
+  \item $\Delta(.,.)$ to avoid selecting teh same object in different candidate series. Again IOU.
+  \end{itemize}
+\end{itemize}
+
+\subsubsection{Optimization Procedure}
+\begin{itemize}
+\item In special cases with fixed indicator matrices $\textbf{Y}$, can be solved directly using existing formulations.
+\item If not fixed, develop iterative procedure to approximately update two sets of variables (Y, U) until convergence.
+\item Multiple Foreground video Co-segmentation method :
+  \begin{itemize}
+  \item Initialize Y to all 1
+  \item Solve for u.
+  \item Update Y. Irrelevant regions have relatively lower unary scores than actual foregrounds. Once $y_{vk}$ updated to 0, can never become 1, to avoid this instead of setting it to 0, set it to $\epsilon (0.0001)$.
+  \item Termination : if Y doesn't chage or upon reaching max number of iterations.
+  \item Pixel-level Post process : Refine teh selected objects through a pixel-level post-process by usuing a spatiotemporal graph based segmentation method.
+  \end{itemize}
+\end{itemize}
+
 
 \bibliography{../Daily_progress/papers.bib}
 \bibliographystyle{ieeetr}
