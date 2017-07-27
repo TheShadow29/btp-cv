@@ -41,7 +41,7 @@ The paper extends the previous proposal Selection based Co-segmentation[PSCS] me
 \begin{itemize}
 \item Key problem in [PSCS] is mining consistent information shared by the common targets. May require manual selection of features, or feature learning performed beforehand. Here : (simple and effective) self-adaptive feature selection strategy is introduced.
 \item Many assume each image contains a single common target and fail for multiple common targets images to extract all targets. Here proposal selection based Unsupervised Co-segmentation [PSUCS] is introduced.
-\item For multiple common targets, multi-class co-segmentation approaches do not do so well because of significant appearance variance and the inconsistent number of common targets, also some combinational common trgets are usually splitted into multiple pieces. Here : an adaptive strategy that can handle Indefinite number of common targets involved cases, where each image may contain different number of common targets.
+\item For multiple common targets, multi-class co-segmentation approaches do not do so well because of significant appearance variance and the inconsistent number of common targets, also some combinational common targets are usually split into multiple pieces. Here : an adaptive strategy that can handle Indefinite number of common targets involved cases, where each image may contain different number of common targets.
 \end{itemize}
 
 \subsection{Problem Formulation}
@@ -59,7 +59,7 @@ The paper extends the previous proposal Selection based Co-segmentation[PSCS] me
 \end{itemize}
 
 \subsection{Co-segmentation for Indefinite Number of Common Targets}
-Key is to adaptively determining the number of targets, which require fully extracting teh potential targets and then mining the conistent relationships shared by teh common targets.
+Key is to adaptively determining the number of targets, which require fully extracting the potential targets and then mining the consistent relationships shared by the common targets.
 
 \subsubsection{Overall Framework}
 \begin{enumerate}
@@ -87,7 +87,7 @@ Key is to adaptively determining the number of targets, which require fully extr
 \item Usual way : measuring similarity between every two proposals.
 \item Choosing fixed features for similarity is not a good option. Adopting a flexible and reliable proposal similarity measurement. Here : Unsupervised self-adaptive similarity measurement is introduced for calculating edge weights. Highly efficient and easy to implement. Example in two images colors might be same, in two other images color might be drastically different.
 \item Use iterative weights setting mechanism for the features. Initial proposal labels using loopy belief algo previously, and then iterating to maximize a function.
-\item The intuitive intention : encourage selected common targets to be globally consistent while keping a low variance to make the similarity metric more reasonable and representative.
+\item The intuitive intention : encourage selected common targets to be globally consistent while keeping a low variance to make the similarity metric more reasonable and representative.
 \end{itemize}
 
 \subsubsection{Common Targets Multi-Search Strategy}
@@ -105,7 +105,7 @@ Adaptive common target searching strategy that can deal with any numbers of targ
 \subsection{Abstract}
 \begin{itemize}
 \item Novel approach for object co-segmentation in arbitrary videos by sampling, tracking, and matching [OP] via a Regulated Maximum Weight Clique [RMWC] extraction scheme.
-\item Achieves good results by pruning away noisy segments in video through selection of [OP] tracklets athat are spatially salient and temporally consistent, and by iteratively extracting weighted groupings of objects with similar shape and appearance (with-in and across videos).
+\item Achieves good results by pruning away noisy segments in video through selection of [OP] tracklets that are spatially salient and temporally consistent, and by iteratively extracting weighted groupings of objects with similar shape and appearance (with-in and across videos).
 \item Approach is general and handles : multiple objects, temporary occlusions, objects going in and out of view, also doesn't make any prior assumption on the commonality of the objects in the video collection.
 \item Keywords : Video Segmentation, Co-segmentation
 \end{itemize}
@@ -115,13 +115,13 @@ Goal is to discover and segment objects from a video collection in an unsupervis
 
 \begin{itemize}
 \item Video Co-segmentation is natural extension of Image Co-segmentation.
-\item In general for video cos, appearance info to group pixels in a spatio-temporal grpah and/or employ motion segmentation techniques to separate objects by using motion cues.
+\item In general for video cos, appearance info to group pixels in a spatio-temporal graph and/or employ motion segmentation techniques to separate objects by using motion cues.
 \item Previous work use strong assumptions of single class of object common to all videos.
 \item The work has the following advantages :
   \begin{itemize}
-  \item Employs object tracklets as opposed to pixel-level or region-level to perform clustering. The eprceptual grouping of pixels before matching reduces segement fragmentation and leads to a simpler matching problem.
+  \item Employs object tracklets as opposed to pixel-level or region-level to perform clustering. The perceptual grouping of pixels before matching reduces segment fragmentation and leads to a simpler matching problem.
   \item No approximate solution. [RMWC] has an optimal solution. Using only object tracklets keeps the computation cost low.
-  \item Can handle occlusions, or objects going in and out of the video because the object tracklets are temporally local and there is no requirements for the object to continuously remain in the field of view of the video. Also no limit on teh number of object classes in the each video and number of common object clases in teh video collection. Therefore more general.
+  \item Can handle occlusions, or objects going in and out of the video because the object tracklets are temporally local and there is no requirements for the object to continuously remain in the field of view of the video. Also no limit on the number of object classes in the each video and number of common object classes in the video collection. Therefore more general.
   \item Different from [MWC], in that it is regulated by intra-clique consistency term, as a result produces more global consistency.
   \end{itemize}
 \end{itemize}
@@ -130,7 +130,7 @@ Goal is to discover and segment objects from a video collection in an unsupervis
 \subsubsection{Framework}
 Two stages :
 \begin{enumerate}
-\item Object Tracklet Generation : generate [OP] for each frame and use each of them as a starting point and track the object proposals backward and forward trhoughout the whole video seq, and generate reliable tracklets from the track set and perform non-maxima suppression to remove noisy or overlapping proposals.
+\item Object Tracklet Generation : generate [OP] for each frame and use each of them as a starting point and track the object proposals backward and forward throughout the whole video seq, and generate reliable tracklets from the track set and perform non-maxima suppression to remove noisy or overlapping proposals.
 \item Multiple Objects Co-segmentation by Regulated Maximum Weight Cliques : Tracklets as node, and the nodes are weighted by tracklet similarity, and edges with weight below a threshold are removed. [RMWC] to find objects ranked by score which is a combination of intra-group consistency and Video Object scores.
 \end{enumerate}
 
@@ -141,9 +141,9 @@ Two stages :
 \item $M(x)$ : motion score defined as the average frob norm of optical flow gradient around the boundary of object proposal.
 \item Efficient Object Proposal Tracking :
   \begin{itemize}
-  \item Track every object proposal from each frame backward and forwar to form a number of tracks for the object.
+  \item Track every object proposal from each frame backward and forward to form a number of tracks for the object.
   \item Combined color (color histograms to model appearance)+ location(overlap ratio) + shape similarity (contour of region in normalized polar coordinates and sampling it from 0 - 360 deg to form a vector) and then dot product for the first and last.
-  \item Greedy tracking : most similar object proposal is selected to be tracked down, computationally requires fnding index of max value in a specific row of the similarity matrix and hence economical.
+  \item Greedy tracking : most similar object proposal is selected to be tracked down, computationally requires finding index of max value in a specific row of the similarity matrix and hence economical.
   \end{itemize}
 \item Non-maximum Suppression [NMS] for Object Proposal Tracks :
   \begin{itemize}
@@ -187,7 +187,7 @@ After object tracklets are obtained, need salient object groupings in the video 
 \subsection{Abstract}
 \begin{itemize}
 \item Multiple foreground Video Co-segmentation for a set of videos.
-\item Foreground object in each frame considering intra-video coherence of the fg as well as fg consistency among teh different videos in the set.
+\item Foreground object in each frame considering intra-video coherence of the fg as well as fg consistency among the different videos in the set.
 \item Multiple foreground handled by multi-state selection graph, node is a video frame, can take multiple labels that correspond to different objects. Also indicator matrix to handle incorrect classification of irrelevant regions.
 \item Iterative algo to optimize the function.
 \item Index terms : Video Co-segmentation, Multiple Foregrounds, object-based Segmentation
@@ -197,9 +197,9 @@ After object tracklets are obtained, need salient object groupings in the video 
 \begin{itemize}
 \item Video foreground Co-segmentation aims at jointly extracting the main common objects present in a given set of videos.
 \item Low level may not accurately discriminate fg and bg. Also object based method for single video do not exploit joint info between the videos. Here : handle Multiple fg object in Multiple videos.
-\item OP as basic pre-processing. Mid-level features result in more robus and meaningful separation of fg and bg.
+\item OP as basic pre-processing. Mid-level features result in more robust and meaningful separation of fg and bg.
 \item Graph : nodes is video frames, state : to indicate which object proposal is chosen.
-\item Edges between adjacent frames in a video so as to enforce spatio-temporal smoothness of the trajectory of the fg object, while edges beetween frames of different videos are added to emasure foreground consistency.
+\item Edges between adjacent frames in a video so as to enforce spatio-temporal smoothness of the trajectory of the fg object, while edges between frames of different videos are added to measure foreground consistency.
 \item Multi state selection graph [MSG] for multiple states of the nodes to handle multiple Foregrounds. The basic subgraph is replicated multiple times with each replicated subgraph representing a particular foreground object. Can be optimized using existing methods.
 \item Relax the condition of existence of the common foreground in all the videos, the method will segment unrelated regions in place of the missing object, and use and indicator matrix to correctly deal with the missing common objects.
 \end{itemize}
@@ -209,12 +209,12 @@ After object tracklets are obtained, need salient object groupings in the video 
 \item Object in a video is a fg if :
   \begin{itemize}
   \item High appearance contrast relative to the bg.
-  \item Trajectory of fg object across consecutive video frames is smooth, appearnace and shape are also similar across frames.
-  \item In a video fg object appers in each frame.
+  \item Trajectory of fg object across consecutive video frames is smooth, appearance and shape are also similar across frames.
+  \item In a video fg object appears in each frame.
   \item Additional constraint : on common fg object that they maintain a consistent appearance across different videos.
   \end{itemize}
 \item Basic subgraph G = (V, E). Define energy function, $\psi$ for nodes, $\phi$ for edges, and $u_n$ a state taken by each node n in a discrete space. Configuration of states can be done by minimizing the energy function. We seek multiple solutions that are as independent as possible. Introduce a diversity term and define a new optimization problem for MSG.
-\item Replicate the basic subgraph K-1 times, to get a total of K, diversity term is incorporated as the edges between teh corresponding nodes in the basic subgraphs, and combined into a unified graph to get a new energy function and it shares the same formulation as the standard graph, so it can be solved directly by existing energy minimization methods to yiedl all of the multiple states at once.
+\item Replicate the basic subgraph K-1 times, to get a total of K, diversity term is incorporated as the edges between the corresponding nodes in the basic subgraphs, and combined into a unified graph to get a new energy function and it shares the same formulation as the standard graph, so it can be solved directly by existing energy minimization methods to yield all of the multiple states at once.
 \end{itemize}
 
 \subsection{Object Based Video Co-segmentation}
@@ -231,7 +231,7 @@ Suppose V videos, and each video consists of $T_v$ frames. In the MSG, intra-vid
 \item Unary Term :
   \begin{itemize}
   \item $\Psi(.)$ combines three factors (objectness score, motion score, saliency score) for determining the likelihood that an object candidate is the Foreground. Saliency score is considered since the object may not always be moving. Co-saliency is different from saliency : discovers common saliency among multiple images.
-  \item Here : compute co-saliency map for each frme and then calculate the mean co-saliency value for each candidate region as the saliency score $S(u)$.
+  \item Here : compute co-saliency map for each frame and then calculate the mean co-saliency value for each candidate region as the saliency score $S(u)$.
   \end{itemize}
 \item Intra Video Term :
   \begin{itemize}
@@ -240,11 +240,11 @@ Suppose V videos, and each video consists of $T_v$ frames. In the MSG, intra-vid
   \end{itemize}
 \item Inter-video Term :
   \begin{itemize}
-  \item $\Phi_b(.,.)$ measures Foreground consistency among the videos, considering $\chi^2$ color distances of color histograms and HOG descirptors.
+  \item $\Phi_b(.,.)$ measures Foreground consistency among the videos, considering $\chi^2$ color distances of color histograms and HOG descriptors.
   \end{itemize}
 \item Diversity Term :
   \begin{itemize}
-  \item $\Delta(.,.)$ to avoid selecting teh same object in different candidate series. Again IOU.
+  \item $\Delta(.,.)$ to avoid selecting the same object in different candidate series. Again IOU.
   \end{itemize}
 \end{itemize}
 
@@ -257,8 +257,8 @@ Suppose V videos, and each video consists of $T_v$ frames. In the MSG, intra-vid
   \item Initialize Y to all 1
   \item Solve for u.
   \item Update Y. Irrelevant regions have relatively lower unary scores than actual foregrounds. Once $y_{vk}$ updated to 0, can never become 1, to avoid this instead of setting it to 0, set it to $\epsilon (0.0001)$.
-  \item Termination : if Y doesn't chage or upon reaching max number of iterations.
-  \item Pixel-level Post process : Refine teh selected objects through a pixel-level post-process by usuing a spatiotemporal graph based segmentation method.
+  \item Termination : if Y doesn't change or upon reaching max number of iterations.
+  \item Pixel-level Post process : Refine the selected objects through a pixel-level post-process by using a spatiotemporal graph based segmentation method.
   \end{itemize}
 \end{itemize}
 
