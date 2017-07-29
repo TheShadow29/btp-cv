@@ -263,6 +263,88 @@ Suppose V videos, and each video consists of $T_v$ frames. In the MSG, intra-vid
 \end{itemize}
 
 
+\section{Convolutional Gated Recurrent Networks for Video Segmentation}
+\cite{DBLP:journals/corr/SiamVJR16}
+\subsection{Abstract}
+\begin{itemize}
+\item Novel approach to implicitly utilize temporal data in videos for online Segmentation. Relies on FCN embedded into a gated recurrent architecture.
+\item The design receives a sequence of consecutive video frames and outputs the segmentation of the last frame.
+\item Convolutional gated Recurrent networks are used for the recurrent part to preserve spatial connectivities in the image.
+\item Works on both online and batch segmentation. Tested for both binary and semantic segmentation part.
+\end{itemize}
+
+\subsection{Introduction}
+\begin{itemize}
+\item \textbf{Video segmentation} extensively investigated using classical approaches. Mainly focuses on semi-supervised approaches that propagate the labels in one or more annotated frames to the entire video.
+\item \textbf{Gated Recurrent Architectures} alleviate problem of vanishing or exploding gradients in RNN. LSTM is one of the earliest attempts to design it. Gated Recurrent Unit [GRU] is a more recent attempt, having similar performance to LSTM with reduced number of gates thus fewer parameters.
+\item Problem : They accept only vectors and hence do not preserve spatio-temporal information. Convolutional GRU can circumvent the problem and has been used for video captioning and action recognition.
+\item Here : Gated Recurrent FCN. Contributions :
+  \begin{itemize}
+  \item Incorporate temporal data to FCN for video Segmentation. Convolutional Gated Recurrent FCN to efficiently utilze spatiotemporal information.
+  \item End-to-end model for video segmentation.
+  \item Experimental analysis on binary segmentation and video semantic segmentation.
+  \end{itemize}
+\end{itemize}
+
+\subsection{Background}
+Review of FCN and RNN.
+\subsubsection{Fully Convolutional Networks (FCN)}
+\begin{itemize}
+\item All fully connected layers are replaced with convolution layers. Allows input of any size, since it is not restricted to a fixed output size, fully connected layers. Can get a coarse segmentation output (heat map) by only one forward pass of the network.
+\item Need to upsample the coarse map, and instead of simple bi-linear interpolation, adaptive up-sampling is shown to have better result. Can have learnable layers to learn the up-sampling weights through back-propagation. These are called deconvolution layers.
+\item Skip architecture can be used for finer Segmentation. Here, heat maps from earlier architecture are merged with the final heat map for an improved  Segmentation.
+\end{itemize}
+
+\subsubsection{Recurrent Neural Networks}
+\begin{itemize}
+\item RNN can be applied on a sequence of inputs and are able to capture the temporal relation betwen them.
+\item Hidden unit in each recurrent cell allows it to have dynamic memory that is changing according to what it had before.
+\item For longer vectors it causes vanishing gradients. ated recurrent architectures have been proposed as a solution and empiricially useful for many tasks.
+\item \textbf{Long Short Term Memory (LSTM)}
+  % \begin{itemize}
+  % \item
+    LSTM utilizes three gates to control flow of signal : input, output, forget gate, each with own set of weights and learned with back-propagation. At the inference stage, values in the hidden unit ican be roughly interpreted as a memory, and used for prediciton of the current state.
+  % \end{itemize}
+\item \textbf{Gated Recurrent Unit (GRU)}
+  % \begin{itemize}
+  % \item
+    Same principal as LSTM, with simpler architecture, less computationally expensive, and requires less memory.
+  % \end{itemize}
+\end{itemize}
+
+\subsection{Method}
+A Recurrent Fully Convolutional Network (RFCN) is designed that utilizes tge spatio-temporal information. Two approaches are explored : conventional recurrent units, convolutional recurrent units.
+
+\subsubsection{Conventional Recurrent Architecture for Segmentation}
+\begin{itemize}
+\item \textbf{RFC-LeNet}
+  \begin{itemize}               %
+  \item Fully convolutional version of LeNet which is a shallow network, used for baseline comparisons.
+  \item Output of deconvolution fo 2D map of dense predicitons is flattened into 1D vector as the input to a conventional Recurrent unit, and the unit takes this vector for each frame in teh sliding window and outputs the Segmentation of the last frame.
+  \end{itemize}
+\item \textbf{RFC-12s}
+  \begin{itemize}
+  \item Apply the recurrent layer on the down-sampled heatmap before deconvolution.
+  \item The recurrent unit operates on coars maps to produce a coarse map corresponding to the last frame in the sequence.
+  \end{itemize}
+\end{itemize}
+
+\subsubsection{Convolutional Gated Recurrent Architecture (Conv-GRU) for Segmentation}
+\begin{itemize}
+\item Conventinal recurrent units are designed for text processing and not image processing, and directly using for images has pains :
+  \begin{itemize}
+  \item The size of weight parameters becomes very large since vectorized images are large
+  \item Spatial connectivity between pixels are ignored.
+  \end{itemize}
+\item Convolutional Recurrent units, convolve 3D weights with their input. Dot products replaced by convolutions. Learning filters that convolve with the entire imagee instead of individual weights for pixels, makes it much more efficient.
+\item \textbf{RFC-VGG}
+  % \begin{itemize}
+  % \item
+    Intermediate faeture maps are fed into a convlutional atead recurrent unit, and then a convolutional layer converts its output to a heat map.
+  % \end{itemize}
+\item \textbf{RFCN-8s} : Recurrent verison of FCN-8s architecture.
+\end{itemize}
+
 \bibliography{../Daily_progress/papers.bib}
 \bibliographystyle{ieeetr}
 
