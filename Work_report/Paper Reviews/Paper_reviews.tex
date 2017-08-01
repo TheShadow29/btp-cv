@@ -345,6 +345,59 @@ A Recurrent Fully Convolutional Network (RFCN) is designed that utilizes tge spa
 \item \textbf{RFCN-8s} : Recurrent verison of FCN-8s architecture.
 \end{itemize}
 
+\section{Structural RNN : Deep Learning on Spatio-temporal Graphs}
+\cite{DBLP:journals/corr/JainZSS15}
+\subsection{Abstract}
+\begin{itemize}
+\item Deep RNN capable at modelig seqeunces, lack an intuitive highlevel spatio-temporal sturcutre which are popular tool for imposting such highlevel intuitions in the formulations of real world problems.
+\item Develop a scalable method for casting an arbitratry spatio-temporal graph as a rich RNN mixture that is feedforward fully differentialble, and jointly trainable.
+\item Shows imporvement over sotawith a large margin.
+\end{itemize}
+
+\subsection{Introduction}
+\begin{itemize}
+\item Spatio-temporal [st] graphs are popular tool for representing such high-level spatio-temporal structures. The nodes represent the Problem components, and the edges capture their spatio-temporal interactions.
+\item Here [st] graph into sturctural RNN [S-RNN].
+\item In high-level steps, given any arbitrary st-graph :
+  \begin{itemize}
+  \item Roll it out in time and decompose it into a set of contributing factor components.
+  \item The factors identify the independent components that collectively determine one decision and are derived from both edges and nodes fo the st-graph.
+  \item Semantically group thefactor componeonts and represent each group using one RNN which results in the desired RNN mixture.
+  \item Main challenges of the transformation is :
+    \begin{itemize}
+    \item Making the RNN mixture as rich as possible to enable learning complex functions : represent  each st factor using one RNN.
+    \item Keeping the RNN mixture scalable with respect to size of the input st-graph : factor sharing between RNNs.
+    \end{itemize}
+  \end{itemize}
+\item Proposed method is generic and applicable to any problem formulated using st-graph. Enjoys underlying high-level structure.
+\end{itemize}
+\subsection{SRNN architecture}
+\subsubsection{Representation of spatio-temporal Graphs}
+\begin{itemize}
+\item St-graph : $G = (V, E_s, E_T)$ whose structure $(V,E_s)$ rolls over time through edges $E_T$.
+\item The nodes $v \in V$ and $e \in E_s \cap E_T$ of the graph repeats over time. In the unrolled st-graph, the ndoes at a given time step t are connected with undirected spatio-temporal edge $e = (u,v) \in E_s$ and the nodes at adjacent time steps ( node $u$ at time $t$ and $v$ at time $t + 1$) are connected with undirected temporal edge iff $(u,v) \in E_T$.
+\item Given a st-graph and the feature vectors associated with the nodes $x_v^t$ and edges $x_e^t$, the goal is to predict the node labels (or real value vectors) $y_v^t$ at each time step t. Label $y_v^t$ is afffectedby both its node and its interactions with other nodes (edges), leading to an overall complex system.
+\item Here : derive SRNN structure from the factor-graph representation of st-graph. The factor graph has a factor function $\Psi_v(y_v, x_v)$ for each node and a pairwise factor $\Psi_e(y_{e(1)}, y_{e(2)}, x_e)$ for each edge.
+\item Sharing factors between nodes : Each factor has parameters that needs to be learned. Semantically similar nodes can optionally share factors.
+\item Partition the nodes as $C_v = \{V_1, ... , V_P\}$ where $V_P$ is a set of semantically similar nodes and they all use the same node factor $\Psi_{V_p}$. Similaryly for edges. For modeling flexibility the edge factors are note shared across the edges in $E_s$ and $E_T$.
+\item To predict teh label of the node $v \in V_P$ : consider node factor, edge factors connected to v in the factor graph. Formally the node factor and edge factor are neighbors if there exists a node v such taht it connects to both in the factor graph.
+\end{itemize}
+
+\subsubsection{Structural RNN from spatio-temporal graphs}
+\begin{itemize}
+\item Represent each factor with an RNN. As such there are nodeRNNs $R_{V_p}$  and edgeRNNs $R_{E_m}$ and they are connected iff they are neighbors in the original st-graph, outputs a bipartite graph $G = (R_{E_m}, R_{V_p}, E_R)$.
+\item The predictions of nodeRNNs interact through edgeRNNs.
+\end{itemize}
+
+\subsubsection{Training structural-RNN architecture}
+\begin{itemize}
+\item The nodeRNN at each time step concatenates the node feature $x_v^t$ and the outsputs of edgeRNNs it is connected to and predictst hte node label. At the time of training the errors int eh prediction are back propagated through the nodeRNN and edge RN involved during the forward pass.
+\item Parameter sharing and strucutred feature space
+\end{itemize}
+
+
+
+
 \bibliography{../Daily_progress/papers.bib}
 \bibliographystyle{ieeetr}
 
