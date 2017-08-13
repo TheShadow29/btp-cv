@@ -8,3 +8,6 @@
 *.blg
 *direct_codes_from_github/
 *data/
+*.pyc
+*.png
+*.jpg
