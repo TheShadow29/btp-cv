@@ -6,4 +6,5 @@
 *.toc
 *.bbl
 *.blg
-*RNNexp/
+*direct_codes_from_github/
+*data/
