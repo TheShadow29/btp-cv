@@ -19,6 +19,34 @@ def graph_from_X(train_data_column, k=4, metric='euclidean'):
     return G
 
 
+def lapl_of_graph(G, normalized=True):
+    if not normalized:
+        return nx.laplacian_matrix(G)
+    else:
+        return nx.normalized_laplacian_matrix(G)
+
+
+def plot_spectrum(L, algo='eig'):
+    """Plot the spectrum of a list of multi-scale Laplacians L."""
+
+    def sort(lamb, U):
+        idx = lamb.argsort()
+        return lamb[idx], U[:, idx]
+    # Algo is eig to be sure to get all eigenvalues.
+
+    plt.figure(figsize=(17, 5))
+    for i, lap in enumerate(L):
+        lamb, U = np.linalg.eig(lap.toarray())
+        lamb, U = sort(lamb, U)
+        step = 2**i
+        x = range(step//2, L[0].shape[0], step)
+        lb = 'L_{} spectrum in [{:1.2e}, {:1.2e}]'.format(i, lamb[0], lamb[-1])
+        plt.plot(x, lamb, '.', label=lb)
+    plt.legend(loc='best')
+    plt.xlim(0, L[0].shape[0])
+    plt.ylim(ymin=0)
+
+
 if __name__ == '__main__':
     # first try with random data generation
     d = 100    # Dimensionality.
@@ -64,3 +92,9 @@ if __name__ == '__main__':
     X_train1 = crs.perm_data(X_train, perm)
     X_val1 = crs.perm_data(X_val, perm)
     X_test1 = crs.perm_data(X_test, perm)
+
+    # Right now the data that I have is permuted
+    # and the pooling is equivalent to 1D pooling
+    L = [lapl_of_graph(A, normalized=True) for A in graphs]
+    plot_spectrum(L)
+    # ==========All is correct upto this point ==========

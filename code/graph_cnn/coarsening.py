@@ -24,13 +24,13 @@ def coarsen(A, levels, self_connections=False):
         A = A.tocsr()
         A.eliminate_zeros()
         graphs[i] = A
-        # graphs_new.append(nx.from_numpy_matrix(A))
-
+        graphs_new.append(nx.from_numpy_matrix(A.todense()))
+        # G = nx.from_numpy_matrix(A.todense())
         Mnew, Mnew = A.shape
         print('Layer {0}: M_{0} = |V| = {1} nodes ({2} added),'
               '|E| = {3} edges'.format(i, Mnew, Mnew-M, A.nnz//2))
 
-    return graphs, perms[0] if levels > 0 else None
+    return graphs_new, perms[0] if levels > 0 else None
 
 
 def metis(W, levels, rid=None):
