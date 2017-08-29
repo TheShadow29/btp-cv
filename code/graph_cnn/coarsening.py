@@ -1,6 +1,6 @@
 import numpy as np
 import scipy.sparse
-
+import networkx as nx
 
 def coarsen(A, levels, self_connections=False):
     """
@@ -8,6 +8,7 @@ def coarsen(A, levels, self_connections=False):
     levels.
     """
     graphs, parents = metis(A, levels)
+    graphs_new = []
     perms = compute_perm(parents)
 
     for i, A in enumerate(graphs):
@@ -23,6 +24,7 @@ def coarsen(A, levels, self_connections=False):
         A = A.tocsr()
         A.eliminate_zeros()
         graphs[i] = A
+        # graphs_new.append(nx.from_numpy_matrix(A))
 
         Mnew, Mnew = A.shape
         print('Layer {0}: M_{0} = |V| = {1} nodes ({2} added),'

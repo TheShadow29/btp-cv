@@ -16,7 +16,7 @@ def graph_from_X(train_data_column, k=4, metric='euclidean'):
         # pdb.set_trace()
         adj_k[row, topk_ids] = orig_row[topk_ids]
     G = nx.from_numpy_matrix(adj_k)
-    return G, adj_k
+    return G
 
 
 if __name__ == '__main__':
@@ -55,6 +55,12 @@ if __name__ == '__main__':
     y_val = y[n_train:n_train+n_val]
     y_test = y[n_train+n_val:]
     # Note : np.array().T gives the transpose
-    G, adj_k = graph_from_X(X_train.T, k=10)
-    # plt.spy(adj_k, markersize=2, color='black')
+    G = graph_from_X(X_train.T, k=10)
+    adj_k = nx.adjacency_matrix(G)
+    # plt.spy(nx.adjacency_matrix(G), markersize=2, color='black')
     # plt.show()
+
+    graphs, perm = crs.coarsen(adj_k, levels=3, self_connections=False)
+    X_train1 = crs.perm_data(X_train, perm)
+    X_val1 = crs.perm_data(X_val, perm)
+    X_test1 = crs.perm_data(X_test, perm)
