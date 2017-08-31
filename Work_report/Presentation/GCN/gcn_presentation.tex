@@ -12,16 +12,23 @@
 \usepackage{subcaption}
 \usepackage{amssymb}
 
-
-\AtBeginSubsection[
-  {\frame<beamer>{\frametitle{Outline}
-    \tableofcontents[currentsection,currentsubsection]}}%
-]%
-{
-  \frame<beamer>{
-    \frametitle{Outline}
-    \tableofcontents[currentsection,currentsubsection]}
+\mode<presentation>{
+    \AtBeginSection[]
+    {
+    \begin{frame}[allowframebreaks]{Outline}
+    \tableofcontents[currentsection]
+    \end{frame}
+    }
 }
+% \AtBeginSubsection[
+%   {\frame<beamer>{\frametitle{Outline}
+%     \tableofcontents[currentsection,currentsubsection]}}%
+% ]%
+% {
+%   \frame<beamer>{
+%     \frametitle{Outline}
+%     \tableofcontents[currentsection,currentsubsection]}
+% }
 
 \title{Graph Convolution Networks}
 % \subtitle{Using Beamer}
@@ -45,7 +52,7 @@
 
 \section{Graph Convolutional Networks}
 
-\subsection{Why GCN}
+% \subsection{Why GCN}
 \begin{frame}
   \frametitle{Introduction to Graph Convolutional Networks}
   \begin{itemize}
@@ -57,7 +64,7 @@
   \end{itemize}
 \end{frame}
 
-\subsection{How to extend convolution to graphs?}
+% \subsection{How to extend convolution to graphs?}
 \begin{frame}
   \frametitle{Extending Convolutional to Graphs}
   There are two main approaches
@@ -77,7 +84,7 @@
   \end{itemize}
 \end{frame}
 
-\section{Spatial Approach}
+\section{Problems with Spatial Approach}
 \begin{frame}
   \frametitle{Limitations of Spatial Approach}
   \begin{itemize}
@@ -88,7 +95,7 @@
 \end{frame}
 
 \section{Spectral Approach}
-\subsection{Basics of Spectral Approach}
+% \subsection{Basics of Spectral Approach}
 \begin{frame}
   \frametitle{A Basic Formulation}
   \begin{itemize}
@@ -98,17 +105,19 @@
   \end{itemize}
 \end{frame}
 
-\subsection{Problem Formulation}
+% \subsection{Problem Formulation}
 \begin{frame}
   \frametitle{Defining the Problem on Graphs}
   \begin{itemize}
   \item <1-> A feature description $x_i$ for every node $i$; summarized in a $N x D$ feature matrix $X$ ($N$ : number of nodes, $D$ : number of input features)
   \item <2-> Adjacency Matrix $A$.
   \item <3-> Node level output $Z$ (an $N x F$ feature matrix, where $F$ = number of output features per node).
+  \item <4-> Every neural network can then be written as a non-linear function.
+    $$H^{(l+1)} = f(H^{l}, A)$$
   \end{itemize}
 \end{frame}
 
-\subsection{Graph Laplacian}
+% \subsection{Graph Laplacian}
 \begin{frame}
   \frametitle{Brief overview of Graph Laplacian}
   Let $T$ denote the diagonal matrix with ($v$,$v$)-th entry having value $d_v$ : degree of vertex $v$.
@@ -144,7 +153,7 @@
 \end{frame}
 \section{Spectral Networks and Deep Locally Connected Networks on Graphs}
 \begin{frame}
-  \frame{Spectral Network Approach}
+  \frametitle{Spectral Networks and Deep Locally Connected Networks on Graphs}
   \begin{itemize}
   \item Mentions the use of both spatial and spectral construction.
   \item For the spectral part uses a spline and has k control points for it.
@@ -216,7 +225,7 @@
   \end{itemize}
 \end{frame}
 
-\subsection{Results on MNIST}
+% \subsection{Results on MNIST}
 \begin{frame}
   \frametitle{MNIST results}
   \begin{itemize}
@@ -225,9 +234,32 @@
   \end{itemize}
 \end{frame}
 
+\section{Semi-Supervised Classification with Graph Convolutional Networks}
+\begin{frame}
+  \frametitle{Fast approximate convolutions on the graph}
+  \begin{itemize}
+  \item Layerwise propagation rule as
+    $$H^{(l+1)} = \sigma(\tilde{D}^{-1/2}\tilde{A}\tilde{D}^{-1/2}H^{(l)}W^{(l)})$$
+    Here $\tilde{A} = A + I_N$ the adjacency matrix with added self-loops. $\tilde{D}$ is the degree matrix.
+  \item In the chebyshev approximation, limit to $K=1$ and therefore the layer-wise convolution operation is linear function of the laplacian.
+  \item Experimentally shows 2-3 layered GCN can effectively learn standard graph problems. Specifically it does decently well in the unsupervised case, and significantly good in the semi-supervised setting.
+  \end{itemize}
+\end{frame}
 
-\bibliography{ref.bib}
-\bibliographystyle{ieeetr}
+\section{Limitations of Graph Convolutional Networks}
+\begin{frame}
+  \frametitle{Limitations}
+  \begin{itemize}
+  \item We would like to model a network which doesn't require a rectangular input size and therefore be able to accomodate superpixels. In theory this should be possible, but there are a few points that we need to keep in mind.
+    \begin{itemize}
+    \item Graph doesn't have orientation. There is no sense of up, down, left or right. The filters are rotationally invariant. This can be both advantageous as well as disadvantageous depending on the set-up of the problem. Spatial Transformer Networks learn the invariance to rotation as well as generic warping. But there is always the problem of '6' and '9' because they are equivalent in modulo rotation.
+    \item The filters are not directly transferable to another graph (because of the graph laplacian).
+    \end{itemize}
+  \end{itemize}
+\end{frame}
+
+% \bibliography{ref.bib}
+% \bibliographystyle{ieeetr}
 
 
 \end{document}
