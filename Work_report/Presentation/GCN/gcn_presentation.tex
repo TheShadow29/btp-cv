@@ -13,11 +13,22 @@
 \usepackage{amssymb}
 
 
+\AtBeginSubsection[
+  {\frame<beamer>{\frametitle{Outline}
+    \tableofcontents[currentsection,currentsubsection]}}%
+]%
+{
+  \frame<beamer>{
+    \frametitle{Outline}
+    \tableofcontents[currentsection,currentsubsection]}
+}
+
 \title{Graph Convolution Networks}
 % \subtitle{Using Beamer}
 \author{Arka Sadhu}
 \institute{IIT Bombay}
 \date{\today}
+
 
 \begin{document}
 % document goes here
@@ -33,6 +44,7 @@
 \end{frame}
 
 \section{Graph Convolutional Networks}
+
 \subsection{Why GCN}
 \begin{frame}
   \frametitle{Introduction to Graph Convolutional Networks}
@@ -40,6 +52,7 @@
   \item <1-> CNN are extremely efficient architectures for image and audio classification tasks.
   \item <1-> But CNN donot directly generalize to irregular domains such as graph.
   \item <2-> Want to generalize CNN to Graphs.
+  \item <3-> Non-trivial because the distances are non-euclidean.
   % \item <3-> Some applications would be spatio-temporal
   \end{itemize}
 \end{frame}
@@ -57,78 +70,131 @@
   \item <3-> Spectral Approach :\\
     Using the frequency characterization of CNN and using that to generalize to Graphical domain
     \begin{itemize}
-    \item <4->Spectral Networks and Deep Locally Connected Networks on Graphs [ICLR 2014]. % \cite{DBLP:journals/corr/BrunaZSL13} %
-    \item <4->Convolutional Neural Networks on Graphs with Fast Localized Spectral Filtering [NIPS 2016] % \cite{DBLP:journals/corr/DefferrardBV16}
-    \item <4->Semi-Supervised Classification with Graph Convolutional Networks [ICLR 2017] % \cite{DBLP:journals/corr/KipfW16}
+    \item <4->Spectral Networks and Deep Locally Connected Networks on Graphs [Bruna et al. ICLR 2014]. % \cite{DBLP:journals/corr/BrunaZSL13} %
+    \item <4->Convolutional Neural Networks on Graphs with Fast Localized Spectral Filtering [Defferrard et al. NIPS 2016] (will be the main focus) % \cite{DBLP:journals/corr/DefferrardBV16}
+    \item <4->Semi-Supervised Classification with Graph Convolutional Networks [Kipf et al. ICLR 2017] % \cite{DBLP:journals/corr/KipfW16}
     \end{itemize}
   \end{itemize}
 \end{frame}
 
 \section{Spatial Approach}
 \begin{frame}
-  \frametitle{Direct extension of convolution}
-
+  \frametitle{Limitations of Spatial Approach}
+  \begin{itemize}
+  \item Can't exactly define a neighborhood because the distances are not uniform.
+  \item Ordering of nodes is problem specific.
+  \end{itemize}
+  Hence for the remainder we discuss the Spectral Approach
 \end{frame}
 
-% \section{Section 1}
-% \subsection{sub a}
+\section{Spectral Approach}
+\subsection{Basics of Spectral Approach}
+\begin{frame}
+  \frametitle{A Basic Formulation}
+  \begin{itemize}
+  \item Convolution in spectral (Fourier) domain is point wise multiplication.
+  \item Fourier Basis is defined as the eigen basis of the laplacian operator.
+  \item Can use Laplacian of a graph.
+  \end{itemize}
+\end{frame}
 
-% \begin{frame}
-% \frametitle{Title}
-% Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
-% \end{frame}
+\subsection{Problem Formulation}
+\begin{frame}
+  \frametitle{Defining the Problem on Graphs}
+  \begin{itemize}
+  \item <1-> A feature description $x_i$ for every node $i$; summarized in a $N x D$ feature matrix $X$ ($N$ : number of nodes, $D$ : number of input features)
+  \item <2-> Adjacency Matrix $A$.
+  \item <3-> Node level output $Z$ (an $N x F$ feature matrix, where $F$ = number of output features per node).
+  \end{itemize}
+\end{frame}
 
-% \section{sub b}
-% \begin{frame}
-% \frametitle{List}
-% \begin{itemize}
-% \item<1-> Point A
-% \item<2-> Point B
-% \begin{itemize}
-% \item part 1
-% \item part 2
-% \end{itemize}
-% \item <3->Point C
-% \item <4->Point D
-% \end{itemize}
-% \end{frame}
+\subsection{Graph Laplacian}
+\begin{frame}
+  \frametitle{Brief overview of Graph Laplacian}
+  Let $T$ denote the diagonal matrix with ($v$,$v$)-th entry having value $d_v$ : degree of vertex $v$.
+  % $$L(u,v) = $$
+  Define L-matrix as
+  \[
+    L(u,v) =
+    \begin{cases}
+      d_v &\quad\text{if u = v}\\
+      -1 &\quad\text{if u and v are adjacent}\\
+      0 &\quad \text{otherwise}\\
+    \end{cases}
+  \]
+  And the Laplacian of the graph as
+  \[
+    \mathcal{L}(u,v) =
+    \begin{cases}
+      1 &\quad\text{if u = v}\\
+      -\frac{1}{\sqrt{d_ud_v}} &\quad\text{if u and v are adjacent}\\
+      0 &\quad \text{otherwise}\\
+    \end{cases}
+  \]
+\end{frame}
 
-% \section{section 2}
-% \begin{frame}
-%   \frametitle{Enumerate}
-%   \begin{enumerate}[I]
-%   \item Point A
-%   \item Point B
-%     \begin{enumerate}[i]
-%     \item part 1
-%     \item part 2
-%     \end{enumerate}
-%   \item Point C
-%   \item Point D
-%   \end{enumerate}
+\begin{frame}
+  \frametitle{Graph Laplacian (contd.)}
+  $$\mathcal{L} = T^{-1/2}LT^{1/2}$$
+  With the convention $T^{-1}(v,v) = 0$ for $d_v = 0$.\\
+  When G is k-regular,
+  $$\mathcal{L} = I - \frac{1}{k}A$$
+  For a general graph
+  $$\mathcal{L} = I - T^{-1/2}AT^{1/2}$$
+\end{frame}
 
-% \end{frame}
+\section{CNN on Graphs with Fast Localized Spectral Filtering}
+\subsection{Learning fast localized Spectral filters}
+\begin{frame}
+  \frametitle{Graph Fourier Transform}
+  \begin{itemize}
+  \item Laplcian of the graph is real symmetric positive semidefinite, and thus can be written as
+    $$L = U \Lambda U^{T}$$
+  \item Here $U = [u_0 .... u_{n-1}]$ is the fourier basis and $\Lambda = diag([\lambda_0...\lambda_{n-1}])$ are ordered real non-negative eigen values.
+  \item Graph Fourier Transform of a signal $x$ is $\hat{x} = U^{T}x$.
+  \end{itemize}
+\end{frame}
 
-% \subsection{sub A}
-% \begin{frame}
-% \frametitle{Using Columns}
-% \begin{columns}
-% \column{0.5\textwidth}
-% \begin{description}
-% \item[API] Application Programming Interface
-% \item[LAN] Local Area Network
-% \item[ASCII] American Standard Code for Information Interchange
-% \end{description}
+\begin{frame}
+  \frametitle{Spectral filtering of graph signals}
+  \begin{itemize}
+  \item Defining convolution on graphs
+    $$ x *_{G} y = U((U^T x) \odot (U^T y))$$
+  \item Filtering by $g_{\theta}$
+    $$ y = g_{\theta}(L)x = g_{\theta}(U \Lambda U^{T})x = Ug_{\theta}(\Lambda) U^T x $$
+  \item A non-parametric filter (all parameters free) would be defined as
+    $$g_{\theta}(\Lambda) = diag(\theta)$$
+  \end{itemize}
+\end{frame}
 
-% \column{0.5\textwidth}
-% \begin{description}
-% \item[API] Application Programming Interface
-% \item[LAN] Local Area Network
-% \item[ASCII] American Standard Code for Information Interchange
-% \end{description}
+\begin{frame}
+  \frametitle{Polynomial Parametrization}
+  \begin{itemize}
+  \item   Problem with non-parametric filters is that not localized (we want something like k-neighborhood) and therefore their learning complexity becomes $O(n)$. This can be overcomed with use of a Polynomial filter
+    $$g_{\theta}(\Lambda) = \sum_{k = 0}^{K-1}\theta_k\Lambda^k$$
+  \item The advantage we gain here is that nodes which are at a distance greater than $K$ away from the node $i$, at which the filter is applied, are not affected. Hence we have gained localization.
+  \end{itemize}
+\end{frame}
 
-% \end{columns}
-% \end{frame}
+\begin{frame}
+  \frametitle{Recursive formulation for fast filtering}
+  \begin{itemize}
+  \item Still cost to filter is high $O(n^2)$ because of multiplication with $U$ matrix.
+  \item Therefore use recurrence relation of chebyshev polynomial instead.
+    $$g_{\theta}(\Lambda) = \sum_{k=0}^{K-1}\theta_k T_K(\tilde{\Lambda})$$
+    Here $\tilde{\Lambda}$ is scaled between $[-1,1]$.
+  \item This allows us to compute $\bar{x_k} = T_K{\tilde{L}}x$. And Therefore
+    $$ y = g_{\theta}(L)x = [\bar{x_0}...\bar{x_{k-1}}]\theta$$
+  \item The cost is now $O(K|E|)$
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Learning filters}
+  \begin{itemize}
+  \item Trivial to show that backprop calculation can be done efficiently.
+  \end{itemize}
+\end{frame}
 
 \bibliography{ref.bib}
 \bibliographystyle{ieeetr}
