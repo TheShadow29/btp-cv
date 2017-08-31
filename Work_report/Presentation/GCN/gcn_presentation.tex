@@ -1,0 +1,84 @@
+\documentclass{beamer}
+\usetheme{Boadilla}
+
+\title{My Presentation}
+\subtitle{Using Beamer}
+\author{Joe Bloggs}
+\institute{University of ShareLaTeX}
+\date{\today}
+
+\begin{document}
+% document goes here
+
+
+\begin{frame}
+\titlepage
+\end{frame}
+
+\section{Section 1}
+\subsection{sub a}
+
+\begin{frame}
+\frametitle{Title}
+Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+\end{frame}
+
+\begin{frame}
+\frametitle{Outline}
+\tableofcontents
+\end{frame}
+
+\subsection{sub b}
+\begin{frame}
+\frametitle{List}
+\begin{itemize}
+\item Point A
+\item Point B
+\begin{itemize}
+\item part 1
+\item part 2
+\end{itemize}
+\item Point C
+\item Point D
+\end{itemize}
+\end{frame}
+
+\section{section 2}
+\begin{frame}
+  \frametitle{Enumerate}
+  \begin{enumerate}[I]
+  \item Point A
+  \item Point B
+    \begin{enumerate}[i]
+    \item part 1
+    \item part 2
+    \end{enumerate}
+  \item Point C
+  \item Point D
+  \end{enumerate}
+
+\end{frame}
+
+\subsection{sub A}
+\begin{frame}
+\frametitle{Using Columns}
+\begin{columns}
+\column{0.5\textwidth}
+\begin{description}
+\item[API] Application Programming Interface
+\item[LAN] Local Area Network
+\item[ASCII] American Standard Code for Information Interchange
+\end{description}
+
+\column{0.5\textwidth}
+\begin{description}
+\item[API] Application Programming Interface
+\item[LAN] Local Area Network
+\item[ASCII] American Standard Code for Information Interchange
+\end{description}
+
+\end{columns}
+\end{frame}
+
+
+\end{document}
