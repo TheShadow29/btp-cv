@@ -1,10 +1,22 @@
 \documentclass{beamer}
 \usetheme{Boadilla}
+% \usepackage[a4paper, tmargin=1in, bmargin=1in]{geometry}
+\usepackage[utf8]{inputenc}
+\usepackage{graphicx}
+\usepackage{parskip}
+\usepackage{pdflscape}
+\usepackage{listings}
+\usepackage{hyperref}
+\usepackage{float}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{amssymb}
 
-\title{My Presentation}
-\subtitle{Using Beamer}
-\author{Joe Bloggs}
-\institute{University of ShareLaTeX}
+
+\title{Graph Convolution Networks}
+% \subtitle{Using Beamer}
+\author{Arka Sadhu}
+\institute{IIT Bombay}
 \date{\today}
 
 \begin{document}
@@ -15,70 +27,111 @@
 \titlepage
 \end{frame}
 
-\section{Section 1}
-\subsection{sub a}
-
-\begin{frame}
-\frametitle{Title}
-Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
-\end{frame}
-
 \begin{frame}
 \frametitle{Outline}
 \tableofcontents
 \end{frame}
 
-\subsection{sub b}
+\section{Graph Convolutional Networks}
+\subsection{Why GCN}
 \begin{frame}
-\frametitle{List}
-\begin{itemize}
-\item Point A
-\item Point B
-\begin{itemize}
-\item part 1
-\item part 2
-\end{itemize}
-\item Point C
-\item Point D
-\end{itemize}
+  \frametitle{Introduction to Graph Convolutional Networks}
+  \begin{itemize}
+  \item <1-> CNN are extremely efficient architectures for image and audio classification tasks.
+  \item <1-> But CNN donot directly generalize to irregular domains such as graph.
+  \item <2-> Want to generalize CNN to Graphs.
+  % \item <3-> Some applications would be spatio-temporal
+  \end{itemize}
 \end{frame}
 
-\section{section 2}
+\subsection{How to extend convolution to graphs?}
 \begin{frame}
-  \frametitle{Enumerate}
-  \begin{enumerate}[I]
-  \item Point A
-  \item Point B
-    \begin{enumerate}[i]
-    \item part 1
-    \item part 2
-    \end{enumerate}
-  \item Point C
-  \item Point D
-  \end{enumerate}
+  \frametitle{Extending Convolutional to Graphs}
+  There are two main approaches
+  \begin{itemize}
+  \item <1->Spatial Approach :\\
+    Generalization of CNN in the spatial domain itself.
+    \begin{itemize}
+    \item <2-> Learning Convolutional Neural Networks for Graphs [ICML 2016].\cite{DBLP:journals/corr/NiepertAK16}
+    \end{itemize}
+  \item <3-> Spectral Approach :\\
+    Using the frequency characterization of CNN and using that to generalize to Graphical domain
+    \begin{itemize}
+    \item <4->Spectral Networks and Deep Locally Connected Networks on Graphs [ICLR 2014]. % \cite{DBLP:journals/corr/BrunaZSL13} %
+    \item <4->Convolutional Neural Networks on Graphs with Fast Localized Spectral Filtering [NIPS 2016] % \cite{DBLP:journals/corr/DefferrardBV16}
+    \item <4->Semi-Supervised Classification with Graph Convolutional Networks [ICLR 2017] % \cite{DBLP:journals/corr/KipfW16}
+    \end{itemize}
+  \end{itemize}
+\end{frame}
+
+\section{Spatial Approach}
+\begin{frame}
+  \frametitle{Direct extension of convolution}
 
 \end{frame}
 
-\subsection{sub A}
-\begin{frame}
-\frametitle{Using Columns}
-\begin{columns}
-\column{0.5\textwidth}
-\begin{description}
-\item[API] Application Programming Interface
-\item[LAN] Local Area Network
-\item[ASCII] American Standard Code for Information Interchange
-\end{description}
+% \section{Section 1}
+% \subsection{sub a}
 
-\column{0.5\textwidth}
-\begin{description}
-\item[API] Application Programming Interface
-\item[LAN] Local Area Network
-\item[ASCII] American Standard Code for Information Interchange
-\end{description}
+% \begin{frame}
+% \frametitle{Title}
+% Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+% \end{frame}
 
-\end{columns}
-\end{frame}
+% \section{sub b}
+% \begin{frame}
+% \frametitle{List}
+% \begin{itemize}
+% \item<1-> Point A
+% \item<2-> Point B
+% \begin{itemize}
+% \item part 1
+% \item part 2
+% \end{itemize}
+% \item <3->Point C
+% \item <4->Point D
+% \end{itemize}
+% \end{frame}
+
+% \section{section 2}
+% \begin{frame}
+%   \frametitle{Enumerate}
+%   \begin{enumerate}[I]
+%   \item Point A
+%   \item Point B
+%     \begin{enumerate}[i]
+%     \item part 1
+%     \item part 2
+%     \end{enumerate}
+%   \item Point C
+%   \item Point D
+%   \end{enumerate}
+
+% \end{frame}
+
+% \subsection{sub A}
+% \begin{frame}
+% \frametitle{Using Columns}
+% \begin{columns}
+% \column{0.5\textwidth}
+% \begin{description}
+% \item[API] Application Programming Interface
+% \item[LAN] Local Area Network
+% \item[ASCII] American Standard Code for Information Interchange
+% \end{description}
+
+% \column{0.5\textwidth}
+% \begin{description}
+% \item[API] Application Programming Interface
+% \item[LAN] Local Area Network
+% \item[ASCII] American Standard Code for Information Interchange
+% \end{description}
+
+% \end{columns}
+% \end{frame}
+
+\bibliography{ref.bib}
+\bibliographystyle{ieeetr}
 
 
 \end{document}
