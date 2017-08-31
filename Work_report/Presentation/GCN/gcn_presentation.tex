@@ -142,6 +142,17 @@
   For a general graph
   $$\mathcal{L} = I - T^{-1/2}AT^{1/2}$$
 \end{frame}
+\section{Spectral Networks and Deep Locally Connected Networks on Graphs}
+\begin{frame}
+  \frame{Spectral Network Approach}
+  \begin{itemize}
+  \item Mentions the use of both spatial and spectral construction.
+  \item For the spectral part uses a spline and has k control points for it.
+    $$g_{\theta}(\Lambda) = B\theta$$
+    Here $B$ is the cubic B-spline basis and $\theta$ is a vector of control points.
+  \item The datasets used (created) are quite interesting. Subsampled MNIST and MNIST on sphere to show how spectral networks can be used on graphs.
+  \end{itemize}
+\end{frame}
 
 \section{CNN on Graphs with Fast Localized Spectral Filtering}
 \subsection{Learning fast localized Spectral filters}
@@ -195,6 +206,25 @@
   \item Trivial to show that backprop calculation can be done efficiently.
   \end{itemize}
 \end{frame}
+
+\subsection{Coarsening and Pooling}
+\begin{frame}
+  \frametitle{Graph Coarsening and Pooling}
+  \begin{itemize}
+  \item Require efficient mechanism for pooling. Graph clustering as such is NP-hard and some approximations must be made.
+  \item The paper uses Graclus algorithm for coarsening, and uses an intelligent way of rearranging the nodes [creating a balanced binary tree from the remaining singleton and fake nodes] so that the pooling now becomes equivalent to pooling a regular 1D signal.
+  \end{itemize}
+\end{frame}
+
+\subsection{Results on MNIST}
+\begin{frame}
+  \frametitle{MNIST results}
+  \begin{itemize}
+  \item Achieves close to classical CNN accuracy.
+  \item Pictures to be added.
+  \end{itemize}
+\end{frame}
+
 
 \bibliography{ref.bib}
 \bibliographystyle{ieeetr}
