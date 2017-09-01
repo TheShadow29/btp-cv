@@ -56,10 +56,10 @@
 \begin{frame}
   \frametitle{Introduction to Graph Convolutional Networks}
   \begin{itemize}
-  \item <1-> CNN are extremely efficient architectures for image and audio classification tasks.
-  \item <1-> But CNN donot directly generalize to irregular domains such as graph.
-  \item <2-> Want to generalize CNN to Graphs.
-  \item <3-> Non-trivial because the distances are non-euclidean.
+  \item  CNN are extremely efficient architectures for image and audio classification tasks.
+  \item  But CNN donot directly generalize to irregular domains such as graph.
+  \item  Want to generalize CNN to Graphs.
+  \item  Non-trivial because the distances are non-euclidean.
   % \item <3-> Some applications would be spatio-temporal
   \end{itemize}
 \end{frame}
@@ -72,14 +72,14 @@
   \item <1->Spatial Approach :\\
     Generalization of CNN in the spatial domain itself.
     \begin{itemize}
-    \item <2-> Learning Convolutional Neural Networks for Graphs [ICML 2016].\cite{DBLP:journals/corr/NiepertAK16}
+    \item <1-> Learning Convolutional Neural Networks for Graphs [ICML 2016].% \cite{DBLP:journals/corr/NiepertAK16}
     \end{itemize}
-  \item <3-> Spectral Approach :\\
+  \item <2-> Spectral Approach :\\
     Using the frequency characterization of CNN and using that to generalize to Graphical domain
     \begin{itemize}
-    \item <4->Spectral Networks and Deep Locally Connected Networks on Graphs [Bruna et al. ICLR 2014]. % \cite{DBLP:journals/corr/BrunaZSL13} %
-    \item <4->Convolutional Neural Networks on Graphs with Fast Localized Spectral Filtering [Defferrard et al. NIPS 2016] (will be the main focus) % \cite{DBLP:journals/corr/DefferrardBV16}
-    \item <4->Semi-Supervised Classification with Graph Convolutional Networks [Kipf et al. ICLR 2017] % \cite{DBLP:journals/corr/KipfW16}
+    \item <2->Spectral Networks and Deep Locally Connected Networks on Graphs [Bruna et al. ICLR 2014]. % \cite{DBLP:journals/corr/BrunaZSL13} %
+    \item <2->Convolutional Neural Networks on Graphs with Fast Localized Spectral Filtering [Defferrard et al. NIPS 2016] (will be the main focus) % \cite{DBLP:journals/corr/DefferrardBV16}
+    \item <2->Semi-Supervised Classification with Graph Convolutional Networks [Kipf et al. ICLR 2017] % \cite{DBLP:journals/corr/KipfW16}
     \end{itemize}
   \end{itemize}
 \end{frame}
@@ -109,10 +109,10 @@
 \begin{frame}
   \frametitle{Defining the Problem on Graphs}
   \begin{itemize}
-  \item <1-> A feature description $x_i$ for every node $i$; summarized in a $N x D$ feature matrix $X$ ($N$ : number of nodes, $D$ : number of input features)
-  \item <2-> Adjacency Matrix $A$.
-  \item <3-> Node level output $Z$ (an $N x F$ feature matrix, where $F$ = number of output features per node).
-  \item <4-> Every neural network can then be written as a non-linear function.
+  \item A feature description $x_i$ for every node $i$; summarized in a $N x D$ feature matrix $X$ ($N$ : number of nodes, $D$ : number of input features)
+  \item Adjacency Matrix $A$.
+  \item  Node level output $Z$ (an $N x F$ feature matrix, where $F$ = number of output features per node).
+  \item  Every neural network can then be written as a non-linear function.
     $$H^{(l+1)} = f(H^{l}, A)$$
   \end{itemize}
 \end{frame}
