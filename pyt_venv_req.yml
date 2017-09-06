@@ -1,0 +1,142 @@
+name: pyt_venv
+channels:
+- conda-forge
+- soumith
+- defaults
+dependencies:
+- autopep8=1.3.2=py35_0
+- yapf=0.16.3=py35_0
+- bleach=1.5.0=py35_0
+- cffi=1.10.0=py35_0
+- cudatoolkit=7.5=2
+- cudnn=6.0.21=cuda7.5_0
+- cycler=0.10.0=py35_0
+- dbus=1.10.20=0
+- decorator=4.1.2=py35_0
+- entrypoints=0.2.3=py35_0
+- expat=2.1.0=0
+- flake8=3.3.0=py35_0
+- fontconfig=2.12.1=3
+- freetype=2.5.5=2
+- glib=2.50.2=1
+- gst-plugins-base=1.8.0=0
+- gstreamer=1.8.0=0
+- html5lib=0.9999999=py35_0
+- icu=54.1=0
+- ipykernel=4.6.1=py35_0
+- ipython=6.1.0=py35_0
+- ipython_genutils=0.2.0=py35_0
+- ipywidgets=6.0.0=py35_0
+- jbig=2.1=0
+- jedi=0.10.2=py35_2
+- jinja2=2.9.6=py35_0
+- jpeg=9b=0
+- jsonschema=2.6.0=py35_0
+- jupyter=1.0.0=py35_3
+- jupyter_client=5.1.0=py35_0
+- jupyter_console=5.1.0=py35_0
+- jupyter_core=4.3.0=py35_0
+- libffi=3.2.1=1
+- libgcc=5.2.0=0
+- libgfortran=3.0.0=1
+- libiconv=1.14=0
+- libpng=1.6.27=0
+- libsodium=1.0.10=0
+- libtiff=4.0.6=3
+- libxcb=1.12=1
+- libxml2=2.9.4=0
+- markupsafe=0.23=py35_2
+- matplotlib=2.0.2=np113py35_0
+- mccabe=0.6.1=py35_0
+- mistune=0.7.4=py35_0
+- mkl=2017.0.3=0
+- nbconvert=5.2.1=py35_0
+- nbformat=4.3.0=py35_0
+- nccl=1.3.4=0
+- networkx=1.11=py35_0
+- notebook=5.0.0=py35_0
+- numpy=1.13.1=py35_0
+- olefile=0.44=py35_0
+- openssl=1.0.2l=0
+- pandas=0.20.3=py35_0
+- pandocfilters=1.4.1=py35_0
+- path.py=10.3.1=py35_0
+- pcre=8.39=1
+- pexpect=4.2.1=py35_0
+- pickleshare=0.7.4=py35_0
+- pillow=4.2.1=py35_0
+- pip=9.0.1=py35_1
+- prompt_toolkit=1.0.14=py35_0
+- ptyprocess=0.5.2=py35_0
+- pycodestyle=2.3.1=py35_0
+- pycparser=2.18=py35_0
+- pyflakes=1.5.0=py35_0
+- pygments=2.2.0=py35_0
+- pyparsing=2.2.0=py35_0
+- pyqt=5.6.0=py35_2
+- python=3.5.3=1
+- python-dateutil=2.6.1=py35_0
+- pytz=2017.2=py35_0
+- pywavelets=0.5.2=np113py35_0
+- pyzmq=16.0.2=py35_0
+- qt=5.6.2=5
+- qtconsole=4.3.0=py35_0
+- readline=6.2=2
+- scikit-image=0.13.0=np113py35_0
+- scikit-learn=0.19.0=np113py35_0
+- scipy=0.19.1=np113py35_0
+- setuptools=27.2.0=py35_0
+- simplegeneric=0.8.1=py35_1
+- sip=4.18=py35_0
+- six=1.10.0=py35_0
+- sqlite=3.13.0=0
+- tabulate=0.7.5=py35_0
+- terminado=0.6=py35_0
+- testpath=0.3.1=py35_0
+- tk=8.5.18=0
+- tornado=4.5.1=py35_0
+- traitlets=4.3.2=py35_0
+- wcwidth=0.1.7=py35_0
+- wheel=0.29.0=py35_0
+- widgetsnbextension=2.0.0=py35_0
+- xz=5.2.2=1
+- zeromq=4.1.5=0
+- zlib=1.2.8=3
+- cuda80=1.0=0
+- pytorch=0.2.0=py35h1a0f79e_2cu80
+- torchvision=0.1.9=py35h72e4c6f_1
+- pip:
+  - appdirs==1.4.0
+  - boto==2.48.0
+  - bz2file==0.98
+  - certifi==2017.7.27.1
+  - chardet==3.0.4
+  - django==1.10.4
+  - gensim==2.3.0
+  - idna==2.6
+  - ipython-genutils==0.2.0
+  - jupyter-client==5.1.0
+  - jupyter-console==5.1.0
+  - jupyter-core==4.3.0
+  - markdown==2.6.9
+  - mechanize==0.2.5
+  - packaging==16.8
+  - pbr==1.10.0
+  - prompt-toolkit==1.0.14
+  - protobuf==3.4.0
+  - pulp==1.6.8
+  - pyserial==3.2.1
+  - python-mnist==0.3
+  - requests==2.18.4
+  - smart-open==1.5.3
+  - stevedore==1.18.0
+  - tensorflow-gpu==1.1.0
+  - tensorflow-tensorboard==0.1.5
+  - torch==0.2.0.post2
+  - urllib3==1.22
+  - virtualenv==15.0.3
+  - virtualenv-clone==0.2.6
+  - virtualenvwrapper==4.7.2
+  - werkzeug==0.12.2
+prefix: /home/arktheshadow/anaconda2/envs/pyt_venv
+
