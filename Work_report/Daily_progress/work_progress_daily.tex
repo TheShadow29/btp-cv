@@ -118,7 +118,7 @@ No work done
 \subsubsection{July 29 : Saturday}
 Probably no work done
 
-\section{Week}
+\section{Week 1 : September}
 \subsection{Sept 6 : Thursday}
 Discussion with the prof. Main points noted below. Also has what all needs to be done before tomorrow's meeting.
 \begin{itemize}
@@ -126,6 +126,17 @@ Discussion with the prof. Main points noted below. Also has what all needs to be
 \item An image may have 100-200 superpixels, which is not a constant. So can't use the same graph for all of them. Can we exploit the graph structure? GCN though requires the same graph structure to be followed, otherwise it won't be able to exploit the weights and would essentially require new training and generally useless.
 \item We would also like to encode the spatial connections of the superpixels.
 \item When we have arbitrary shape, we don't want to have any kind of orientation information, may mess things up.
+\item Each superpixel would give some form of a feature vector and we would like to use this feature vector as inputs to the GCN. But need to check if the GCN would actually be of any use?
+\item We want to use Graph structure to get some kind of context between the superpixels. So this would be a context sensitive classifier. Need to do extensive literature survey on this.
+\item For the case of Co-segmentation the problem is that can we even preserve the graph structure? The nodes? The adjacency graph / matrix. Need to think about these things more carefully.
+\item Co-segmentation in general may include both seen/unseen categorization as well. We might need to train on one set of classes and still get outputs on another unseen set of classes. Prof gave the same example as mine, 30C2 combinations, or possibly 25C2 and test on the rest 5C2. We can get the corresponding ground truths as well.
+\item Two aspects to the problem of Co-segmentation. Say G1 has m nodes, and G2 has n nodes. We would like to perform subgraph matching problem. What Avik has done is used a greedy algorithm which gives the results quite fast. But I don't think that would be enough actually. Prof suggested to use Graph Neural Networks to solve this problem. This is actually a combinatorial problem. We would like to learn to solve this combinatorial problem.
+\item In one case the problem is one-to-one, but here it is possible that it is many-to-many. Because one superpixel may match to two smaller super pixels from the other graph and vice-versa. Solution exists for the one-to-one problem. Sayan's talk tomorrow on the jigsaw puzzle thing is also one-to-one. May need to check the feasibility of such problems.
+\item Subgraph Matching Using Deep Learning.
+\item The other aspect is the features that are bein given as inputs. Currently it is hog and color features which are in some sense hand-crafted. But what we probably need is more general features. I am thinking in the direction of dilated convolution. May be that can help. [Need to read this one too.]
+\item In graphs, the sub-graph matching is NP-complete. To get the MCS : currently greedy algorithm being employed.
+\item Another thing to note is that currently we are doing only 0th order. We would like it to be of say some k-ordered, i.e. see till k-hops.
+\item So the problem now effectively becomes matching a group of nodes to a group of nodes. A problem that could arise is that number of nodes of the two matching things may not be exactly the same. What we can possibly do is to bring the number of nodes to be the same, by clustering some very similar nodes together.
 \end{itemize}
 
 \bibliography{./papers.bib}
