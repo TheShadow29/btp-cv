@@ -119,7 +119,7 @@ No work done
 Probably no work done
 
 \section{Week 1 : September}
-\subsection{Sept 6 : Thursday}
+\subsection{Sept 6 : Wednesday}
 Discussion with the prof. Main points noted below. Also has what all needs to be done before tomorrow's meeting.
 \begin{itemize}
 \item Graph Signal. Needs a more concrete definition. Can the vectors be of different dimensions? (I think not, but need to verify this.)
@@ -137,6 +137,18 @@ Discussion with the prof. Main points noted below. Also has what all needs to be
 \item In graphs, the sub-graph matching is NP-complete. To get the MCS : currently greedy algorithm being employed.
 \item Another thing to note is that currently we are doing only 0th order. We would like it to be of say some k-ordered, i.e. see till k-hops.
 \item So the problem now effectively becomes matching a group of nodes to a group of nodes. A problem that could arise is that number of nodes of the two matching things may not be exactly the same. What we can possibly do is to bring the number of nodes to be the same, by clustering some very similar nodes together.
+\end{itemize}
+
+\subsection{Sept 7 : Thursday}
+Minutes of the discussion with professor and my answers to the doubts we previously had.
+\begin{itemize}
+\item First if the graph structure is approximately the same, we can simply do an adjacency approximation and say that the learned parameters are shared across the graphs.
+\item Second if the dimensionality of the vectors in each node is different can go to some fixed length representation using attention mechanism.
+\item Third is that if the graph is completely different then we can pass on the laplacian as well. My suggestion and partly intuition is that given a graph signal $x_{G1}$ and graph signal $x_{G2}$ belonging to two different graphs, we should be able to find some kind of conversion using the attention mechanism previously described.
+\item Then we go to Sayan's Jigsaw puzzle. The problem is formulated in RNN way with LSTM cells.
+\item Need to understand how to apply the graph networks to the subgraph matching problems clearly.
+\item Also need to understand seq2seq models. One thing I need to know is to how do we manage the problem of having different length vectors in the seq2seq models.
+\item Need to read about : Graph Neural Networks as to how they are different from graph convolution networks in what way and all. Second is to read the gated graph attention mechanism given for alleviating different graph structure problem.
 \end{itemize}
 
 \bibliography{./papers.bib}
