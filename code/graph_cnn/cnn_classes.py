@@ -22,6 +22,6 @@ class gcn_layer(object):
         # Coarsen a graph multiple times using the Metis algorithm
         # levels is the number of coarsened graphs
         self.coarse_graphs.append(G)
-
+        rid = np
         for i in range(levels):
             # Need to choose the weights for pairing
