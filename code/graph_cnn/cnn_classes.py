@@ -1,6 +1,6 @@
 # import torch
 import numpy as np
-import sklearn
+# import sklearn
 import networkx as nx
 
 
@@ -15,13 +15,15 @@ class gcn_layer(object):
         self.sparse_adj_mat = self.G.adjacency_matrix()
         self.coarse_graphs = list()
 
-    def coarsen(self):
-        # Coarsen a graph
+    # def metis(self, levels):
+    #     # Coarsen a graph multiple times using the Metis algorithm
+    #     # levels is the number of coarsened graphs
+    #     self.coarse_graphs.append(G)
+    #     # rid = np
+    #     for i in range(levels):
+    # Need to choose the weights for pairing
 
-    def metis(self, levels):
-        # Coarsen a graph multiple times using the Metis algorithm
-        # levels is the number of coarsened graphs
-        self.coarse_graphs.append(G)
-        rid = np
-        for i in range(levels):
-            # Need to choose the weights for pairing
+    # def coarsen(self):
+    # Coarsen a graph
+
+    # def metis_one_level(self, ):
