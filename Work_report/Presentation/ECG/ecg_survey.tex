@@ -1,0 +1,64 @@
+\documentclass{article}
+\usepackage[a4paper, tmargin=1in, bmargin=1in]{geometry}
+\usepackage[utf8]{inputenc}
+\usepackage{graphicx}
+\usepackage{parskip}
+\usepackage{pdflscape}
+\usepackage{listings}
+\usepackage{hyperref}
+\usepackage{float}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{amssymb}
+
+% \usepackage{siunitx}
+% \sisetup{round-mode=places,round-precision=2}
+
+\newcommand{\ra}{$\rightarrow$}
+
+
+\title{Paper Summaries}
+\author{
+  Arka Sadhu}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\tableofcontents
+\newpage
+
+\section{QRS Analysis Algos}
+\subsection{Signal Derivatives and Digital Filters}
+\begin{itemize}
+\item Typical f components in the range of 10-25 Hz, so most algos use a filter bank to attenuate other signal artifacts from P,T waves, baseline drift, incoupling noise.
+\item For P,T waves use high pass filtering, for incoupling noise actually need a low pass filter, giving a bandpass filter from 10-25 Hz.
+\item Some do it separately , some only take the high pass part of it.
+\item Most algos use some kind of decision rules to reduce the number of false positives.
+\end{itemize}
+\subsubsection{Derivative Based Algos}
+\begin{itemize}
+\item HPF realized as a differentiator. Mostly first order, some also second order. Some cases a linear combination as well.
+\item Detection by comparing the feature against a threshold.
+\item Also complemented by heuristically found features
+\end{itemize}
+\subsubsection{Digital Filters}
+\begin{itemize}
+\item Two different lpf with different cut-off freq, subtraction gives bpf.
+\item Passed onto simple m+-time step averaging.
+\item MOBD (multiplicatio of backward difference) : kind of AND all algorithm  and some consistency conditions.
+\item Simple peak detection search by comparing the max and following till v/2 of the signal. Mark the highest peak.
+\item Do a form of lc of peak level and simple noise level and update, eventually threshold reached.
+\item Another method : max of each segment compared to an adaptive noise level and adaptive peak estimate and classified depending on distance to each other.
+\item Generalized digital filters also proposed.
+\end{itemize}
+
+\subsection{Wavelet, Singularity, Filter Bank}
+\begin{itemize}
+\item Use wavelet transform, in some sense similar to stft. Use discrete wavelet transform.
+\item 32 band filter bank used to downsample subband signals.
+\end{itemize}
+
+\subsection{Neural Network Based Methods}
+
+\end{document}
