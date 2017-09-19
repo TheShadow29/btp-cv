@@ -17,7 +17,7 @@
 \newcommand{\ra}{$\rightarrow$}
 
 
-\title{Paper Summaries}
+\title{ECG Analysis Summaries}
 \author{
   Arka Sadhu}
 \date{\today}
@@ -60,5 +60,94 @@
 \end{itemize}
 
 \subsection{Neural Network Based Methods}
-
+\subsubsection{Neural Networks}
+\begin{itemize}
+\item ANN for non-linear signal processing. Mostly MLP, RBF, LVQ used. RBF closely related to fuzzy logic methods.
+\item LVQ has input layer, competitive layer, linear layer, competitive automatically learns to classify input vectors into subclasses where max subclasses is number of neurons.
+\item MLP, RBF trained using supervised, LVQ trained in an unsupervised manner.
+\end{itemize}
+\subsubsection{Neural Networks as Adaptive Non-linear Predictors}
+\begin{itemize}
+\item Since ecg contains mostly non-QRS segments, nn converges to a point where samples from non-QRS segments are well predicted, and segments with sudden changes (QRS segments) follow a different statistics and lead to sudden increase in the prediction error, which in itself can be used as a feature signal for QRS detection.
+\item Non-linear prediction using mlp, trained online and output is further passed through matched filter.
+\end{itemize}
+\subsubsection{LVQ for QRS-detection}
+\begin{itemize}
+\item Train a discrimination between QRS and PVC contractions.
+\item Not very good results, but once trained offers fast computations.
+\end{itemize}
+\subsection{Additional Approaches}
+\subsubsection{Adaptive Filters}
+\begin{itemize}
+\item Simple prediction filter to learn the weights using least mean square error.
+\end{itemize}
+\subsubsection{Hidden Markov Models}
+\begin{itemize}
+\item Possible states are P-wave, QRS, T-wave. Whole state sequence is inferred at once.
+\item Disadvantage is large computation complexity.
+\end{itemize}
+\subsubsection{Mathematical Morphology}
+\begin{itemize}
+\item Use of erosion and dilation.
+\item This gives a feature signal and QRS again got using thresholding.
+\end{itemize}
+\subsubsection{Matched Filter}
+\begin{itemize}
+\item Improves SNR.
+\item AMCD : Average magnitude cross difference method : computationally inexpensive alternative.
+\end{itemize}
+\subsubsection{Genetic Algorithms}
+\begin{itemize}
+\item Genetic algorithms applied to combined design of optimal polynomial filters for the pre-processing and decision stage.
+\item Decision stage mainly adaptive threshold, and optimized in conjunction with polynomial filters.
+\end{itemize}
+\subsubsection{Hilbert Transformed Based QRS-detection}
+\begin{itemize}
+\item Hilbert transform of the signal is used to compute the signal envelope.
+\item LPF to avoid ambiguity of peak detection.
+\end{itemize}
+\subsubsection{Length and Energy Transforms}
+\begin{itemize}
+\item Both assume that ecg is a vector.
+\item Length and energy transform are better features than conventional transforms of feature extractions.
+\end{itemize}
+\subsubsection{Synctactic Methods}
+\begin{itemize}
+\item Signal assumed to be concatenation of linguistically represented primary patterns i.e. strings. Use grammar to search for code strings.
+\item Due to computational efficiency mostly use line segments as primitives for the signal representation.
+\end{itemize}
+\subsubsection{QRS Detection Based on MAP estimate}
+\begin{itemize}
+\item Prior of linear combination of pulse-shaped peaks.
+\end{itemize}
+\subsubsection{Zero-crossing based QRS Detection}
+\begin{itemize}
+\item After bpf a high freq sequence is added. Non-QRS segment has more zero crossing than QRS segment.
+\end{itemize}
+\subsection{Benchmark Databases}
+\subsubsection{MIT-BIH Database}
+\begin{itemize}
+\item Ten databases for various test purposes.
+\item Most frequently MIT-BIH Arrythmia database is used. Contains 48 half hour recordings of annotated ECG with sampling rate of 360Hz and 11bit resolution over 10mV range. For some cases detection is quite difficult because of abnormal shapes, noise and artifacts.
+\end{itemize}
+\subsubsection{AHA Databse}
+\begin{itemize}
+\item 155 recordings of ambulatory ECG for Ventricular Arrythmia Detectors.
+\end{itemize}
+\subsubsection{Ann Arbor Electrogram Libraries}
+\begin{itemize}
+\item Not relevant.
+\end{itemize}
+\subsubsection{CSE Database}
+\begin{itemize}
+\item Contains 1000 multi-lead recordings (12-15 leads).
+\end{itemize}
+\subsubsection{Other standard Databases}
+\begin{itemize}
+\item European ST-T
+\item QT
+\item MGH
+\item IMPROVE
+\item PTB
+\end{itemize}
 \end{document}
