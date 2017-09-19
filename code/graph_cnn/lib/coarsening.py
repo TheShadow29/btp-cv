@@ -1,7 +1,6 @@
 import numpy as np
 import scipy.sparse
-import networkx as nx
-
+import pdb
 
 def coarsen(A, levels, self_connections=False):
     """
@@ -9,7 +8,6 @@ def coarsen(A, levels, self_connections=False):
     levels.
     """
     graphs, parents = metis(A, levels)
-    graphs_new = []
     perms = compute_perm(parents)
 
     for i, A in enumerate(graphs):
@@ -25,13 +23,12 @@ def coarsen(A, levels, self_connections=False):
         A = A.tocsr()
         A.eliminate_zeros()
         graphs[i] = A
-        graphs_new.append(nx.from_numpy_matrix(A.todense()))
-        # G = nx.from_numpy_matrix(A.todense())
+
         Mnew, Mnew = A.shape
         print('Layer {0}: M_{0} = |V| = {1} nodes ({2} added),'
               '|E| = {3} edges'.format(i, Mnew, Mnew-M, A.nnz//2))
 
-    return graphs_new, perms[0] if levels > 0 else None
+    return graphs, perms[0] if levels > 0 else None
 
 
 def metis(W, levels, rid=None):
@@ -53,6 +50,7 @@ def metis(W, levels, rid=None):
     NOTE
     if "graph" is a list of length k, then "parents" will be a list of length k-1
     """
+
     N, N = W.shape
     if rid is None:
         rid = np.random.permutation(range(N))
@@ -95,8 +93,8 @@ def metis(W, levels, rid=None):
         nrr = cluster_id[rr]
         ncc = cluster_id[cc]
         nvv = vv
-        pdb.set_trace()
         Nnew = cluster_id.max() + 1
+        # pdb.set_trace()
         # CSR is more appropriate: row,val pairs appear multiple times
         W = scipy.sparse.csr_matrix((nvv,(nrr,ncc)), shape=(Nnew,Nnew))
         W.eliminate_zeros()
@@ -119,8 +117,7 @@ def metis(W, levels, rid=None):
 
 
 # Coarsen a graph given by rr,cc,vv.  rr is assumed to be ordered
-def metis_one_level(rr,cc,vv,rid,weights):
-
+def metis_one_level(rr, cc, vv, rid, weights):
     nnz = rr.shape[0]
     N = rr[nnz-1] + 1
 
@@ -241,6 +238,7 @@ def perm_data(x, indices):
         else:
             xnew[:,i] = np.zeros(N)
     return xnew
+
 
 def perm_adjacency(A, indices):
     """
