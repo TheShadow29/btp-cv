@@ -107,8 +107,10 @@ if __name__ == '__main__':
     for epoch in range(30):
         for sample in ecg_data:
             instance = Variable(sample['sig'].cuda())
+            # instance = Variable(sample['sig'])
             # instance1 = instance.view(-1, 1, 3000)
             label = Variable(sample['label'].cuda())
+            # label = Variable(sample['label'])
             optimizer.zero_grad()
             # pdb.set_trace()
             y_pred = simple_model(instance)
@@ -119,6 +121,6 @@ if __name__ == '__main__':
             loss.backward()
             optimizer.step()
         print('epoch', epoch)
-
+        print(time.time() - start)
     end = time.time()
     print(end - start)
