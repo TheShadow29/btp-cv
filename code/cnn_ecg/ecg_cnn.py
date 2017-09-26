@@ -6,27 +6,6 @@ import torch
 from torch.autograd import Variable
 from torch.utils.data import Dataset, DataLoader
 import numpy as np
-# class ecg_one_data_holder():
-#     def __init__(self, tfile):
-#         self.tfile = tfile
-#         # pdb.set_trace()
-#         self.sig, self.fields = wfdb.srdsamp(tfile)
-#         # self.fields = fields['comments'][4]
-#         return
-
-
-# class ecg_all_data_holder():
-#     def __init__(self, tdir, patient_list):
-#         self.tdir = tdir
-#         self.patient_list = patient_list
-#         self.ecg_data = list()
-#         return
-
-#     def populate_data(self):
-#         for ind, f in enumerate(self.patient_list):
-#             one_ecg_info = ecg_one_data_holder(self.tdir + f)
-#             self.ecg_data.append(one_ecg_info)
-#         return
 
 # class simple_net(torch.nn.module):
 #     def __init__(self):
@@ -34,30 +13,31 @@ import numpy as np
 #         super(simple_net, self).__init__()
 
 class ecg_dataset(Dataset):
-    def __init__(self, tdir, patient_list, din):
+    def __init__(self, tdir, patient_list, din, partitions=1):
         self.tdir = tdir
         self.patient_list = patient_list
-        self.D_in = din
+        self.batch_sig_len = din
+        self.partitions = partitions
+        # self.batch_sig_len = batch_sig_len
         # self.disease
 
     def __len__(self):
-        return len(self.patient_list)
+        return len(self.patient_list)*self.partitions
 
     def __getitem__(self, idx):
-        sig, fields = wfdb.srdsamp(self.tdir + self.patient_list[idx], channels=[7])
-        # For small testing do 6000-9000
-        # sig1 = torch.from_numpy(sig[6000:9000]).float()  #
-        # sig1 = torch.from_numpy(sig[0:self.D_in]).float()
-        # sig_out = torch.from_numpy(sig[0:self.D_in]).float()
-        sig_out = sig[0:self.D_in].T.astype(np.float32)
-        # npoints = sig1.shape[0]
-        # sig_out = sig1.view(1, 3000)
-        # pdb.set_trace()
-        # sig_out = sig_out.view(-1, self.D_in)
-        # sig_torch_out = torch.FloatTensor((1, 1, 3000))
+        act_idx = idx // self.partitions
+        pidx = idx % self.partitions
+        sample = self.get_sample(act_idx, pidx)
+        return sample
+
+    def get_sample(self, idx, pidx):
+        st_pt = int(self.batch_sig_len * pidx)
+        end_pt = st_pt + self.batch_sig_len
+        sig, fields = wfdb.srdsamp(self.tdir + self.patient_list[idx], channels=[7],
+                                   sampfrom=st_pt, sampto=end_pt)
+        sig_out = sig.T.astype(np.float32)
         # if has mycardial infraction give out label 1, else 0
         # temporary setting, may use seq2seq at a later time
-
         # if 'Myocardial Infarction'fields['comments'][4]:
         # out_label = torch.LongTensor(1)
         if 'Myocardial infarction' in fields['comments'][4]:
@@ -84,6 +64,7 @@ class model():
             self.optimizer = torch.optim.Adam(self.nn_model.parameters())
 
     def train_model(self, num_epoch=30):
+        print('TrainSet :', len(self.train_loader))
         for epoch in range(num_epoch):
             running_loss = 0
             for sample in self.train_loader:
@@ -105,6 +86,7 @@ class model():
             print('epoch', epoch, running_loss/num_tr_points)
 
     def test_model(self):
+        print('TestSet :', len(self.test_loader))
         num_corr = 0
         tot_num = 0
         for sample in self.test_loader:
@@ -116,8 +98,9 @@ class model():
             # if (label_pred == sample['label'].cuda()).cpu().numpy():
             # if (label_pred.cpu() == sample['label']).numpy():
 
-            num_corr += sum(label_pred.cpu() == sample['label'])
-            tot_num += label_pred.shape[0]
+            num_corr += (label_pred.cpu() == sample['label']).any()
+            # tot_num += label_pred.shape[0]
+            tot_num += 1
         print(num_corr, tot_num, num_corr/tot_num)
 
 
@@ -141,11 +124,12 @@ if __name__ == '__main__':
     # Use 50% control and 50% positive people for training
     # That should ideally remove any training bias (hopefully)
 
-    D_in = 20000
+    D_in = 10
     batch_size = 4
     num_tr_points = 300
-    ecg_train_data = ecg_dataset(ptb_tdir, patient_list[:num_tr_points], D_in)
-    ecg_test_data = ecg_dataset(ptb_tdir, patient_list[num_tr_points:], D_in)
+    ecg_train_data = ecg_dataset(ptb_tdir, patient_list[:num_tr_points], D_in, partitions=5)
+    ecg_test_data = ecg_dataset(ptb_tdir, patient_list[num_tr_points:], D_in,
+                                partitions=batch_size)
     ecg_train_loader = DataLoader(ecg_train_data, batch_size=batch_size, shuffle=True,
                                   num_workers=2)
     ecg_test_loader = DataLoader(ecg_test_data, batch_size=batch_size, shuffle=False,
@@ -172,4 +156,4 @@ if __name__ == '__main__':
     # loss_fn = torch.nn.NLLLoss()
     simple_model = model(simple_nn, ecg_train_loader, ecg_test_loader, loss_fn)
     simple_model.train_model()
-    simple_model.test_model()
+    # simple_model.test_model()
