@@ -34,9 +34,10 @@ from torch.utils.data import Dataset
 #         self.conv1 = torch.nn.Conv1d(D_in)
 
 class ecg_dataset(Dataset):
-    def __init__(self, tdir, patient_list):
+    def __init__(self, tdir, patient_list, din):
         self.tdir = tdir
         self.patient_list = patient_list
+        self.D_in = din
         # self.disease
 
     def __len__(self):
@@ -45,8 +46,12 @@ class ecg_dataset(Dataset):
     def __getitem__(self, idx):
         sig, fields = wfdb.srdsamp(self.tdir + self.patient_list[idx], channels=[7])
         # For small testing do 6000-9000
-        sig1 = torch.from_numpy(sig[6000:9000]).float()
-        sig_out = sig1.view(1, 3000)
+        # sig1 = torch.from_numpy(sig[6000:9000]).float()  #
+        sig1 = torch.from_numpy(sig[0:self.D_in]).float()
+        # npoints = sig1.shape[0]
+        # sig_out = sig1.view(1, 3000)
+        # pdb.set_trace()
+        sig_out = sig1.view(1, self.D_in)
         # sig_torch_out = torch.FloatTensor((1, 1, 3000))
         # if has mycardial infraction give out label 1, else 0
         # temporary setting, may use seq2seq at a later time
@@ -84,15 +89,16 @@ if __name__ == '__main__':
     # Pytorch code from here
     # Use 50% control and 50% positive people for training
     # That should ideally remove any training bias (hopefully)
-    ecg_train_data = ecg_dataset(ptb_tdir, patient_list[:300])
-    ecg_test_data = ecg_dataset(ptb_tdir, patient_list[300:])
 
-    D_in = 3000
+    D_in = 20000
+    ecg_train_data = ecg_dataset(ptb_tdir, patient_list[:400], D_in)
+    ecg_test_data = ecg_dataset(ptb_tdir, patient_list[400:], D_in)
+    # D_in = 38400
     D_out = 2
     H1 = 300
     # H2 =
 
-    inp_data = Variable(torch.zeros(3000))
+    # inp_data = Variable(torch.zeros(300))
     # out_data = Variable(torch.zeros(2))
 
     simple_model = torch.nn.Sequential(
@@ -129,7 +135,7 @@ if __name__ == '__main__':
             optimizer.step()
             running_loss += loss.data[0]
 
-        print('epoch', epoch, running_loss/3000)
+            print('epoch', epoch, running_loss/D_in)
         # print(time.time() - start)
     end = time.time()
     print(end - start)
