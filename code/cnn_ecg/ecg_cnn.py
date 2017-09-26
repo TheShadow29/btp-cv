@@ -61,7 +61,12 @@ class ecg_dataset(Dataset):
         return sample
 
 
+# class simple_model(torch.nn.Module):
+#     def __init__(self, )
+
+
 if __name__ == '__main__':
+    print('Starting Code')
     start = time.time()
     ptb_tdir = '/home/SharedData/Ark_git_files/btp_extra_files/ecg-analysis/data/'
     patient_list_file = ('/home/SharedData/Ark_git_files/btp_extra_files/'
@@ -79,7 +84,8 @@ if __name__ == '__main__':
     # Pytorch code from here
     # Use 50% control and 50% positive people for training
     # That should ideally remove any training bias (hopefully)
-    ecg_data = ecg_dataset(ptb_tdir, patient_list)
+    ecg_train_data = ecg_dataset(ptb_tdir, patient_list[:300])
+    ecg_test_data = ecg_dataset(ptb_tdir, patient_list[300:])
 
     D_in = 3000
     D_out = 2
@@ -105,7 +111,8 @@ if __name__ == '__main__':
     # optimizer = torch.optim.SGD(simple_model.parameters(), lr=0.001, momentum=0.9)
 
     for epoch in range(30):
-        for sample in ecg_data:
+        running_loss = 0
+        for sample in ecg_train_data:
             instance = Variable(sample['sig'].cuda())
             # instance = Variable(sample['sig'])
             # instance1 = instance.view(-1, 1, 3000)
@@ -116,11 +123,24 @@ if __name__ == '__main__':
             y_pred = simple_model(instance)
             # pdb.set_trace()
             loss = loss_fn(y_pred, label)
-            # print(epoch, loss.data[0])
+            # print(loss.data[0])
 
             loss.backward()
             optimizer.step()
-        print('epoch', epoch)
-        print(time.time() - start)
+            running_loss += loss.data[0]
+
+        print('epoch', epoch, running_loss/3000)
+        # print(time.time() - start)
     end = time.time()
     print(end - start)
+    num_corr = 0
+    tot_num = 0
+    for sample in ecg_test_data:
+        instance = Variable(sample['sig'].cuda())
+        y_pred = simple_model(instance)
+        _, label_pred = torch.max(y_pred.data, 1)
+        # if (label_pred == sample['label'].cuda()).cpu().numpy():
+        if (label_pred.cpu() == sample['label']).numpy():
+            num_corr += 1
+        tot_num += 1
+    print(num_corr, tot_num, num_corr/tot_num)
