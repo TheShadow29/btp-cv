@@ -35,7 +35,7 @@ class ecg_dataset(Dataset):
     def get_sample(self, idx, pidx):
         st_pt = int(self.batch_sig_len * pidx)
         end_pt = st_pt + self.batch_sig_len
-        sig, fields = wfdb.srdsamp(self.tdir + self.patient_list[idx], channels=[7],
+        sig, fields = wfdb.srdsamp(self.tdir + self.patient_list[idx], channels=[7, 8, 9],
                                    sampfrom=st_pt, sampto=end_pt)
         sig_out = sig.T.astype(np.float32)
         # if has mycardial infraction give out label 1, else 0
@@ -66,7 +66,7 @@ class simple_net(torch.nn.Module):
         # For now keep the number of channels=1
         f = 3
         s = 1
-        self.conv1 = torch.nn.Conv1d(1, 6, f, stride=s)
+        self.conv1 = torch.nn.Conv1d(3, 6, f, stride=s)
         new_dim = calc_dim(D_in, f, s) // 2
         self.conv2 = torch.nn.Conv1d(6, 16, f, stride=s)
         new_dim = calc_dim(new_dim, f, s) // 2
@@ -167,25 +167,30 @@ if __name__ == '__main__':
     # Use 50% control and 50% positive people for training
     # That should ideally remove any training bias (hopefully)
 
-    D_in = 3000
+    D_in = 1000
     batch_size = 4
     num_tr_points = 300
     # pdb.set_trace()
     # D_in = 38400
-    D_out = 2
-    H1 = 300
+    # D_out = 2
+    # H1 = 300
     contr_tr_pts = int(num_tr_points*len(control_list)/len(patient_list))
     post_tr_pts = int(num_tr_points*len(positive_list)/len(patient_list))
+    remain_tr_pts = num_tr_points - contr_tr_pts - post_tr_pts
+    remainder_list = list(set(patient_list) ^ set(control_list) ^ set(positive_list))
 
-    train_list = control_list[:contr_tr_pts] + positive_list[:post_tr_pts]
-    # test_list = control_list[contr_tr_pts:] + positive_list[post_tr_pts:]
-    test_list = patient_list
+    train_list = (control_list[:contr_tr_pts] + positive_list[:post_tr_pts] +
+                  remainder_list[:remain_tr_pts])
+    test_list = (control_list[contr_tr_pts:] + positive_list[post_tr_pts:] +
+                 remainder_list[remain_tr_pts:])
+
+    # test_list = patient_list
     # inp_data = Variable(torch.zeros(300))
     # out_data = Variable(torch.zeros(2))
 
     # simple_nn.cuda()
     with torch.cuda.device(0):
-        ecg_train_loader = DataLoader(ecg_dataset(ptb_tdir, train_list, D_in, partitions=5),
+        ecg_train_loader = DataLoader(ecg_dataset(ptb_tdir, train_list, D_in, partitions=27),
                                       batch_size=batch_size, shuffle=True, num_workers=2)
         ecg_test_loader = DataLoader(ecg_dataset(ptb_tdir, test_list, D_in, partitions=batch_size),
                                      batch_size=batch_size, shuffle=False, num_workers=2)
