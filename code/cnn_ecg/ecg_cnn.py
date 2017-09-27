@@ -35,6 +35,7 @@ class ecg_dataset(Dataset):
     def get_sample(self, idx, pidx):
         st_pt = int(self.batch_sig_len * pidx)
         end_pt = st_pt + self.batch_sig_len
+        # sig, fields = wfdb.srdsamp(self.tdir + self.patient_list[idx], channels=[7],
         sig, fields = wfdb.srdsamp(self.tdir + self.patient_list[idx], channels=[7, 8, 9],
                                    sampfrom=st_pt, sampto=end_pt)
         sig_out = sig.T.astype(np.float32)
@@ -70,16 +71,24 @@ class simple_net(torch.nn.Module):
         new_dim = calc_dim(D_in, f, s) // 2
         self.conv2 = torch.nn.Conv1d(6, 16, f, stride=s)
         new_dim = calc_dim(new_dim, f, s) // 2
+        # self.conv3 = torch.nn.Conv1d(16, 32, f, stride=s)
+        # new_dim = calc_dim(new_dim, f, s) // 2
         self.lin1 = torch.nn.Linear(16*new_dim, 30)
         self.lin2 = torch.nn.Linear(30, 2)
 
     def forward(self, inp):
         out = F.relu(self.conv1(inp))
+        out = F.dropout(out)
         out = F.max_pool1d(out, 2)
         out = F.relu(self.conv2(out))
+        out = F.dropout(out)
         out = F.max_pool1d(out, 2)
+        # out = F.relu(self.conv3(out))
+        # out = F.dropout(out)
+        # out = F.max_pool1d(out, 2)
         out = out.view(out.size(0), -1)
         out = F.relu(self.lin1(out))
+        out = F.dropout(out)
         out = self.lin2(out)
         return out
 
@@ -95,7 +104,7 @@ class model():
         if optimizer == 'adam':
             self.optimizer = torch.optim.Adam(self.nn_model.parameters())
 
-    def train_model(self, num_epoch=30):
+    def train_model(self, num_epoch=15):
         print('TrainSet :', len(self.train_loader))
         for epoch in range(num_epoch):
             running_loss = 0
@@ -119,6 +128,7 @@ class model():
                 # print(epoch, running_loss/num_tr_points)
 
             print('epoch', epoch, running_loss/num_tr_points)
+            self.test_model()
 
     def test_model(self):
         print('TestSet :', len(self.test_loader))
