@@ -11,3 +11,4 @@
 *.pyc
 *.png
 *.jpg
+!results/*

@@ -85,6 +85,7 @@ class simple_net(torch.nn.Module):
         # out = F.relu(F.max_pool1d(self.conv1_bn(self.conv1(inp)), 2))
         out = F.max_pool1d(self.conv1_bn(F.relu(self.conv1(inp))), 2)
         # out = F.dropout(out)
+        # out = F.relu(F.max_pool1d(self.conv2_bn(self.conv2(out)), 2))
         out = F.max_pool1d(self.conv2_bn(F.relu(self.conv2(out))), 2)
         # out = F.relu(self.conv2(out))
         # out = F.dropout(out)
@@ -213,7 +214,7 @@ if __name__ == '__main__':
     D_in = 1000
     batch_size = 4
     num_tr_points = 300
-    channels = [7, 8, 9]
+    channels = [7, 8]
     # pdb.set_trace()
     # D_in = 38400
     # D_out = 2
@@ -236,7 +237,7 @@ if __name__ == '__main__':
     with torch.cuda.device(0):
         ecg_train_loader = DataLoader(ecg_dataset(ptb_tdir, train_list, D_in, partitions=27,
                                                   channels=channels),
-                                      batch_size=batch_size, shuffle=False, num_workers=2)
+                                      batch_size=batch_size, shuffle=True, num_workers=2)
         ecg_test_loader = DataLoader(ecg_dataset(ptb_tdir, test_list, D_in, partitions=batch_size,
                                                  channels=channels),
                                      batch_size=batch_size, shuffle=False, num_workers=2)
@@ -267,7 +268,8 @@ if __name__ == '__main__':
         # loss_fn = torch.nn.NLLLoss()
         # simple_model = model(simple_nn, ecg_train_loader, ecg_test_loader, loss_fn)
         simple_model = model(simple_nn, ecg_train_loader, ecg_test_loader, loss_fn)
-        simple_model.train_model(30, plt_fig=True)
+        simple_model.train_model(50, plt_fig=True)
+        # param0 = list(simple_model.nn_model.parameters())
         # simple_model.train_model(1)
         # param1 = list(simple_model.nn_model.parameters())
         # simple_model.train_model(1)
