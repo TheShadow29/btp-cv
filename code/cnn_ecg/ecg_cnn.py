@@ -7,6 +7,8 @@ from torch.autograd import Variable
 from torch.utils.data import Dataset, DataLoader
 import torch.nn.functional as F
 import numpy as np
+import matplotlib.pyplot as plt
+
 
 # class simple_net(torch.nn.module):
 #     def __init__(self):
@@ -15,11 +17,12 @@ import numpy as np
 
 
 class ecg_dataset(Dataset):
-    def __init__(self, tdir, patient_list, din, partitions=1):
+    def __init__(self, tdir, patient_list, din, partitions=1, channels=[7]):
         self.tdir = tdir
         self.patient_list = patient_list
         self.batch_sig_len = din
         self.partitions = partitions
+        self.channels = channels
         # self.batch_sig_len = batch_sig_len
         # self.disease
 
@@ -36,7 +39,7 @@ class ecg_dataset(Dataset):
         st_pt = int(self.batch_sig_len * pidx)
         end_pt = st_pt + self.batch_sig_len
         # sig, fields = wfdb.srdsamp(self.tdir + self.patient_list[idx], channels=[7],
-        sig, fields = wfdb.srdsamp(self.tdir + self.patient_list[idx], channels=[7, 8, 9],
+        sig, fields = wfdb.srdsamp(self.tdir + self.patient_list[idx], channels=self.channels,
                                    sampfrom=st_pt, sampto=end_pt)
         sig_out = sig.T.astype(np.float32)
         # if has mycardial infraction give out label 1, else 0
@@ -58,7 +61,7 @@ def calc_dim(din, f, s):
 
 
 class simple_net(torch.nn.Module):
-    def __init__(self, D_in):
+    def __init__(self, D_in, inp_channels):
         super(simple_net, self).__init__()
         # For conv1d the params are N, C, L
         # N is the batch size
@@ -67,7 +70,7 @@ class simple_net(torch.nn.Module):
         # For now keep the number of channels=1
         f = 3
         s = 1
-        self.conv1 = torch.nn.Conv1d(3, 6, f, stride=s)
+        self.conv1 = torch.nn.Conv1d(inp_channels, 6, f, stride=s)
         new_dim = calc_dim(D_in, f, s) // 2
         self.conv2 = torch.nn.Conv1d(6, 16, f, stride=s)
         new_dim = calc_dim(new_dim, f, s) // 2
@@ -78,17 +81,17 @@ class simple_net(torch.nn.Module):
 
     def forward(self, inp):
         out = F.relu(self.conv1(inp))
-        out = F.dropout(out)
+        # out = F.dropout(out)
         out = F.max_pool1d(out, 2)
         out = F.relu(self.conv2(out))
-        out = F.dropout(out)
+        # out = F.dropout(out)
         out = F.max_pool1d(out, 2)
         # out = F.relu(self.conv3(out))
         # out = F.dropout(out)
         # out = F.max_pool1d(out, 2)
         out = out.view(out.size(0), -1)
         out = F.relu(self.lin1(out))
-        out = F.dropout(out)
+        # out = F.dropout(out)
         out = self.lin2(out)
         return out
 
@@ -103,9 +106,20 @@ class model():
         self.loss_fn = loss_fn
         if optimizer == 'adam':
             self.optimizer = torch.optim.Adam(self.nn_model.parameters())
+        # self.valid_acc_list = list()
 
     def train_model(self, num_epoch=15):
         print('TrainSet :', len(self.train_loader))
+        # self.valid_acc_list = np.arange(15)
+        # plt.axis([0, num_epoch, 0, 1])
+        # plt.ion()
+        epoch_list = 0
+        val_acc = 0
+        fig = plt.figure(1)
+        ax = fig.add_subplot(111)
+        ax.set_xlim(0, num_epoch)
+        ax.set_ylim(0, 1)
+        line, = ax.plot(epoch_list, val_acc, 'ko-')
         for epoch in range(num_epoch):
             running_loss = 0
             for ind, sample in enumerate(self.train_loader):
@@ -123,12 +137,20 @@ class model():
                 loss.backward()
                 self.optimizer.step()
                 running_loss += loss.data[0]
+                # print(self.nn_model.parameters())
                 # if ind % 100 == 0:
                 # if True:
                 # print(epoch, running_loss/num_tr_points)
 
             print('epoch', epoch, running_loss/num_tr_points)
-            self.test_model()
+            # pdb.set_trace()
+            epoch_list = np.concatenate((line.get_xdata(), [epoch]))
+            val_acc = np.concatenate((line.get_ydata(), [self.test_model()]))
+            # plt.plot(epoch, val_acc, '.r-')
+            line.set_data(epoch_list, val_acc)
+            plt.pause(0.01)
+            # self.valid_acc_list.append(val_acc)
+        return fig
 
     def test_model(self):
         print('TestSet :', len(self.test_loader))
@@ -147,7 +169,7 @@ class model():
             # tot_num += label_pred.shape[0]
             tot_num += 1
         print(num_corr, tot_num, num_corr/tot_num)
-        return
+        return num_corr/tot_num
 
 
 if __name__ == '__main__':
@@ -180,6 +202,7 @@ if __name__ == '__main__':
     D_in = 1000
     batch_size = 4
     num_tr_points = 300
+    channels = [7, 8, 9]
     # pdb.set_trace()
     # D_in = 38400
     # D_out = 2
@@ -200,9 +223,11 @@ if __name__ == '__main__':
 
     # simple_nn.cuda()
     with torch.cuda.device(0):
-        ecg_train_loader = DataLoader(ecg_dataset(ptb_tdir, train_list, D_in, partitions=27),
+        ecg_train_loader = DataLoader(ecg_dataset(ptb_tdir, train_list, D_in, partitions=27,
+                                                  channels=channels),
                                       batch_size=batch_size, shuffle=True, num_workers=2)
-        ecg_test_loader = DataLoader(ecg_dataset(ptb_tdir, test_list, D_in, partitions=batch_size),
+        ecg_test_loader = DataLoader(ecg_dataset(ptb_tdir, test_list, D_in, partitions=batch_size,
+                                                 channels=channels),
                                      batch_size=batch_size, shuffle=False, num_workers=2)
         # ecg_train_data = ecg_dataset(ptb_tdir, patient_list[:num_tr_points], D_in, partitions=5)
         # ecg_test_data = ecg_dataset(ptb_tdir, patient_list[num_tr_points:], D_in,
@@ -226,10 +251,12 @@ if __name__ == '__main__':
         #     # torch.nn.LogSoftmax(),
         # )
 
-        simple_nn = simple_net(D_in)
+        simple_nn = simple_net(D_in, len(channels))
         loss_fn = torch.nn.CrossEntropyLoss()
         # loss_fn = torch.nn.NLLLoss()
         # simple_model = model(simple_nn, ecg_train_loader, ecg_test_loader, loss_fn)
         simple_model = model(simple_nn, ecg_train_loader, ecg_test_loader, loss_fn)
-        simple_model.train_model()
-        simple_model.test_model()
+        simple_model.train_model(30)
+        # simple_model.train_model()
+        # simple_model.train_model(8)
+        # simple_model.test_model()
