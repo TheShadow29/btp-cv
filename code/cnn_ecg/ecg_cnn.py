@@ -4,29 +4,40 @@ import time
 # import pickle
 import torch
 from torch.autograd import Variable
+from torch.utils.data import Dataset
+
+# class ecg_one_data_holder():
+#     def __init__(self, tfile):
+#         self.tfile = tfile
+#         # pdb.set_trace()
+#         self.sig, self.fields = wfdb.srdsamp(tfile)
+#         # self.fields = fields['comments'][4]
+#         return
 
 
-class ecg_one_data_holder():
-    def __init__(self, tfile):
-        self.tfile = tfile
-        # pdb.set_trace()
-        self.sig, self.fields = wfdb.srdsamp(tfile)
-        # self.fields = fields['comments'][4]
-        return
+# class ecg_all_data_holder():
+#     def __init__(self, tdir, patient_list):
+#         self.tdir = tdir
+#         self.patient_list = patient_list
+#         self.ecg_data = list()
+#         return
 
+#     def populate_data(self):
+#         for ind, f in enumerate(self.patient_list):
+#             one_ecg_info = ecg_one_data_holder(self.tdir + f)
+#             self.ecg_data.append(one_ecg_info)
+#         return
 
-class ecg_all_data_holder():
+class ecg_dataset(Dataset):
     def __init__(self, tdir, patient_list):
         self.tdir = tdir
         self.patient_list = patient_list
-        self.ecg_data = list()
-        return
 
-    def populate_data(self):
-        for ind, f in enumerate(self.patient_list):
-            one_ecg_info = ecg_one_data_holder(self.tdir + f)
-            self.ecg_data.append(one_ecg_info)
-        return
+    def __len__(self):
+        return len(self.patient_list)
+
+    def __getitem__(self, idx):
+        sig, fields = wfdb.srdsamp(self.tdir + self.patient_list[idx])
 
 
 if __name__ == '__main__':
