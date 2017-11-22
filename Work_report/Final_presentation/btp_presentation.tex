@@ -69,6 +69,20 @@
 \end{frame}
 
 \begin{frame}
+  \frametitle{Motivation}
+  We wish to classify the disease of person based on raw ECG data.
+  \begin{itemize}
+  \item The main motivation comes from being able to capture real time ECG data and use that monitor the occurence of any heart related problem in the patient.
+  \item This can also serve as a second opinion to the doctor.
+  \end{itemize}
+  Problems with Existing Methods:
+  \begin{itemize}
+  \item Signal Processing Techniques often may be computationally expensive and cannot work in real time.
+  \item Need extremely high accuracy perhaps so as to not to trigger false alarms.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
   \frametitle{Heart diseases considered}
   The following heart diseases are considered:
   \begin{itemize}
@@ -78,12 +92,23 @@
   \item Dysrhythmia
   \item Myocarditis
   \end{itemize}
+  Currently, we are bothered only with Myocardial Infarction which is major part of the PTB dataset (described next).
+\end{frame}
+
+\begin{frame}
+  \frametitle{Methodology}
+  The following methodology is followed:
+  \begin{itemize}
+  \item First we analyze using simple Convolutional Neural Networks [CNN] for our problem. CNN are a good starting point as they are well known for their spatial invariance which in 1D can be considered as the temporal invariance which is something required in a continuous ECG data.
+  \item Next we hope to understand what things CNN is able to learn well and what it is not. In particular we want to identify some Ad-Hocs which lead to better convergence of the Neural Network.
+  \item Then we want to know the bottleneck of the learning and what we can do to improve it, which introduces us to Graph CNN.
+  \end{itemize}
 \end{frame}
 
 \section{CNN on ECG}
 \begin{frame}
   \frametitle{Dataset}
-  The dataset used for experiments is the PTB databas from Physionet repository.
+  The dataset used for experiments is the PTB database from Physionet repository.
   \begin{itemize}
   \item Consists of 15 channels (12 for conventional ecgs, 3 frank leads).
   \item Resolution is 16bit and sampling rate is 1kHz.
@@ -99,11 +124,29 @@
   \item Architecture adopted is 1D version of the LeNet architecture. The network is :
     $$conv -> max pool -> conv -> max pool -> fc -> fc -> softmax$$
   \item Base implementation results in accuracy around 80-87\%.
-  \item On top of each convolution layer, we add a batch normalization.
-  \item This gives accuracy boost upto 93\%-94\%
-  \item State of the Art to the best of knowledge is 96\%
+  \item Some Ad-Hocs are required to get better results.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{CNN on ECG (contd.)}
+  \begin{itemize}
+  \item Since data is not so much, each ECG data is pre-processed by taking the samples upto fixed period only (eg. 38000 points are broken into 27 partitions).
+  \item On top of each convolution layer, we add a batch normalization. This gives accuracy boost upto 93\%-94\%
+  \item State of the Art to the best of my knowledge on the PTB dataset is 96\%.
   \item It is also noted that using more number of channels doesn't lead to increase in the accuracy.
   \end{itemize}
+  We would like to do better.
+\end{frame}
+
+\begin{frame}
+  \frametitle{Results on using CNNs on ECG}
+  \begin{figure}[H]
+    \centering
+    \includegraphics[scale=0.5]{images/bn_before_relu_acc_94_3}
+    \caption{Accuracy of validation set vs Number of epochs}
+    \label{fig:1}
+  \end{figure}
 \end{frame}
 
 \section{Graph CNN}
@@ -121,10 +164,60 @@
   Two main approaches to Graph CNN
   \begin{itemize}
   \item Spectral Approach [ChebNet, NIPS2016]
+    \begin{itemize}
+    \item Basic Idea : Use graph laplacian and do convolution operation in the spectral domain.
+    \end{itemize}
   \item Spatial Approach [MoNet, CVPR2017]
+    \begin{itemize}
+    \item Basic Idea : Use a local manifold and learn in polar coordinates.
+    \end{itemize}
   \end{itemize}
-  A limitation of Spectral Approach is that the underlying graph should be fixed, which is precisely the case for ECG.
+  A limitation of Spectral Approach is that the underlying graph should be fixed, which is fortunately the case for ECG.
 \end{frame}
+
+\begin{frame}
+  \frametitle{ChebNet (Optional)}
+  Main Ideas in ChebNet:
+  \begin{itemize}
+  \item Uses graph laplacian and computes convolution in the fourier domain (using graph fourier transform).
+  \item Restricts convolution to a local domain (k-hops) even when using the spectral approach.
+  \item Efficient computation of the graph convoluion using the Chebyshev Polynomials.
+  \item Efficient coarsening and pooling operation on graphs.
+  \end{itemize}
+  Main Limitation:
+  \begin{itemize}
+  \item The graph should be fixed. Cannot learn on multiple graphs.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{ChebNet on ECG data}
+  This is still Work In Progress. Code is ready and small bug fixes are to be made.
+  % \begin{itemize}
+  % \item Main limitation is that the code is
+  % \end{itemize}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Main Limitations of the Approach}
+  \begin{itemize}
+  \item Neural Networks are in general data hungry. We would need large amounts of data. Unfortunately, annotated Medical data is not very easily available.
+  \item Data is not directly interpretable and needs the eye of a professional. Makes debugging difficult.
+  \item In usual applications of graph convolution networks, the number of nodes can be quite high which allows for efficiently using pooling and convolutions. For a small network like ECG with only 12 nodes it remains to be seen how much improvement the Graph CNN will give over vanilla CNN.
+  \end{itemize}
+\end{frame}
+
+\section{Future Work}
+\begin{frame}
+  \frametitle{Future Work}
+  \begin{itemize}
+  \item Get the results on ECG data using ChebNet.
+  \item Extend the results to larger datasets and even Holter ECG data.
+  \item Extend the work on ECG data to EEG data as the problem space is extremely similar except for the added number of channels.
+  \end{itemize}
+\end{frame}
+
 % \subsection{How to extend convolution to graphs?}
 % \begin{frame}
 %   \frametitle{Extending Convolutional to Graphs}
