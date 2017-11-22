@@ -1,0 +1,195 @@
+\documentclass{beamer}
+\usetheme{Boadilla}
+% \usepackage[a4paper, tmargin=1in, bmargin=1in]{geometry}
+\usepackage[utf8]{inputenc}
+\usepackage{graphicx}
+\usepackage{parskip}
+\usepackage{pdflscape}
+\usepackage{listings}
+\usepackage{hyperref}
+\usepackage{float}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{amssymb}
+\usepackage{multirow}
+\mode<presentation>{
+    \AtBeginSection[]
+    {
+    \begin{frame}[allowframebreaks]{Outline}
+    \tableofcontents[currentsection]
+    \end{frame}
+    }
+}
+% \AtBeginSubsection[
+%   {\frame<beamer>{\frametitle{Outline}
+%     \tableofcontents[currentsection,currentsubsection]}}%
+% ]%
+% {
+%   \frame<beamer>{
+%     \frametitle{Outline}
+%     \tableofcontents[currentsection,currentsubsection]}
+% }
+
+\title{Deformable Convolution Networks}
+% \subtitle{Using Beamer}
+\author{Arka Sadhu}
+\institute{IIT Bombay}
+\date{\today}
+
+
+\begin{document}
+% document goes here
+
+
+\begin{frame}
+\titlepage
+\end{frame}
+
+\begin{frame}
+\frametitle{Outline}
+\tableofcontents
+\end{frame}
+
+\section{Deformable Convolutional Networks : Introduction}
+
+\begin{frame}
+  \frametitle{Limitations of Convolutional Networks}
+
+  \begin{itemize}
+  \item CNNs cannot model large unknown transformations because of fixed geometric structures of CNN modules.
+  \item Convolution samples features at fixed locations.
+  \item Region of Interest (RoI) use fixed spatial bins.
+  \item Example : Receptive fields of a convolution layer is the same at all places. This is not desirable at higher layers which encode semantic features rather than spatial features.
+  \item Instead of bounding boxes we would rather want exact boundaries.
+  \item Hence we move on to Deformable Convolutional Networks.
+  \end{itemize}
+\end{frame}
+
+% \section{Two Modules Introduced}
+\begin{frame}
+  \frametitle{Two New Modules}
+  \begin{itemize}
+  \item Deformable Convolutions : basic idea is to add 2d offset to enable a deformed sampling grid. These offset are also learnt simultaneously along with the convolutional layers.
+  \item Deformable RoI : similar idea. Adds offset to each bin position in the regular bin partitioning.
+  \item Combined to get Deformable Convolutional Networks.
+  \item Authors claim that this can directly replace existing CNN architecture.
+  \end{itemize}
+\end{frame}
+
+\section{Deformable Convolutions} %
+% \subsection{Basics of Spectral Approach}
+\begin{frame}
+  \frametitle{Simple Convolution to Deformable Convolutions}
+  \begin{itemize}
+  % \item While the feature maps and convolutions in a CNN are in 3D, both the deformable convolution and deformable roi are in 2D.
+  \item Let $R$ denote the set of points which are to be considered for the convolution. In usual convolution of size 3 this $R$ will have $(-1,-1)$ to $(1, 1)$.
+  \item Let input feature map be denoted by x and output feature map denoted by y, and w be in the weights of the convolution filter. For a particular point $p_0$, $$y(p_0) = \sum_{p_n \in R}w(p_n) x(p_0 + p_n)$$.
+  \item For the case of deformable convolutions the new equation will be
+    $$y(p_0) = \sum_{p_n \in R}w(p_n) x(p_0 + p_n + \Delta p_n)$$.
+  \end{itemize}
+\end{frame}
+
+% \subsection{Problem Formulation}
+\begin{frame}
+  \frametitle{Simple Convolution to Deformable Convolutions (Contd.)}
+  \begin{itemize}
+  \item Note: $\Delta p_n$ can be fractional. To get the value of $x(p_0 + p_n + \Delta p_n)$ bilinear interpolation is used.
+  \item Let G(., .) be the bilinear interpolation kernet. Then for any point $p$ (could be fractional as well) $$x(p) = \sum_{q}G(p,q) x(q)$$
+  \item Authors claim that this is easy to compute since G will be non-zero at very small number of qs.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Deformable Convolutions Example}
+  \begin{figure}[H]
+    \centering
+    \includegraphics[scale=0.5]{images/def_conv_fig2}
+    \caption{Deformable Convolution example}
+    \label{fig:dfc1}
+  \end{figure}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Deformable Convolutions Example (contd.)}
+  \begin{itemize}
+  \item As can be seen in \ref{fig:dfc1} offsets are computed by applying a convolutional layer over the same input feature map.
+  \item During training both offsets and convolution kernel are learnt simultaneously.
+  \item The backprop for offsets is given as :
+    $$\frac{\partial y(p_0)}{\partial \Delta p_n} = \sum_{p_n \in R}w(p_n) \sum_{q}\frac{\partial G(q, p_0 + p_n + \Delta p_n)}{\partial \Delta p_n} x(q)$$
+  \item The partial derivative of the bilinear interpolation kernel can be calculated from its 1-D version.
+  \end{itemize}
+\end{frame}
+
+% \subsection{Graph Laplacian}
+\section{Deformable RoI and Deformable RoI pooling}
+\begin{frame}
+  \frametitle{What is RoI and RoI pooling}
+  \begin{itemize}
+  \item RoI is region of interest. The best example would be a bounding box for an object in an image.
+  \item We would like to work even when this bounding box is not be constrained to rectangular.
+  \item RoI pooling divides the RoI into k by k bins and outputs a feature map y of size k-by-k. This could be max or average pooling or any other kind of pooling. For say (i, j)-th bin with $n_{ij}$ pixels we can have:
+    $$y(i, j) = \sum_{p \in bin(i,j)}x(p_0 + p)/n_{ij}$$
+  % \item
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{RoI pooling to Deformable RoI pooling}
+  \begin{itemize}
+  \item For the deformable RoI pooling case we will instead have: $$y(i, j) = \sum_{p \in bin(i,j)}x(p_0 + p + \Delta p_{ij)})/n_{ij}$$
+  \item Again $\Delta p_{ij}$ could be fractional and we would use bilinear interpolation.
+  \item The paper introduces the idea of normalized offsets $\hat{\Delta{p_{ij}}}$ and actual offset is calculated using $\Delta p_{ij} = \gamma *  \hat{\Delta{p_{ij}}} \cdot(w, h)$. This is intuitively required to account for the different k used in the RoI pooling. Emperically $\gamma$ is set to 0.1
+  \item Extra : Position Sensitive RoI.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Deformable RoI Pooling Example}
+  \begin{figure}[H]
+    \centering
+    \includegraphics[scale=0.5]{images/def_roi_pool_fig3}
+    \caption{Deformable RoI pooling Example}
+    \label{fig:dfroif3}
+  \end{figure}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Deformable RoI Pooling Example (Contd.)}
+  \begin{itemize}
+  \item RoI pooling generates the pooled feature maps which is passed onto a fc layer which generates the normalized offsets which are further converted to the actual offsets.
+  \item Similar backprop works.
+  \end{itemize}
+\end{frame}
+
+\section{Deformable Convolutional Networks}
+\begin{frame}
+  \frametitle{Deformable Convolutional Networks}
+  \begin{itemize}
+  \item Since both deformable convolution and the deformale roi pooling have same input output structure as that of their counterparts in vanilla CNN, they can readily replace them without affecting the overall network.
+  \item To integrate Deformable conv nets to state of the art CNN architectures two stages are involved.
+  \item First, the cnn generates feature maps over the whole image.
+  \item Second, a task specific network uses the generated feature maps for a specific target.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Deformable Convolutional Network Example Image}
+  \begin{figure}[H]
+    \centering
+    \includegraphics[scale=0.5]{images/def_conv_net_fig5}
+    \caption{Deformable Conv Net Exampe}
+    \label{fig:dfcnf5}
+  \end{figure}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Deformable Convolution Network Motivation}
+  \begin{itemize}
+  \item When the deformable convolution layers are stacked on top of each other, the effect of composited deformation is profound.
+  \item The receptive field and the sampling locations are adaptively adjusted according to the objects scale and shape in deformation. The localization is aspect is enhanced in non-rigid objects specially.
+  \item The paper suggests that using deformable networks gives performance boost in many cases like semantic segmentation, object detection and in general gives baseline improvements to Faster-RCNN as well.
+  \end{itemize}
+\end{frame}
+
+
+\end{document}
