@@ -32,7 +32,7 @@
 
 \title{ECG Disease Classification Using Graph Convolution Networks}
 % \subtitle{Using Beamer}
-\author{Arka Sadhu}
+\author[Arka Sadhu]{Arka Sadhu \\ Supervised by Prof. Subhasis Chaudhuri}
 \institute{IIT Bombay}
 \date{\today}
 
@@ -133,7 +133,7 @@
   \begin{itemize}
   \item Since data is not so much, each ECG data is pre-processed by taking the samples upto fixed period only (eg. 38000 points are broken into 27 partitions).
   \item On top of each convolution layer, we add a batch normalization. This gives accuracy boost upto 93\%-94\%
-  \item State of the Art to the best of my knowledge on the PTB dataset is 96\%.
+  \item State of the Art to the best of my knowledge on the PTB dataset is 96\% [1]
   \item It is also noted that using more number of channels doesn't lead to increase in the accuracy.
   \end{itemize}
   We would like to do better.
@@ -163,11 +163,11 @@
   \frametitle{Graph CNN (Optional)}
   Two main approaches to Graph CNN
   \begin{itemize}
-  \item Spectral Approach [ChebNet, NIPS2016]
+  \item Spectral Approach [ChebNet, NIPS2016][2]
     \begin{itemize}
     \item Basic Idea : Use graph laplacian and do convolution operation in the spectral domain.
     \end{itemize}
-  \item Spatial Approach [MoNet, CVPR2017]
+  \item Spatial Approach [MoNet, CVPR2017][3]
     \begin{itemize}
     \item Basic Idea : Use a local manifold and learn in polar coordinates.
     \end{itemize}
@@ -218,6 +218,15 @@
   \end{itemize}
 \end{frame}
 
+\begin{frame}
+  \frametitle{References}
+  \begin{enumerate}
+  \item L. N. Sharma, R. K. Tripathy and S. Dandapat, "Multiscale Energy and Eigenspace Approach to Detection and Localization of Myocardial Infarction," IEEE Trans. Biomed. Eng. , vol. 62, no. 7, pp. 1827-1837, Jul. 2015
+  \item M. Defferrard, X. Bresson, P. Vandergheynst, Convolutional Neural Networks on Graphs with Fast Localized Spectral Filtering, NIPS 2016 (ChebNet framework)
+  \item F. Monti*, D. Boscaini*, J. Masci, E. Rodolà, J. Svoboda, M. M. Bronstein, Geometric deep learning on graphs and manifolds using mixture model CNNs, CVPR 2017 (MoNet framework)
+  \end{enumerate}
+
+\end{frame}
 % \subsection{How to extend convolution to graphs?}
 % \begin{frame}
 %   \frametitle{Extending Convolutional to Graphs}

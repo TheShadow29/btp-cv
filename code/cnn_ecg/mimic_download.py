@@ -18,8 +18,8 @@ with open('/home/SharedData/Ark_git_files/mimic-code/mimic3_matcheddb/RECORDS-nu
 # Getting top 2000 person data
 n = 1000
 batch = 4
-record_wf_to_dl = record_waveforms[:n]
-record_n_to_dl = record_numerics[:n]
+record_wf_to_dl = record_waveforms[n:n+n]
+record_n_to_dl = record_numerics[n:n+n]
 db = 'mimic3wdb/matched'
 dl_dir = '/home/SharedData/Ark_git_files/mimic-code/mimic3_matcheddb/'
 numeric_problems = list()
