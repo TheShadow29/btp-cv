@@ -1,6 +1,8 @@
 import numpy as np
 import scipy.sparse
 import sklearn.metrics
+import torch
+import pdb
 
 
 def laplacian(W, normalized=True):
@@ -23,7 +25,6 @@ def laplacian(W, normalized=True):
     assert np.abs(L - L.T).mean() < 1e-9
     assert type(L) is scipy.sparse.csr.csr_matrix
     return L
-
 
 
 def rescale_L(L, lmax=2):
@@ -312,4 +313,28 @@ def perm_data(x, indices):
         # Or -infty ?
         else:
             xnew[:,i] = np.zeros(N)
+    return xnew
+
+
+def perm_data_torch(x, indices):
+    """
+    Permute data matrix, i.e. exchange node ids,
+    so that binary unions form the clustering tree.
+    """
+    if indices is None:
+        return x
+    # pdb.set_trace()
+    N, M = x.shape
+    Mnew = len(indices)
+    assert Mnew >= M
+    xnew = torch.FloatTensor(N, Mnew).zero_()
+    for i, j in enumerate(indices):
+        # Existing vertex, i.e. real data.
+        if j < M:
+            xnew[:, i] = x[:, j]
+        # Fake vertex because of singeltons.
+        # They will stay 0 so that max pooling chooses the singelton.
+        # Or -infty ?
+        else:
+            xnew[:, i] = torch.zeros(N)
     return xnew
