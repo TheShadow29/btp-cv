@@ -1,5 +1,6 @@
 import torch
 import pdb
+import pickle
 from PIL import Image
 from torch.autograd import Variable
 import torch.nn.functional as F
@@ -9,6 +10,7 @@ import collections
 import time
 import numpy as np
 from torchvision import datasets, transforms
+from torch.utils.data import Dataset, DataLoader
 from lib.grid_graph import grid_graph
 from lib.coarsening import coarsen
 from lib.coarsening import lmax_L
@@ -74,6 +76,28 @@ class mnist_perm(datasets.MNIST):
         img1 = img.view(-1, 784)
         img2 = perm_data_torch(img1, self.perm_idx)
         return img2, target
+
+
+class mnist_perm_saved(Dataset):
+    def __init__(self, tdir, ttype, transform):
+        self.tdir = tdir
+        self.ttype = ttype
+        self.transform = transform
+        with open(self.tdir + ttype + '_perm.pkl', 'rb') as f:
+            self.img, self.lab = pickle.load(f)
+            # pdb.set_trace()
+
+    def __len__(self, ):
+        return len(self.lab)
+
+    def __getitem__(self, index):
+        img = self.img[index].unsqueeze(0)
+        # pdb.set_trace()
+        # if self.transform is not None:
+        #     img = self.transform(img)
+
+        return img, self.lab[index]
+        # return self.img[index], self.lab[index]
 
 
 class mnist_model(model):
@@ -169,18 +193,25 @@ if __name__ == '__main__':
     # print(val_data.shape)
     # print(test_data.shape)
 
+    # train_loader = torch.utils.data.DataLoader(
+    #     mnist_perm(perm, '../data', train=True, download=True,
+    #                transform=transforms.Compose([
+    #                    transforms.ToTensor(),
+    #                    transforms.Normalize((0.1307,), (0.3081,))
+    #                ])),
+    #     batch_size=batch_size, shuffle=True, **kwargs)
+    # test_loader = torch.utils.data.DataLoader(
+    #     mnist_perm(perm, '../data', train=False, transform=transforms.Compose([
+    #         transforms.ToTensor(),
+    #         transforms.Normalize((0.1307,), (0.3081,))
+    #     ])),
+    #     batch_size=test_batch_size, shuffle=False, **kwargs)
+
     train_loader = torch.utils.data.DataLoader(
-        mnist_perm(perm, '../data', train=True, download=True,
-                   transform=transforms.Compose([
-                       transforms.ToTensor(),
-                       transforms.Normalize((0.1307,), (0.3081,))
-                   ])),
+        mnist_perm_saved('./mnist/', 'train'),
         batch_size=batch_size, shuffle=True, **kwargs)
     test_loader = torch.utils.data.DataLoader(
-        mnist_perm(perm, '../data', train=False, transform=transforms.Compose([
-            transforms.ToTensor(),
-            transforms.Normalize((0.1307,), (0.3081,))
-        ])),
+        mnist_perm_saved('./mnist/', 'test'),
         batch_size=test_batch_size, shuffle=False, **kwargs)
 
     D = 912
