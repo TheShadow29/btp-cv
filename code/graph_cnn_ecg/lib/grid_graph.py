@@ -2,11 +2,13 @@ import sklearn
 import sklearn.metrics
 import scipy.sparse, scipy.sparse.linalg  # scipy.spatial.distance
 import numpy as np
+import pdb
 
 
 def grid_graph(grid_side,number_edges,metric):
     """Generate graph of a grid"""
     z = grid(grid_side)
+    pdb.set_trace()
     dist, idx = distance_sklearn_metrics(z, k=number_edges, metric=metric)
     A = adjacency(dist, idx)
     print("nb edges: ",A.nnz)
@@ -64,3 +66,15 @@ def adjacency(dist, idx):
     assert np.abs(W - W.T).mean() < 1e-10
     assert type(W) is scipy.sparse.csr.csr_matrix
     return W
+
+
+def radial_graph(number_edges=3, metric='euclidean', dtype=np.float32):
+    z = np.empty((6, 2))
+    for ind, th in enumerate(np.arange(0, np.pi/1.9, np.pi/10)):
+        z[ind, 0] = np.cos(th)
+        z[ind, 1] = np.sin(th)
+    # return z
+    dist, idx = distance_sklearn_metrics(z, k=number_edges, metric=metric)
+    A = adjacency(dist, idx)
+    print("nb edges: ", A.nnz)
+    return A
