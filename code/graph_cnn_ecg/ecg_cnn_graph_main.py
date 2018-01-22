@@ -91,10 +91,10 @@ if __name__ == '__main__':
     with torch.cuda.device(0):
         ecg_train_loader = DataLoader(ecg_dataset(ptb_tdir, train_list, D_in, perm, partitions=27,
                                                   channels=channels),
-                                      batch_size=batch_size, shuffle=True, num_workers=1)
+                                      batch_size=batch_size, shuffle=True, num_workers=0)
         ecg_test_loader = DataLoader(ecg_dataset(ptb_tdir, test_list, D_in, perm,
                                                  partitions=batch_size, channels=channels),
-                                     batch_size=batch_size, shuffle=False, num_workers=1)
+                                     batch_size=batch_size, shuffle=False, num_workers=0)
 
         graph_nn = Graph_ConvNet_cl_fc(net_parameters)
         optimizer = graph_nn.update(lr)

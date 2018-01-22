@@ -3,7 +3,8 @@ import pdb
 import numpy as np
 # import torch
 from torch.utils.data import Dataset
-from lib.coarsening import perm_data_torch
+# from lib.coarsening import perm_data_torch
+from lib.coarsening import perm_data
 
 
 class ecg_dataset(Dataset):
@@ -32,8 +33,10 @@ class ecg_dataset(Dataset):
         # sig, fields = wfdb.srdsamp(self.tdir + self.patient_list[idx], channels=[7],
         sig, fields = wfdb.srdsamp(self.tdir + self.patient_list[idx], channels=self.channels,
                                    sampfrom=st_pt, sampto=end_pt)
+        pdb.set_trace()         #
         sig_out = sig.T.astype(np.float32)
-
+        sig_out = perm_data(sig_out, self.perm_ind)
+        # pdb.set_trace()
         # if has mycardial infraction give out label 1, else 0
         # temporary setting, may use seq2seq at a later time
         # if 'Myocardial Infarction'fields['comments'][4]:

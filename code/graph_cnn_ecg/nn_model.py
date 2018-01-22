@@ -17,6 +17,7 @@ class my_sparse_mm(torch.autograd.Function):
 
     def forward(self, W, x):  # W is SPARSE
         self.save_for_backward(W, x)
+        # pdb.set_trace()
         y = torch.mm(W, x)
         return y
 
