@@ -30,7 +30,7 @@ if __name__ == '__main__':
     with open(positive_list_file, 'r') as f:
         positive_list = f.read().splitlines()
 
-    D_in = 1000
+    D_in = 750
     batch_size = 4
     num_tr_points = 300
     channels = [7, 8]
@@ -46,14 +46,18 @@ if __name__ == '__main__':
                  remainder_list[remain_tr_pts:])
 
     # D = 912
-    D = 8
+    D = 6144
     CL1_F = 32
-    CL1_K = 25
+    CL1_K = 49
     CL2_F = 64
-    CL2_K = 25
-    FC1_F = 512
+    CL2_K = 49
+    CL3_F = 128
+    CL3_K = 49
+    CL4_F = 256
+    CL4_K = 49
+    FC1_F = 32
     FC2_F = 2
-    net_parameters = [D, CL1_F, CL1_K, FC1_F, FC2_F]
+    net_parameters = [D, CL1_F, CL1_K, CL2_F, CL2_K, CL3_F, CL3_K, CL4_F, CL4_K, FC1_F, FC2_F]
 
     # net = Graph_ConvNet_LeNet5(net_parameters)
     # if torch.cuda.is_available():
@@ -67,7 +71,7 @@ if __name__ == '__main__':
     l2_regularization = 5e-4
     batch_size = 100
     num_epochs = 20
-    channels = [7]
+    channels = [6, 7, 8, 9, 10, 11]
     # Optimizer
     global_lr = learning_rate
     global_step = 0
@@ -76,7 +80,7 @@ if __name__ == '__main__':
     lr = learning_rate
 
     A = radial_graph()
-    coarsening_levels = 2
+    coarsening_levels = 10
     L, perm = coarsen(A, coarsening_levels)
 
     lmax = []

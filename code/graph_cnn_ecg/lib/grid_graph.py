@@ -1,6 +1,8 @@
 import sklearn
 import sklearn.metrics
+import networkx as nx
 import scipy.sparse, scipy.sparse.linalg  # scipy.spatial.distance
+import scipy.linalg
 import numpy as np
 import pdb
 
@@ -68,13 +70,32 @@ def adjacency(dist, idx):
     return W
 
 
-def radial_graph(number_edges=3, metric='euclidean', dtype=np.float32):
+def radial_graph(t_units=750, number_edges=2, metric='euclidean'):
     z = np.empty((6, 2))
     for ind, th in enumerate(np.arange(0, np.pi/1.9, np.pi/10)):
         z[ind, 0] = np.cos(th)
         z[ind, 1] = np.sin(th)
     # return z
+    # z[0, 1] =
     dist, idx = distance_sklearn_metrics(z, k=number_edges, metric=metric)
     A = adjacency(dist, idx)
+    G = nx.from_scipy_sparse_matrix(A)
+    # Vt is the dft matrix
+    V_t = np.zeros((t_units, t_units), dtype=np.complex_)
+    for i1 in range(t_units):
+        for i2 in range(t_units):
+            V_t[i1, i2] = np.exp(-2*np.pi * 1j * (i1 - 1)*(i2 - 1)/t_units)
+    V_t = V_t / np.sqrt(t_units)
+    U_t = V_t.conjugate().transpose()
+    lam_t = np.zeros(t_units, dtype=np.complex_)
+    for i1 in range(t_units):
+        lam_t[i1] = np.exp(2*np.pi * 1j * (i1 - 1)*(t_units - 1)/t_units)
+    lamb_t = np.diag(lam_t)
+    T_adj = np.dot(np.dot(V_t, lamb_t), U_t)
+    T_adj = T_adj.astype(np.float_)
+    # pdb.set_trace()
+    T_graph = nx.from_numpy_matrix(T_adj)
+    J_graph = nx.cartesian_product(G, T_graph)
+    A = nx.adjacency_matrix(J_graph)
     print("nb edges: ", A.nnz)
     return A

@@ -4,5 +4,5 @@ from lib.grid_graph import radial_graph
 
 
 A = radial_graph()
-coarsening_levels = 2
+coarsening_levels = 10
 L, perm = coarsen(A, coarsening_levels)

@@ -38,7 +38,8 @@ class Graph_ConvNet_LeNet5(nn.Module):
 
         # parameters
         D, CL1_F, CL1_K, CL2_F, CL2_K, FC1_F, FC2_F = net_parameters
-        FC1Fin = CL2_F*(D//16)
+        p = 4
+        FC1Fin = CL2_F*(D//p*p)
 
         # graph CL1
         self.cl1 = nn.Linear(CL1_K, CL1_F)
@@ -162,8 +163,8 @@ class Graph_ConvNet_LeNet5(nn.Module):
 
         # graph CL1
         # pdb.set_trace()
-        x = x.squeeze()
-        x = x.unsqueeze(2)  # B x V x Fin=1
+        # x = x.squeeze()
+        # x = x.unsqueeze(2)  # B x V x Fin=1
         x = self.graph_conv_cheby(x, self.cl1, L[0], lmax[0], self.CL1_F, self.CL1_K)
         x = F.relu(x)
         x = self.graph_max_pool(x, 4)
@@ -223,8 +224,11 @@ class Graph_ConvNet_cl_fc(nn.Module):
         super(Graph_ConvNet_cl_fc, self).__init__()
 
         # parameters
-        D, CL1_F, CL1_K, FC1_F, FC2_F = net_parameters
-        FC1Fin = CL1_F*(D//4)
+        # D, CL1_F, CL1_K, FC1_F, FC2_F = net_parameters
+        D, CL1_F, CL1_K, CL2_F, CL2_K, CL3_F, CL3_K, CL4_F, CL4_K, FC1_F, FC2_F = net_parameters
+        self.p = 2
+        # 4 conv layers
+        FC1Fin = CL1_F*(D//self.p ** 8)
 
         # graph CL1
         self.cl1 = nn.Linear(CL1_K, CL1_F)
@@ -237,14 +241,34 @@ class Graph_ConvNet_cl_fc(nn.Module):
         self.CL1_F = CL1_F
 
         # # graph CL2
-        # self.cl2 = nn.Linear(CL2_K*CL1_F, CL2_F)
-        # Fin = CL2_K * CL1_F
-        # Fout = CL2_F
+        self.cl2 = nn.Linear(CL2_K*CL1_F, CL2_F)
+        Fin = CL2_K * CL1_F
+        Fout = CL2_F
+        scale = np.sqrt(2.0 / (Fin+Fout))
+        self.cl2.weight.data.uniform_(-scale, scale)
+        self.cl2.bias.data.fill_(0.0)
+        self.CL2_K = CL2_K
+        self.CL2_F = CL2_F
+
+        # # graph CL3
+        self.cl3 = nn.Linear(CL3_K*CL2_F, CL3_F)
+        Fin = CL3_K * CL2_F
+        Fout = CL3_F
+        scale = np.sqrt(2.0 / (Fin+Fout))
+        self.cl3.weight.data.uniform_(-scale, scale)
+        self.cl3.bias.data.fill_(0.0)
+        self.CL3_K = CL3_K
+        self.CL3_F = CL3_F
+
+        # # # graph CL4
+        # self.cl4 = nn.Linear(CL4_K*CL3_F, CL4_F)
+        # Fin = CL4_K * CL3_F
+        # Fout = CL4_F
         # scale = np.sqrt(2.0 / (Fin+Fout))
-        # self.cl2.weight.data.uniform_(-scale, scale)
-        # self.cl2.bias.data.fill_(0.0)
-        # self.CL2_K = CL2_K
-        # self.CL2_F = CL2_F
+        # self.cl4.weight.data.uniform_(-scale, scale)
+        # self.cl4.bias.data.fill_(0.0)
+        # self.CL4_K = CL4_K
+        # self.CL4_F = CL4_F
 
         # FC1
         self.fc1 = nn.Linear(FC1Fin, FC1_F)
@@ -265,7 +289,9 @@ class Graph_ConvNet_cl_fc(nn.Module):
 
         # nb of parameters
         nb_param = CL1_K * CL1_F + CL1_F          # CL1
-        # nb_param += CL2_K * CL1_F * CL2_F + CL2_F  # CL2
+        nb_param += CL2_K * CL1_F * CL2_F + CL2_F  # CL2
+        nb_param += CL3_K * CL2_F * CL3_F + CL3_F  # CL3
+        # nb_param += CL4_K * CL3_F * CL4_F + CL4_F  # CL3
         nb_param += FC1Fin * FC1_F + FC1_F        # FC1
         nb_param += FC1_F * FC2_F + FC2_F         # FC2
         print('nb of parameters=', nb_param, '\n')
@@ -349,15 +375,15 @@ class Graph_ConvNet_cl_fc(nn.Module):
         # graph CL1
         # pdb.set_trace()
         x = x.squeeze()
-        x = x.unsqueeze(2)  # B x V x Fin=1
+        # x = x.unsqueeze(2)  # B x V x Fin=1
         x = self.graph_conv_cheby(x, self.cl1, L[0], lmax[0], self.CL1_F, self.CL1_K)
         x = F.relu(x)
-        x = self.graph_max_pool(x, 4)
+        x = self.graph_max_pool(x, self.p)
 
         # graph CL2
         x = self.graph_conv_cheby(x, self.cl2, L[2], lmax[2], self.CL2_F, self.CL2_K)
         x = F.relu(x)
-        x = self.graph_max_pool(x, 4)
+        x = self.graph_max_pool(x, self.p)
 
         # FC1
         x = x.view(-1, self.FC1Fin)
