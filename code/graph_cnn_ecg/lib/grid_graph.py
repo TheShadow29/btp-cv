@@ -86,7 +86,8 @@ def radial_graph(t_units=750, number_edges=2, metric='euclidean'):
         for i2 in range(t_units):
             V_t[i1, i2] = np.exp(-2*np.pi * 1j * (i1 - 1)*(i2 - 1)/t_units)
     V_t = V_t / np.sqrt(t_units)
-    U_t = V_t.conjugate().transpose()
+    # U_t = V_t.conjugate().transpose()
+    U_t = V_t.conjugate()
     lam_t = np.zeros(t_units, dtype=np.complex_)
     for i1 in range(t_units):
         lam_t[i1] = np.exp(2*np.pi * 1j * (i1 - 1)*(t_units - 1)/t_units)
@@ -95,7 +96,9 @@ def radial_graph(t_units=750, number_edges=2, metric='euclidean'):
     T_adj = T_adj.astype(np.float_)
     # pdb.set_trace()
     T_graph = nx.from_numpy_matrix(T_adj)
+    pdb.set_trace()
     J_graph = nx.cartesian_product(G, T_graph)
+    pdb.set_trace()
     A = nx.adjacency_matrix(J_graph)
     print("nb edges: ", A.nnz)
     return A
