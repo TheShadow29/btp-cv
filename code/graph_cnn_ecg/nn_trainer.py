@@ -1,5 +1,6 @@
 import torch
 from torch.autograd import Variable
+import matplotlib.pyplot as plt
 
 if torch.cuda.is_available():
     print('cuda available')
