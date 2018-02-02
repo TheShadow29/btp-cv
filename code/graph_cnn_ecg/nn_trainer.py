@@ -76,3 +76,87 @@ class ecg_trainer:
                 running_total_test += 1
 
             print('  accuracy(test) = %.3f %%' % (running_accuray_test / running_total_test))
+
+
+class simple_trainer():
+    def __init__(self, nn_model, train_loader=None, test_loader=None,
+                 loss_fn=None, optimizer='adam'):
+        self.nn_model = nn_model
+        self.nn_model.cuda()
+        self.train_loader = train_loader
+        self.test_loader = test_loader
+        self.loss_fn = loss_fn
+        if optimizer == 'adam':
+            self.optimizer = torch.optim.Adam(self.nn_model.parameters())
+        # self.valid_acc_list = list()
+
+    def train_model(self, num_epoch=15, plt_fig=False):
+        print('TrainSet :', len(self.train_loader))
+        # self.valid_acc_list = np.arange(15)
+        # plt.axis([0, num_epoch, 0, 1])
+        # plt.ion()
+        epoch_list = 0
+        val_acc = 0
+        if plt_fig:
+            fig = plt.figure(1)
+            ax = fig.add_subplot(111)
+            ax.set_xlim(0, num_epoch)
+            ax.set_ylim(0, 1)
+            line, = ax.plot(epoch_list, val_acc, 'ko-')
+        for epoch in range(num_epoch):
+            running_loss = 0
+            for ind, sample in enumerate(self.train_loader):
+                instance = Variable(sample['sig'].cuda())
+                label = Variable(sample['label'].cuda())
+                # label = Variable(sample['label'])
+                self.optimizer.zero_grad()
+                # pdb.set_trace()
+                y_pred = self.nn_model(instance)
+                y_pred = y_pred.view(-1, 2)
+                # pdb.set_trace()
+                loss = self.loss_fn(y_pred, label)
+                # print(loss.data[0])
+
+                loss.backward()
+                self.optimizer.step()
+                running_loss += loss.data[0]
+                # print(self.nn_model.parameters())
+                # if ind % 100 == 0:
+                # if True:
+                # print(epoch, running_loss/num_tr_points)
+
+            print('epoch', epoch, running_loss/num_tr_points)
+            # pdb.set_trace()
+            if plt_fig:
+                epoch_list = np.concatenate((line.get_xdata(), [epoch]))
+                val_acc = np.concatenate((line.get_ydata(), [self.test_model()]))
+                # plt.plot(epoch, val_acc, '.r-')
+                line.set_data(epoch_list, val_acc)
+                plt.pause(0.01)
+
+            # self.valid_acc_list.append(val_acc)
+            else:
+                self.test_model()
+        if plt_fig:
+            return fig
+        else:
+            return
+
+    def test_model(self):
+        print('TestSet :', len(self.test_loader))
+        num_corr = 0
+        tot_num = 0
+        for sample in self.test_loader:
+            instance = Variable(sample['sig'].cuda())
+            y_pred = self.nn_model(instance)
+            # pdb.set_trace()
+            y_pred = y_pred.view(-1, 2)
+            _, label_pred = torch.max(y_pred.data, 1)
+            # if (label_pred == sample['label'].cuda()).cpu().numpy():
+            # if (label_pred.cpu() == sample['label']).numpy():
+
+            num_corr += (label_pred.cpu() == sample['label']).any()
+            # tot_num += label_pred.shape[0]
+            tot_num += 1
+        print(num_corr, tot_num, num_corr/tot_num)
+        return num_corr/tot_num

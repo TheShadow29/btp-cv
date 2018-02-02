@@ -224,6 +224,28 @@ class model():
         return num_corr/tot_num
 
 
+def get_all_params(var, all_params):
+    if isinstance(var, torch.nn.Parameter):
+        all_params[id(var)] = var.nelement()
+    elif hasattr(var, "creator") and var.creator is not None:
+        if var.creator.previous_functions is not None:
+            for j in var.creator.previous_functions:
+                get_all_params(j[0], all_params)
+    elif hasattr(var, "previous_functions"):
+        for j in var.previous_functions:
+            get_all_params(j[0], all_params)
+
+
+def get_n_params(model):
+    pp = 0
+    for p in list(model.parameters()):
+        nn = 1
+        for s in list(p.size()):
+            nn = nn*s
+        pp += nn
+    return pp
+
+
 if __name__ == '__main__':
     print('Starting Code')
     start = time.time()
@@ -254,7 +276,7 @@ if __name__ == '__main__':
     D_in = 1000
     batch_size = 4
     num_tr_points = 300
-    channels = [7, 8]
+    channels = [7, 8, 9, 10, 11]
     # pdb.set_trace()
     # D_in = 38400
     # D_out = 2

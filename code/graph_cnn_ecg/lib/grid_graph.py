@@ -70,6 +70,13 @@ def adjacency(dist, idx):
     return W
 
 
+def path_graph(t_units=750, metric='euclidean'):
+    p_graph = nx.path_graph(t_units)
+    A = nx.adjacency_matrix(p_graph)
+    print("nb edges: ", A.nnz)
+    return A
+
+
 def radial_graph(t_units=750, number_edges=2, metric='euclidean'):
     z = np.empty((6, 2))
     for ind, th in enumerate(np.arange(0, np.pi/1.9, np.pi/10)):
@@ -96,9 +103,9 @@ def radial_graph(t_units=750, number_edges=2, metric='euclidean'):
     T_adj = T_adj.astype(np.float_)
     # pdb.set_trace()
     T_graph = nx.from_numpy_matrix(T_adj)
-    pdb.set_trace()
+    # pdb.set_trace()
     J_graph = nx.cartesian_product(G, T_graph)
-    pdb.set_trace()
+    # pdb.set_trace()
     A = nx.adjacency_matrix(J_graph)
     print("nb edges: ", A.nnz)
     return A

@@ -425,3 +425,68 @@ class Graph_ConvNet_cl_fc(nn.Module):
 
         _, class_predicted = torch.max(y_predicted.data, 1)
         return 100.0 * (class_predicted == test_l).sum() / y_predicted.size(0)
+
+
+class graph_conv_ecg(nn.Module):
+    def __init__(self, net_params):
+        print('Graph ConvNet Finale')
+        super(graph_conv_ecg, self).__init__()
+        D, cl1_f, cl1_k, cl2_f, cl2_k, fc1_fin, fc1_f, fc2_f = net_params
+
+        self.cl1 = torch.nn.Linear(cl1_k, cl1_f)
+
+        Fin = cl1_f
+        Fout = cl1_k
+        scale = np.sqrt(2.0 / (Fin+Fout))
+        self.cl1.weight.data.uniform_(-scale, scale)
+        self.cl1.bias.data.fill_(0.0)
+
+        self.cl2 = torch.nn.Linear(cl2_k * cl1_f, cl2_f)
+        Fin = cl2_k * cl1_f
+        Fout = cl2_f
+        self.cl2.weight.data.uniform_(-scale, scale)
+        self.cl2.bias.data.fill_(0.0)
+
+
+def calc_dim(din, f, s):
+    return (din - f)//s + 1
+
+
+class simple_net(torch.nn.Module):
+    def __init__(self, D_in, inp_channels):
+        super(simple_net, self).__init__()
+        # For conv1d the params are N, C, L
+        # N is the batch size
+        # C is the number of channels
+        # L is the len of the signal
+        # For now keep the number of channels=1
+        f = 3
+        s = 1
+        self.conv1 = torch.nn.Conv1d(inp_channels, 6, f, stride=s)
+        new_dim = calc_dim(D_in, f, s) // 2
+        self.conv1_bn = torch.nn.BatchNorm1d(6)
+        self.conv2 = torch.nn.Conv1d(6, 16, f, stride=s)
+        new_dim = calc_dim(new_dim, f, s) // 2
+        self.conv2_bn = torch.nn.BatchNorm1d(16)
+        # self.conv3 = torch.nn.Conv1d(16, 32, f, stride=s)
+        # new_dim = calc_dim(new_dim, f, s) // 2
+        self.lin1 = torch.nn.Linear(16*new_dim, 30)
+        self.lin2 = torch.nn.Linear(30, 2)
+
+    def forward(self, inp):
+        # out = F.relu(F.max_pool1d(self.conv1_bn(self.conv1(inp)), 2))
+        out = F.max_pool1d(self.conv1_bn(F.relu(self.conv1(inp))), 2)
+        # out = F.dropout(out)
+        # out = F.relu(F.max_pool1d(self.conv2_bn(self.conv2(out)), 2))
+        out = F.max_pool1d(self.conv2_bn(F.relu(self.conv2(out))), 2)
+        # out = F.relu(self.conv2(out))
+        # out = F.dropout(out)
+        # out = F.max_pool1d(out, 2)
+        # out = F.relu(self.conv3(out))
+        # out = F.dropout(out)
+        # out = F.max_pool1d(out, 2)
+        out = out.view(out.size(0), -1)
+        out = F.relu(self.lin1(out))
+        # out = F.dropout(out)
+        out = self.lin2(out)
+        return out

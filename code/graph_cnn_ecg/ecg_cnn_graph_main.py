@@ -10,7 +10,7 @@ from nn_model import Graph_ConvNet_cl_fc
 from nn_trainer import ecg_trainer
 
 from lib.coarsening import coarsen
-from lib.grid_graph import radial_graph
+from lib.grid_graph import path_graph
 from lib.coarsening import lmax_L
 
 
@@ -46,18 +46,20 @@ if __name__ == '__main__':
                  remainder_list[remain_tr_pts:])
 
     # D = 912
-    D = 6144
-    CL1_F = 32
-    CL1_K = 49
-    CL2_F = 64
-    CL2_K = 49
-    CL3_F = 128
-    CL3_K = 49
-    CL4_F = 256
-    CL4_K = 49
-    FC1_F = 32
+    # D = 6144
+    D = 750
+    CL1_F = 3
+    CL1_K = 6
+    CL2_F = 3
+    CL2_K = 16
+    # CL3_F = 128
+    # CL3_K = 49
+    # CL4_F = 256
+    # CL4_K = 49
+    FC1_F = 30
     FC2_F = 2
-    net_parameters = [D, CL1_F, CL1_K, CL2_F, CL2_K, CL3_F, CL3_K, CL4_F, CL4_K, FC1_F, FC2_F]
+    net_parameters = [D, CL1_F, CL1_K, CL2_F, CL2_K, FC1_F, FC2_F]
+    # net_parameters = [D, CL1_F, CL1_K, CL2_F, CL2_K, CL3_F, CL3_K, CL4_F, CL4_K, FC1_F, FC2_F]
 
     # net = Graph_ConvNet_LeNet5(net_parameters)
     # if torch.cuda.is_available():
@@ -71,7 +73,8 @@ if __name__ == '__main__':
     l2_regularization = 5e-4
     batch_size = 100
     num_epochs = 20
-    channels = [6, 7, 8, 9, 10, 11]
+    # channels = [6, 7, 8, 9, 10, 11]
+    channels = [6]
     # Optimizer
     global_lr = learning_rate
     global_step = 0
@@ -79,8 +82,9 @@ if __name__ == '__main__':
     # decay_steps = train_size
     lr = learning_rate
 
-    A = radial_graph()
-    coarsening_levels = 10
+    # A = radial_graph()
+    A = path_graph()
+    coarsening_levels = 2
     L, perm = coarsen(A, coarsening_levels)
 
     lmax = []
