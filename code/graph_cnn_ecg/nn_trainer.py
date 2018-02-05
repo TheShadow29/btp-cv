@@ -1,6 +1,7 @@
 import torch
 from torch.autograd import Variable
 import matplotlib.pyplot as plt
+import numpy as np
 
 if torch.cuda.is_available():
     print('cuda available')
@@ -79,7 +80,7 @@ class ecg_trainer:
             print('  accuracy(test) = %.3f %%' % (running_accuray_test / running_total_test))
 
 
-class simple_trainer():
+class simple_trainer:
     def __init__(self, nn_model, train_loader=None, test_loader=None,
                  loss_fn=None, optimizer='adam'):
         self.nn_model = nn_model
@@ -106,6 +107,7 @@ class simple_trainer():
             line, = ax.plot(epoch_list, val_acc, 'ko-')
         for epoch in range(num_epoch):
             running_loss = 0
+            num_tr_iter = 0
             for ind, sample in enumerate(self.train_loader):
                 instance = Variable(sample['sig'].cuda())
                 label = Variable(sample['label'].cuda())
@@ -125,8 +127,8 @@ class simple_trainer():
                 # if ind % 100 == 0:
                 # if True:
                 # print(epoch, running_loss/num_tr_points)
-
-            print('epoch', epoch, running_loss/num_tr_points)
+                num_tr_iter += 1
+            print('epoch', epoch, running_loss/num_tr_iter)
             # pdb.set_trace()
             if plt_fig:
                 epoch_list = np.concatenate((line.get_xdata(), [epoch]))
