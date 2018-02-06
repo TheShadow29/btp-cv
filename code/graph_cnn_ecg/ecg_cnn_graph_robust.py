@@ -12,6 +12,8 @@ import numpy as np
 # import pathlib
 from pathlib import Path
 from cfg import all_vars
+from lib.grid_graph import simple_graph
+
 
 if __name__ == "__main__":
     ptb_tdir = Path('/home/SharedData/Ark_git_files/btp_extra_files/ecg-analysis/')
@@ -45,9 +47,11 @@ if __name__ == "__main__":
     test_list = (control_list[contr_tr_pts:] + positive_list[post_tr_pts:] +
                  remainder_list[remain_tr_pts:])
 
+    small_graph = simple_graph()
+
     with torch.cuda.device(1):
-        ecg_train_loader = DataLoader(ecg_dataset_simple(ptb_tdir_str, train_list, Din, partitions=27,
-                                                         channels=channels),
+        ecg_train_loader = DataLoader(ecg_dataset_simple(ptb_tdir_str, train_list,
+                                                         Din, partitions=27, channels=channels),
                                       batch_size=batch_size, shuffle=True, num_workers=2)
         ecg_test_loader = DataLoader(ecg_dataset_simple(ptb_tdir_str, test_list, Din,
                                                         partitions=batch_size, channels=channels),

@@ -1,6 +1,6 @@
 def all_vars():
     all_var = dict()
-    all_var['Din'] = 1000
+    all_var['Din'] = 750
     all_var['batch_size'] = 4
     all_var['num_tr_points'] = 300
     all_var['channels'] = [7]

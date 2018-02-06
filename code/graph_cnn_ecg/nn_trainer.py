@@ -114,7 +114,7 @@ class simple_trainer:
                 # label = Variable(sample['label'])
                 self.optimizer.zero_grad()
                 # pdb.set_trace()
-                y_pred = self.nn_model(instance)
+                y_pred, pred_layer_outs = self.nn_model(instance)
                 y_pred = y_pred.view(-1, 2)
                 # pdb.set_trace()
                 loss = self.loss_fn(y_pred, label)
@@ -151,7 +151,7 @@ class simple_trainer:
         tot_num = 0
         for sample in self.test_loader:
             instance = Variable(sample['sig'].cuda())
-            y_pred = self.nn_model(instance)
+            y_pred, pred_layer_outs = self.nn_model(instance)
             # pdb.set_trace()
             y_pred = y_pred.view(-1, 2)
             _, label_pred = torch.max(y_pred.data, 1)

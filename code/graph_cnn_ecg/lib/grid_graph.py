@@ -5,7 +5,7 @@ import scipy.sparse, scipy.sparse.linalg  # scipy.spatial.distance
 import scipy.linalg
 import numpy as np
 import pdb
-
+import itertools
 
 def grid_graph(grid_side,number_edges,metric):
     """Generate graph of a grid"""
@@ -74,6 +74,21 @@ def path_graph(t_units=750, metric='euclidean'):
     p_graph = nx.path_graph(t_units)
     A = nx.adjacency_matrix(p_graph)
     print("nb edges: ", A.nnz)
+    return A
+
+
+def simple_graph(n=6, create_using=None, number_edges=2, metric='euclidean'):
+    z = np.empty((6, 2))
+    for ind, th in enumerate(np.arange(0, np.pi/1.9, np.pi/10)):
+        z[ind, 0] = np.cos(th)
+        z[ind, 1] = np.sin(th)
+    # return z
+    # z[0, 1] =
+    dist, idx = distance_sklearn_metrics(z, k=number_edges, metric=metric)
+    A = adjacency(dist, idx)
+    G = nx.from_scipy_sparse_matrix(A)
+    nx.draw(G)
+    print(A.data)
     return A
 
 

@@ -475,10 +475,13 @@ class simple_net(torch.nn.Module):
 
     def forward(self, inp):
         # out = F.relu(F.max_pool1d(self.conv1_bn(self.conv1(inp)), 2))
+        layer_outs = dict()
         out = F.max_pool1d(self.conv1_bn(F.relu(self.conv1(inp))), 2)
         # out = F.dropout(out)
         # out = F.relu(F.max_pool1d(self.conv2_bn(self.conv2(out)), 2))
+        layer_outs['conv1'] = out
         out = F.max_pool1d(self.conv2_bn(F.relu(self.conv2(out))), 2)
+        layer_outs['conv2'] = out
         # out = F.relu(self.conv2(out))
         # out = F.dropout(out)
         # out = F.max_pool1d(out, 2)
@@ -486,7 +489,10 @@ class simple_net(torch.nn.Module):
         # out = F.dropout(out)
         # out = F.max_pool1d(out, 2)
         out = out.view(out.size(0), -1)
+        layer_outs['fc_inp'] = out
         out = F.relu(self.lin1(out))
+        layer_outs['fc1'] = out
         # out = F.dropout(out)
         out = self.lin2(out)
-        return out
+        layer_outs['fc2'] = out
+        return out, layer_outs
