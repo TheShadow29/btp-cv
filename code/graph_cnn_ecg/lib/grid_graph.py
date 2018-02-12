@@ -124,3 +124,18 @@ def radial_graph(t_units=750, number_edges=2, metric='euclidean'):
     A = nx.adjacency_matrix(J_graph)
     print("nb edges: ", A.nnz)
     return A
+
+
+# def simple_radial_graph(n=6, create_using=None, number_edges=2, metric='euclidean'):
+#     z = np.empty((6, 2))
+#     for ind, th in enumerate(np.arange(0, np.pi/1.9, np.pi/10)):
+#         z[ind, 0] = np.cos(th)
+#         z[ind, 1] = np.sin(th)
+#     # return z
+#     # z[0, 1] =
+#     dist, idx = distance_sklearn_metrics(z, k=number_edges, metric=metric)
+#     A = adjacency(dist, idx)
+#     G = nx.from_scipy_sparse_matrix(A)
+#     nx.draw(G)
+#     print(A.data)
+#     return A

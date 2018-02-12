@@ -13,7 +13,7 @@ import numpy as np
 from pathlib import Path
 from cfg import all_vars
 from lib.grid_graph import simple_graph
-
+# from lib.grid_graph import radial_graph
 
 if __name__ == "__main__":
     ptb_tdir = Path('/home/SharedData/Ark_git_files/btp_extra_files/ecg-analysis/')
@@ -62,3 +62,11 @@ if __name__ == "__main__":
         simple_train = simple_trainer(simple_nn, ecg_train_loader,
                                       ecg_test_loader, loss_fn)
         simple_train.train_model(50, plt_fig=False)
+
+        # Get all the weights from the CNN
+        # Put the weights onto the graph
+        # graph structure to learn on is very small
+        # Basically equivalent to making N different
+        # GCNs and working with them.
+        # Take the graph and extrapolate it backwards
+        # Use LeNet like structure here as well
