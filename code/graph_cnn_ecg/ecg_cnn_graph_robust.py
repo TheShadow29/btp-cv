@@ -63,7 +63,7 @@ if __name__ == "__main__":
                                       ecg_test_loader, loss_fn)
         simple_train.train_model(50, plt_fig=False)
 
-        # Get all the weights from the CNN
+        # Get all the last layer predn from the CNN
         # Put the weights onto the graph
         # graph structure to learn on is very small
         # Basically equivalent to making N different
