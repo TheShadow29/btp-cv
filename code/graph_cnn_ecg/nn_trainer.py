@@ -2,6 +2,7 @@ import torch
 from torch.autograd import Variable
 import matplotlib.pyplot as plt
 import numpy as np
+import shutil
 
 if torch.cuda.is_available():
     print('cuda available')
@@ -13,6 +14,12 @@ else:
     dtypeFloat = torch.FloatTensor
     dtypeLong = torch.LongTensor
     torch.manual_seed(1)
+
+
+def save_checkpoint(state, is_best, filename='checkpoint.pth.tar'):
+    torch.save(state, filename)
+    if is_best:
+        shutil.copyfile(filename, 'model_best.pth.tar')
 
 
 class ecg_trainer:
@@ -105,6 +112,8 @@ class simple_trainer:
             ax.set_xlim(0, num_epoch)
             ax.set_ylim(0, 1)
             line, = ax.plot(epoch_list, val_acc, 'ko-')
+        curr_acc = 0
+        best_acc = 0
         for epoch in range(num_epoch):
             running_loss = 0
             num_tr_iter = 0
@@ -139,11 +148,28 @@ class simple_trainer:
 
             # self.valid_acc_list.append(val_acc)
             else:
-                self.test_model()
+                curr_acc = self.test_model()
+                is_best = False
+                if curr_acc > best_acc:
+                    best_acc = curr_acc
+                    is_best = True
+                    save_checkpoint({
+                        'epoch': epoch + 1,
+                        # 'arch': args.arch,
+                        'state_dict': self.nn_model.state_dict(),
+                        # 'best_prec1': best_prec1,
+                        'optimizer': self.optimizer.state_dict(),
+                    }, is_best)
         if plt_fig:
             return fig
         else:
             return
+
+    def get_nn_features(self, instance):
+        # for ind, sample in enumerate(self.train_loader):
+            # instance = Variable(sample['sig'].cuda())
+        y_pred, pred_layer_outs = self.nn_model(instance)
+        return pred_layer_outs['fc1']
 
     def test_model(self):
         print('TestSet :', len(self.test_loader))
@@ -163,3 +189,12 @@ class simple_trainer:
             tot_num += 1
         print(num_corr, tot_num, num_corr/tot_num)
         return num_corr/tot_num
+
+    def graph_nn_train(self, num_epoch=10):
+        for epoch in range(num_epoch):
+            running_loss = 0
+            num_tr_iter = 0
+            for ind, sample in enumerate(self.train_loader):
+                instance = Variable(sample['sig'].cuda())
+                label = Variable(sample['label'].cuda())
+                last_layer_features = self.get_nn_features(instance)
