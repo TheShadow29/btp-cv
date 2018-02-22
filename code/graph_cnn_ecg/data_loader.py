@@ -49,7 +49,7 @@ class ecg_dataset(Dataset):
             out_label = 0
         # pdb.set_trace()
 
-        sample = {'sig': sig_out, 'label': out_label}
+        sample = {'sig': sig_out, 'label': out_label, 'idx': idx, 'pidx': pidx}
         return sample
 
 

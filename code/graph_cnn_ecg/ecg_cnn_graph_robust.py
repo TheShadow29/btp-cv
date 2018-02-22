@@ -4,7 +4,7 @@ from torch.autograd import Variable
 # from torch.utils.data import Dataset, DataLoader
 from torch.utils.data import DataLoader
 from data_loader import ecg_dataset_simple
-from nn_model import simple_net
+from nn_model import simple_net, complex_net
 from nn_trainer import simple_trainer
 import torch.nn.functional as F
 import numpy as np
@@ -57,7 +57,8 @@ if __name__ == "__main__":
                                                         partitions=batch_size, channels=channels),
                                      batch_size=batch_size, shuffle=False, num_workers=2)
 
-        simple_nn = simple_net(Din, len(channels))
+        # simple_nn = simple_net(Din, len(channels))
+        simple_nn = complex_net(Din, len(channels))
         loss_fn = torch.nn.CrossEntropyLoss()
         simple_train = simple_trainer(simple_nn, ecg_train_loader,
                                       ecg_test_loader, loss_fn)

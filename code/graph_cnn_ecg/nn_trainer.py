@@ -3,6 +3,7 @@ from torch.autograd import Variable
 import matplotlib.pyplot as plt
 import numpy as np
 import shutil
+import pickle
 
 if torch.cuda.is_available():
     print('cuda available')
@@ -165,11 +166,11 @@ class simple_trainer:
         else:
             return
 
-    def get_nn_features(self, instance):
-        # for ind, sample in enumerate(self.train_loader):
-            # instance = Variable(sample['sig'].cuda())
-        y_pred, pred_layer_outs = self.nn_model(instance)
-        return pred_layer_outs['fc1']
+    # def get_nn_features(self, instance):
+    #     # for ind, sample in enumerate(self.train_loader):
+    #         # instance = Variable(sample['sig'].cuda())
+    #     y_pred, pred_layer_outs = self.nn_model(instance)
+    #     return pred_layer_outs
 
     def test_model(self):
         print('TestSet :', len(self.test_loader))
@@ -190,11 +191,28 @@ class simple_trainer:
         print(num_corr, tot_num, num_corr/tot_num)
         return num_corr/tot_num
 
-    def graph_nn_train(self, num_epoch=10):
-        for epoch in range(num_epoch):
-            running_loss = 0
-            num_tr_iter = 0
-            for ind, sample in enumerate(self.train_loader):
-                instance = Variable(sample['sig'].cuda())
-                label = Variable(sample['label'].cuda())
-                last_layer_features = self.get_nn_features(instance)
+    def cnn_features_save(self):
+        out_train_list = []
+        for ind, sample in enumerate(self.train_loader):
+            out_train = dict()
+            instance = Variable(sample['sig'].cuda())
+            # label = Variable(sample['label'].cuda())
+            idx = sample['idx']
+            pidx = sample['pidx']
+            y_pred, channel_layer_outs = self.nn_model(instance)
+            out_train['idx'] = idx
+            out_train['pidx'] = pidx
+            out_train['label'] = sample['label']
+            out_train['channel_layer_outs'] = channel_layer_outs
+            out_train_list.append(out_train)
+        pickle.dump(out_train_list, '../data/cnn_features.pkl')
+
+    # def graph_nn_train(self, num_epoch=10):
+    #     for epoch in range(num_epoch):
+    #         running_loss = 0
+    #         num_tr_iter = 0
+    #         for ind, sample in enumerate(self.train_loader):
+    #             instance = Variable(sample['sig'].cuda())
+    #             label = Variable(sample['label'].cuda())
+    #             # last_layer_features = self.get_nn_features(instance)
+    #             y_pred, channel_layer_outs = self.nn_model(instance)
