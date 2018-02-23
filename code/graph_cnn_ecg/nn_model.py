@@ -509,22 +509,22 @@ class complex_net(torch.nn.Module):
         self.num_inp_channels = inp_channels
         f = 3
         s = 1
-        self.conv1_list = []
+        self.conv1_list = torch.nn.ModuleList()
         # for i in range(inp_channels):
         # self.conv1_list.append(torch.nn.Conv1d(1, 6, f, stride=s))
         new_dim = calc_dim(D_in, f, s) // 2
         self.conv1_bn = torch.nn.BatchNorm1d(6)
-        self.conv2_list = []
+        self.conv2_list = torch.nn.ModuleList()
         # for i in range(inp_channels):
         # self.conv2_list.append(torch.nn.Conv1d(6, 16, f, stride=s))
         new_dim = calc_dim(new_dim, f, s) // 2
         self.conv2_bn = torch.nn.BatchNorm1d(16)
         # self.conv3 = torch.nn.Conv1d(16, 32, f, stride=s)
         # new_dim = calc_dim(new_dim, f, s) // 2
-        self.lin1_list = []
+        self.lin1_list = torch.nn.ModuleList()
         # for i in range(inp_channels):
         # self.lin1_list.append(torch.nn.Linear(16*new_dim, 30))
-        self.lin2_list = []
+        self.lin2_list = torch.nn.ModuleList()
         for i in range(inp_channels):
             self.conv1_list.append(torch.nn.Conv1d(1, 6, f, stride=s))
             self.conv2_list.append(torch.nn.Conv1d(6, 16, f, stride=s))
@@ -577,10 +577,85 @@ class complex_net(torch.nn.Module):
 
         return out, channel_layer_outs
 
-    def to_cuda(self):
-        self.cuda()
-        for i in range(self.num_inp_channels):
-            self.conv1_list[i].cuda()
-            self.conv2_list[i].cuda()
-            self.lin1_list[i].cuda()
-            self.lin2_list[i].cuda()
+    # def to_cuda(self):
+    #     self.cuda()
+    #     for i in range(self.num_inp_channels):
+    #         self.conv1_list[i].cuda()
+    #         self.conv2_list[i].cuda()
+    #         self.lin1_list[i].cuda()
+    #         self.lin2_list[i].cuda()
+
+
+# class complex_net2(torch.nn.Module):
+#     def __init__(self, D_in, inp_channels):
+#         super(complex_net2, self).__init__()
+#         # For conv1d the params are N, C, L
+#         # N is the batch size
+#         # C is the number of channels
+#         # L is the len of the signal
+#         # For now keep the number of channels=1
+#         self.num_inp_channels = inp_channels
+#         f = 3
+#         s = 1
+#         # for i in range(inp_channels):
+#         new_dim = calc_dim(D_in, f, s) // 2
+#         self.conv1_bn = torch.nn.BatchNorm1d(6)
+
+#         new_dim = calc_dim(new_dim, f, s) // 2
+#         self.conv2_bn = torch.nn.BatchNorm1d(16)
+
+#         self.basic_block_lenet5 = simple_net(D_in, 1)
+
+#     def forward(self, inp):
+#         # out = F.relu(F.max_pool1d(self.conv1_bn(self.conv1(inp)), 2))
+#         # pdb.set_trace()
+#         num_channels = inp.shape[1]
+#         channel_layer_outs = []
+#         fin_outs = []
+#         for i in range(num_channels):
+#             layer_outs = dict()
+#             # pdb.set_trace()
+#             # inp_chan = inp[:, ]
+#             out = F.max_pool1d(self.conv1_bn(F.relu(self.conv1_list[i](inp[:, [i], :]))), 2)
+#             layer_outs['conv1'] = out
+#             out = F.max_pool1d(self.conv2_bn(F.relu(self.conv2_list[i](out))), 2)
+#             layer_outs['conv2'] = out
+#             out = out.view(out.size(0), -1)
+#             layer_outs['fc_inp'] = out
+#             out = F.relu(self.lin1_list[i](out))
+#             layer_outs['fc1'] = out
+#             out = self.lin2_list[i](out)
+#             layer_outs['fc2'] = out
+#             channel_layer_outs.append(layer_outs)
+#             fin_outs.append(out)
+#         # dict()
+
+#         # out = F.max_pool1d(self.conv1_bn(F.relu(self.conv1(inp))), 2)
+#         # out = F.dropout(out)
+#         # out = F.relu(F.max_pool1d(self.conv2_bn(self.conv2(out)), 2))
+#         # layer_outs['conv1'] = out
+#         # out = F.max_pool1d(self.conv2_bn(F.relu(self.conv2(out))), 2)
+#         # layer_outs['conv2'] = out
+#         # out = F.relu(self.conv2(out))
+#         # out = F.dropout(out)
+#         # out = F.max_pool1d(out, 2)
+#         # out = F.relu(self.conv3(out))
+#         # out = F.dropout(out)
+#         # out = F.max_pool1d(out, 2)
+#         # out = out.view(out.size(0), -1)
+#         # layer_outs['fc_inp'] = out
+#         # out = F.relu(self.lin1(out))
+#         # layer_outs['fc1'] = out
+#         # out = F.dropout(out)
+#         # out = self.lin2(out)
+#         # layer_outs['fc2'] = out
+
+#         return out, channel_layer_outs
+
+#     def to_cuda(self):
+#         self.cuda()
+#         for i in range(self.num_inp_channels):
+#             self.conv1_list[i].cuda()
+#             self.conv2_list[i].cuda()
+#             self.lin1_list[i].cuda()
+#             self.lin2_list[i].cuda()

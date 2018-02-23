@@ -60,7 +60,7 @@ if __name__ == "__main__":
         # simple_nn = simple_net(Din, len(channels))
         simple_nn = complex_net(Din, len(channels))
         simple_nn.cuda()
-        simple_nn.to_cuda()
+        # simple_nn.to_cuda()
         loss_fn = torch.nn.CrossEntropyLoss()
         simple_train = simple_trainer(simple_nn, ecg_train_loader,
                                       ecg_test_loader, loss_fn)

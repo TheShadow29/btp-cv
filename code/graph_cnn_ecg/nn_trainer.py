@@ -207,12 +207,12 @@ class simple_trainer:
             out_train_list.append(out_train)
         pickle.dump(out_train_list, '../data/cnn_features.pkl')
 
-    # def graph_nn_train(self, num_epoch=10):
-    #     for epoch in range(num_epoch):
-    #         running_loss = 0
-    #         num_tr_iter = 0
-    #         for ind, sample in enumerate(self.train_loader):
-    #             instance = Variable(sample['sig'].cuda())
-    #             label = Variable(sample['label'].cuda())
-    #             # last_layer_features = self.get_nn_features(instance)
-    #             y_pred, channel_layer_outs = self.nn_model(instance)
+    def graph_nn_train(self, num_epoch=10):
+        for epoch in range(num_epoch):
+            running_loss = 0
+            num_tr_iter = 0
+            for ind, sample in enumerate(self.train_loader):
+                instance = Variable(sample['sig'].cuda())
+                label = Variable(sample['label'].cuda())
+                # last_layer_features = self.get_nn_features(instance)
+                y_pred, channel_layer_outs = self.nn_model(instance)
