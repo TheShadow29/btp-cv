@@ -92,7 +92,7 @@ class simple_trainer:
     def __init__(self, nn_model, train_loader=None, test_loader=None,
                  loss_fn=None, optimizer='adam'):
         self.nn_model = nn_model
-        self.nn_model.cuda()
+        # self.nn_model.cuda()
         self.train_loader = train_loader
         self.test_loader = test_loader
         self.loss_fn = loss_fn

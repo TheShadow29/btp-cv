@@ -506,6 +506,7 @@ class complex_net(torch.nn.Module):
         # C is the number of channels
         # L is the len of the signal
         # For now keep the number of channels=1
+        self.num_inp_channels = inp_channels
         f = 3
         s = 1
         self.conv1_list = []
@@ -532,9 +533,10 @@ class complex_net(torch.nn.Module):
 
     def forward(self, inp):
         # out = F.relu(F.max_pool1d(self.conv1_bn(self.conv1(inp)), 2))
+        # pdb.set_trace()
         num_channels = inp.shape[1]
         channel_layer_outs = []
-
+        fin_outs = []
         for i in range(num_channels):
             layer_outs = dict()
             # pdb.set_trace()
@@ -549,8 +551,8 @@ class complex_net(torch.nn.Module):
             layer_outs['fc1'] = out
             out = self.lin2_list[i](out)
             layer_outs['fc2'] = out
-            channel_layer_outs[i] = layer_outs
-
+            channel_layer_outs.append(layer_outs)
+            fin_outs.append(out)
         # dict()
 
         # out = F.max_pool1d(self.conv1_bn(F.relu(self.conv1(inp))), 2)
@@ -572,4 +574,13 @@ class complex_net(torch.nn.Module):
         # out = F.dropout(out)
         # out = self.lin2(out)
         # layer_outs['fc2'] = out
+
         return out, channel_layer_outs
+
+    def to_cuda(self):
+        self.cuda()
+        for i in range(self.num_inp_channels):
+            self.conv1_list[i].cuda()
+            self.conv2_list[i].cuda()
+            self.lin1_list[i].cuda()
+            self.lin2_list[i].cuda()
