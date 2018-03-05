@@ -53,6 +53,11 @@ if __name__ == "__main__":
         ecg_train_loader = DataLoader(ecg_dataset_simple(ptb_tdir_str, train_list,
                                                          Din, partitions=27, channels=channels),
                                       batch_size=batch_size, shuffle=True, num_workers=2)
+        ecg_train_loader2 = DataLoader(ecg_dataset_simple(ptb_tdir_str, train_list,
+                                                          Din, partitions=27,
+                                                          channels=channels),
+                                       batch_size=1, shuffle=True, num_workers=0)
+
         ecg_test_loader = DataLoader(ecg_dataset_simple(ptb_tdir_str, test_list, Din,
                                                         partitions=batch_size, channels=channels),
                                      batch_size=batch_size, shuffle=False, num_workers=2)
@@ -62,10 +67,11 @@ if __name__ == "__main__":
         simple_nn.cuda()
         # simple_nn.to_cuda()
         loss_fn = torch.nn.CrossEntropyLoss()
-        simple_train = simple_trainer(simple_nn, ecg_train_loader,
+        simple_train = simple_trainer(simple_nn, ecg_train_loader, ecg_train_loader2,
                                       ecg_test_loader, loss_fn)
-        simple_train.train_model(50, plt_fig=False)
-
+        simple_train.load_model()
+        # simple_train.train_model(50, plt_fig=False)
+        simple_train.cnn_features_save(fname='/home/SharedData/Ark_git_files/btp_extra_files/ecg-analysis/cnn_features_train.pkl')
         # Get all the last layer predn from the CNN
         # Put the weights onto the graph
         # graph structure to learn on is very small

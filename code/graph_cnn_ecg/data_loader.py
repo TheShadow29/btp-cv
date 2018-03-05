@@ -89,5 +89,6 @@ class ecg_dataset_simple(Dataset):
         else:
             # out_label[0] = 0
             out_label = 0
-        sample = {'sig': sig_out, 'label': out_label}
+        # sample = {'sig': sig_out, 'label': out_label}
+        sample = {'sig': sig_out, 'label': out_label, 'idx': idx, 'pidx': pidx}
         return sample

@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import shutil
 import pickle
+import os
 
 if torch.cuda.is_available():
     print('cuda available')
@@ -89,16 +90,31 @@ class ecg_trainer:
 
 
 class simple_trainer:
-    def __init__(self, nn_model, train_loader=None, test_loader=None,
+    def __init__(self, nn_model, train_loader=None, train_loader2=None, test_loader=None,
                  loss_fn=None, optimizer='adam'):
         self.nn_model = nn_model
         # self.nn_model.cuda()
         self.train_loader = train_loader
+        self.train_loader2 = train_loader2
         self.test_loader = test_loader
         self.loss_fn = loss_fn
+        self.start_epoch = 0
         if optimizer == 'adam':
             self.optimizer = torch.optim.Adam(self.nn_model.parameters())
         # self.valid_acc_list = list()
+
+    def load_model(self, load_path='model_best.pth.tar'):
+        if os.path.isfile(load_path):
+            print("=> loading checkpoint '{}'".format(load_path))
+            checkpoint = torch.load(load_path)
+            self.start_epoch = checkpoint['epoch']
+            # best_prec1 = checkpoint['best_prec1']
+            self.nn_model.load_state_dict(checkpoint['state_dict'])
+            self.optimizer.load_state_dict(checkpoint['optimizer'])
+            print("=> loaded checkpoint '{}' (epoch {})"
+                  .format(load_path, checkpoint['epoch']))
+        else:
+            print("=> no checkpoint found at '{}'".format(load_path))
 
     def train_model(self, num_epoch=15, plt_fig=False):
         print('TrainSet :', len(self.train_loader))
@@ -138,7 +154,8 @@ class simple_trainer:
                 # if True:
                 # print(epoch, running_loss/num_tr_points)
                 num_tr_iter += 1
-            print('epoch', epoch, running_loss/num_tr_iter)
+            self.curr_epoch = self.start_epoch + epoch
+            print('epoch', self.curr_epoch, running_loss/num_tr_iter)
             # pdb.set_trace()
             if plt_fig:
                 epoch_list = np.concatenate((line.get_xdata(), [epoch]))
@@ -155,7 +172,7 @@ class simple_trainer:
                     best_acc = curr_acc
                     is_best = True
                     save_checkpoint({
-                        'epoch': epoch + 1,
+                        'epoch': self.curr_epoch + 1,
                         # 'arch': args.arch,
                         'state_dict': self.nn_model.state_dict(),
                         # 'best_prec1': best_prec1,
@@ -191,23 +208,27 @@ class simple_trainer:
         print(num_corr, tot_num, num_corr/tot_num)
         return num_corr/tot_num
 
-    def cnn_features_save(self):
+    def cnn_features_save(self, fname='../data/cnn_features.pkl'):
         out_train_list = []
-        for ind, sample in enumerate(self.train_loader):
+        for ind, sample in enumerate(self.train_loader2):
             out_train = dict()
             instance = Variable(sample['sig'].cuda())
             # label = Variable(sample['label'].cuda())
-            idx = sample['idx']
-            pidx = sample['pidx']
+            idx = Variable(sample['idx'])
+            pidx = Variable(sample['pidx'])
             y_pred, channel_layer_outs = self.nn_model(instance)
             out_train['idx'] = idx
             out_train['pidx'] = pidx
             out_train['label'] = sample['label']
             out_train['channel_layer_outs'] = channel_layer_outs
             out_train_list.append(out_train)
-        pickle.dump(out_train_list, '../data/cnn_features.pkl')
+            print('Ind', ind, 'done')
+        print(out_train_list[0])
+        with open(fname, 'wb') as f:
+            pickle.dump(out_train_list, f)
 
     def graph_nn_train(self, num_epoch=10):
+
         for epoch in range(num_epoch):
             running_loss = 0
             num_tr_iter = 0
