@@ -5,6 +5,7 @@ from torch.autograd import Variable
 from torch.utils.data import DataLoader
 from data_loader import ecg_dataset_simple
 from nn_model import simple_net, complex_net
+from nn_model import Graph_ConvNet_LeNet5
 from nn_trainer import simple_trainer
 import torch.nn.functional as F
 import numpy as np
@@ -13,6 +14,8 @@ import numpy as np
 from pathlib import Path
 from cfg import all_vars
 from lib.grid_graph import simple_graph
+from lib.coarsening import coarsen
+from lib.coarsening import lmax_L
 # from lib.grid_graph import radial_graph
 
 if __name__ == "__main__":
@@ -48,6 +51,25 @@ if __name__ == "__main__":
                  remainder_list[remain_tr_pts:])
 
     small_graph = simple_graph()
+    coarsening_levels = 4
+    L, perm = coarsen(small_graph, coarsening_levels)
+
+    lmax = []
+    for i in range(coarsening_levels):
+        lmax.append(lmax_L(L[i]))
+    print('lmax: ' + str([lmax[i] for i in range(coarsening_levels)]))
+
+    D = 6
+    CL1_F = 32
+    CL1_K = 25
+    CL2_F = 64
+    CL2_K = 25
+    FC1_F = 512
+    FC2_F = 10
+    net_parameters = [D, CL1_F, CL1_K, CL2_F, CL2_K, FC1_F, FC2_F]
+
+    # Need to define graph_nn
+    graph_nn = Graph_ConvNet_LeNet5(net_parameters)
 
     with torch.cuda.device(1):
         ecg_train_loader = DataLoader(ecg_dataset_simple(ptb_tdir_str, train_list,
@@ -62,17 +84,22 @@ if __name__ == "__main__":
                                                         partitions=batch_size, channels=channels),
                                      batch_size=batch_size, shuffle=False, num_workers=2)
 
+        ecg_test_loader2 = DataLoader(ecg_dataset_simple(ptb_tdir_str, test_list, Din,
+                                                         partitions=27, channels=channels),
+                                      batch_size=1, shuffle=False, num_workers=0)
+
         # simple_nn = simple_net(Din, len(channels))
         simple_nn = complex_net(Din, len(channels))
         simple_nn.cuda()
         # simple_nn.to_cuda()
         loss_fn = torch.nn.CrossEntropyLoss()
-        simple_train = simple_trainer(simple_nn, ecg_train_loader, ecg_train_loader2,
-                                      ecg_test_loader, loss_fn)
+        simple_train = simple_trainer(simple_nn, graph_nn, ecg_train_loader, ecg_train_loader2,
+                                      ecg_test_loader, ecg_test_loader2, loss_fn)
         simple_train.load_model()
         # simple_train.train_model(50, plt_fig=False)
-        simple_train.cnn_features_save(fname='/home/SharedData/Ark_git_files/btp_extra_files/ecg-analysis/cnn_features_train.pkl')
-        # Get all the last layer predn from the CNN
+        # simple_train.cnn_features_save(fname='/home/SharedData/Ark_git_files/btp_extra_files/ecg-analysis/cnn_features_train.pkl')
+        simple_train.graph_nn_train(L, lmax)
+        # get all the last layer predn from the CNN
         # Put the weights onto the graph
         # graph structure to learn on is very small
         # Basically equivalent to making N different

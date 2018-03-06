@@ -3,7 +3,7 @@ def all_vars():
     all_var['Din'] = 750
     all_var['batch_size'] = 4
     all_var['num_tr_points'] = 300
-    all_var['channels'] = [8, 7]
+    all_var['channels'] = [6, 7, 8, 9, 10, 11]
     return all_var
 
 

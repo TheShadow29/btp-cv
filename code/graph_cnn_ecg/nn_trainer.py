@@ -4,7 +4,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 import shutil
 import pickle
+import json
 import os
+import pdb
 
 if torch.cuda.is_available():
     print('cuda available')
@@ -90,17 +92,23 @@ class ecg_trainer:
 
 
 class simple_trainer:
-    def __init__(self, nn_model, train_loader=None, train_loader2=None, test_loader=None,
-                 loss_fn=None, optimizer='adam'):
+    def __init__(self, nn_model, graph_model, train_loader=None,
+                 train_loader2=None, test_loader=None, test_loader2=None,
+                 loss_fn=None, optimizer='adam', graph_optimizer='adam'):
         self.nn_model = nn_model
+        self.graph_model = graph_model
         # self.nn_model.cuda()
         self.train_loader = train_loader
         self.train_loader2 = train_loader2
         self.test_loader = test_loader
+        self.test_loader2 = test_loader2
         self.loss_fn = loss_fn
         self.start_epoch = 0
+        # self.dropout_value = 0.5
         if optimizer == 'adam':
             self.optimizer = torch.optim.Adam(self.nn_model.parameters())
+        if graph_optimizer == 'adam':
+            self.graph_optimizer = torch.optim.Adam(self.graph_model.parameters())
         # self.valid_acc_list = list()
 
     def load_model(self, load_path='model_best.pth.tar'):
@@ -189,6 +197,13 @@ class simple_trainer:
     #     y_pred, pred_layer_outs = self.nn_model(instance)
     #     return pred_layer_outs
 
+    # def retesting_model(self):
+    #     print('TestSet :', len(self.test_loader))
+    #     num_corr = 0
+    #     tot_num = 0
+    #     for sample in self.test_loader:
+    #         instance = Variable(sample['sig'].cuda())
+
     def test_model(self):
         print('TestSet :', len(self.test_loader))
         num_corr = 0
@@ -209,8 +224,10 @@ class simple_trainer:
         return num_corr/tot_num
 
     def cnn_features_save(self, fname='../data/cnn_features.pkl'):
-        out_train_list = []
+        out_train_list = dict()
+        sample_count = 0
         for ind, sample in enumerate(self.train_loader2):
+            # for ind, sample in enumerate(self.test_loader2):
             out_train = dict()
             instance = Variable(sample['sig'].cuda())
             # label = Variable(sample['label'].cuda())
@@ -221,19 +238,49 @@ class simple_trainer:
             out_train['pidx'] = pidx
             out_train['label'] = sample['label']
             out_train['channel_layer_outs'] = channel_layer_outs
-            out_train_list.append(out_train)
+            # out_train_list.append(out_train)
+            # out_train_list['index'] = sample_count
+            out_train_list[sample_count] = out_train
+            sample_count += 1
             print('Ind', ind, 'done')
-        print(out_train_list[0])
+        # print(out_train_list[0])
         with open(fname, 'wb') as f:
             pickle.dump(out_train_list, f)
 
-    def graph_nn_train(self, num_epoch=10):
+    def graph_nn_train(self, L, lmax, l2_reg=5e-4, num_epoch=10, dr_val=0.5):
+        running_loss = 0
+        running_accuray = 0
+        running_total = 0
 
         for epoch in range(num_epoch):
-            running_loss = 0
+            # running_loss = 0
             num_tr_iter = 0
             for ind, sample in enumerate(self.train_loader):
                 instance = Variable(sample['sig'].cuda())
                 label = Variable(sample['label'].cuda())
                 # last_layer_features = self.get_nn_features(instance)
                 y_pred, channel_layer_outs = self.nn_model(instance)
+                inp_fin_outs = [channel_layer_outs[i]['fc1'] for i in range(6)]
+                self.graph_optimizer.zero_grad()
+                y_pred_graph = self.graph_model(inp_fin_outs, dr_val, L, lmax)
+                # y_pred_graph = y_pred.view(-1, 2)
+
+                loss = self.graph_model(y_pred_graph, label, l2_reg)
+                loss_train = loss.data[0]
+
+                acc_train = self.graph_model.evaluation(y_pred_graph, label.data)
+
+                loss.backward()
+
+                # global_step += self.batch_size
+                self.graph_optimizer.step()
+
+                running_loss += loss_train
+                running_accuray += acc_train
+                running_total += 1
+
+        print('epoch= %d, loss(train)= %.3f, accuracy(train)= %.3f, time= %.3f, lr= %.5f' %
+              (epoch+1, running_loss/running_total, running_accuray/running_total))
+
+        # self.graph_model(channel_layer_outs, )
+        # pdb.set_trace()
