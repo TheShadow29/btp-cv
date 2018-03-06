@@ -4,6 +4,17 @@ import sklearn.metrics
 import torch
 import pdb
 
+if torch.cuda.is_available():
+    print('cuda available')
+    dtypeFloat = torch.cuda.FloatTensor
+    dtypeLong = torch.cuda.LongTensor
+    torch.cuda.manual_seed(1)
+else:
+    print('cuda not available')
+    dtypeFloat = torch.FloatTensor
+    dtypeLong = torch.LongTensor
+    torch.manual_seed(1)
+
 
 def laplacian(W, normalized=True):
     """Return graph Laplacian"""
@@ -338,4 +349,27 @@ def perm_data_torch(x, indices):
         # Or -infty ?
         else:
             xnew[:, i] = torch.zeros(N)
+    return xnew
+
+def perm_data_torch2(x, indices):
+    """
+    Permute data matrix, i.e. exchange node ids,
+    so that binary unions form the clustering tree.
+    """
+    if indices is None:
+        return x
+    # pdb.set_trace()
+    V, B, F = x.shape
+    Mnew = len(indices)
+    assert Mnew >= V
+    xnew = torch.autograd.Variable(torch.cuda.FloatTensor(Mnew, B, F).zero_())
+    for i, j in enumerate(indices):
+        # Existing vertex, i.e. real data.
+        if j < V:
+            xnew[i, :, :] = x[j, :, :]
+        # Fake vertex because of singeltons.
+        # They will stay 0 so that max pooling chooses the singelton.
+        # Or -infty ?
+        else:
+            xnew[i, :, :] = torch.zeros(B, F)
     return xnew

@@ -7,6 +7,8 @@ import pickle
 import json
 import os
 import pdb
+from lib.coarsening import perm_data_torch2
+
 
 if torch.cuda.is_available():
     print('cuda available')
@@ -247,20 +249,26 @@ class simple_trainer:
         with open(fname, 'wb') as f:
             pickle.dump(out_train_list, f)
 
-    def graph_nn_train(self, L, lmax, l2_reg=5e-4, num_epoch=10, dr_val=0.5):
+    def graph_nn_train(self, L, lmax, perm, l2_reg=5e-4, num_epoch=10, dr_val=0.5):
         running_loss = 0
         running_accuray = 0
         running_total = 0
 
         for epoch in range(num_epoch):
             # running_loss = 0
-            num_tr_iter = 0
+            # num_tr_iter = 0
             for ind, sample in enumerate(self.train_loader):
                 instance = Variable(sample['sig'].cuda())
                 label = Variable(sample['label'].cuda())
                 # last_layer_features = self.get_nn_features(instance)
                 y_pred, channel_layer_outs = self.nn_model(instance)
                 inp_fin_outs = [channel_layer_outs[i]['fc1'] for i in range(6)]
+                # pdb.set_trace()
+                inp_fin_outs = torch.stack(inp_fin_outs)
+                inp_fin_outs = perm_data_torch2(inp_fin_outs, perm)
+                # inp_fin_outs.cuda()
+                inp_fin_outs = inp_fin_outs.permute(1, 0, 2)
+                # pdb.set_trace()
                 self.graph_optimizer.zero_grad()
                 y_pred_graph = self.graph_model(inp_fin_outs, dr_val, L, lmax)
                 # y_pred_graph = y_pred.view(-1, 2)

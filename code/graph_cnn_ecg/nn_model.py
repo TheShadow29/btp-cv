@@ -101,7 +101,7 @@ class Graph_ConvNet_LeNet5(nn.Module):
         # Fin = nb input features
         # Fout = nb output features
         # K = Chebyshev order & support size
-        # pdb.set_trace()
+        pdb.set_trace()
         B, V, Fin = x.size()
         B, V, Fin = int(B), int(V), int(Fin)
 
@@ -145,6 +145,7 @@ class Graph_ConvNet_LeNet5(nn.Module):
         x = x.view([B*V, Fin*K])             # B*V x Fin*K
 
         # Compose linearly Fin features to get Fout features
+        pdb.set_trace()
         x = cl(x)                            # B*V x Fout
         x = x.view([B, V, Fout])             # B x V x Fout
 
@@ -166,7 +167,9 @@ class Graph_ConvNet_LeNet5(nn.Module):
         # pdb.set_trace()
         # x = x.squeeze()
         # x = x.unsqueeze(2)  # B x V x Fin=1
+        pdb.set_trace()
         x = self.graph_conv_cheby(x, self.cl1, L[0], lmax[0], self.CL1_F, self.CL1_K)
+
         x = F.relu(x)
         x = self.graph_max_pool(x, 4)
 
@@ -220,7 +223,7 @@ class Graph_ConvNet_cl_fc(nn.Module):
 
     def __init__(self, net_parameters):
 
-        print('Graph ConvNet: LeNet5')
+        print('Graph ConvNet: LeNet2')
 
         super(Graph_ConvNet_cl_fc, self).__init__()
 
