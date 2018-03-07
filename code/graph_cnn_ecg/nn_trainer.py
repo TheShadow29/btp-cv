@@ -95,13 +95,14 @@ class ecg_trainer:
 
 class simple_trainer:
     def __init__(self, nn_model, graph_model, train_loader=None,
-                 train_loader2=None, test_loader=None, test_loader2=None,
+                 train_loader2=None, train_loader_graph=None, test_loader=None, test_loader2=None,
                  loss_fn=None, optimizer='adam', graph_optimizer='adam'):
         self.nn_model = nn_model
         self.graph_model = graph_model
         # self.nn_model.cuda()
         self.train_loader = train_loader
         self.train_loader2 = train_loader2
+        self.train_loader_graph = train_loader_graph
         self.test_loader = test_loader
         self.test_loader2 = test_loader2
         self.loss_fn = loss_fn
@@ -151,6 +152,7 @@ class simple_trainer:
                 self.optimizer.zero_grad()
                 # pdb.set_trace()
                 y_pred, pred_layer_outs = self.nn_model(instance)
+                # pdb.set_trace()
                 y_pred = y_pred.view(-1, 2)
                 # pdb.set_trace()
                 loss = self.loss_fn(y_pred, label)
@@ -175,10 +177,11 @@ class simple_trainer:
                 plt.pause(0.01)
 
             # self.valid_acc_list.append(val_acc)
-            else:
+            else:               #
                 curr_acc = self.test_model()
                 is_best = False
-                if curr_acc > best_acc:
+                # if curr_acc > best_acc:
+                if False:
                     best_acc = curr_acc
                     is_best = True
                     save_checkpoint({
@@ -257,7 +260,7 @@ class simple_trainer:
         for epoch in range(num_epoch):
             # running_loss = 0
             # num_tr_iter = 0
-            for ind, sample in enumerate(self.train_loader):
+            for ind, sample in enumerate(self.train_loader_graph):
                 instance = Variable(sample['sig'].cuda())
                 label = Variable(sample['label'].cuda())
                 # last_layer_features = self.get_nn_features(instance)
@@ -272,12 +275,13 @@ class simple_trainer:
                 self.graph_optimizer.zero_grad()
                 y_pred_graph = self.graph_model(inp_fin_outs, dr_val, L, lmax)
                 # y_pred_graph = y_pred.view(-1, 2)
-
-                loss = self.graph_model(y_pred_graph, label, l2_reg)
+                y_pred_graph = y_pred_graph.view(-1, 2)
+                pdb.set_trace()
+                loss = self.graph_model.loss(y_pred_graph, label, l2_reg)
                 loss_train = loss.data[0]
 
                 acc_train = self.graph_model.evaluation(y_pred_graph, label.data)
-
+                pdb.set_trace()
                 loss.backward()
 
                 # global_step += self.batch_size

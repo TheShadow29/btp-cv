@@ -59,14 +59,15 @@ if __name__ == "__main__":
         lmax.append(lmax_L(L[i]))
     print('lmax: ' + str([lmax[i] for i in range(coarsening_levels)]))
 
-    D = 6
-    CL1_F = 32
-    CL1_K = 25
-    CL2_F = 64
-    CL2_K = 25
-    FC1_F = 512
+    D = 8
+    Fin = 30
+    CL1_F = 3
+    CL1_K = 5
+    CL2_F = 3
+    CL2_K = 10
+    FC1_F = 4
     FC2_F = 2
-    net_parameters = [D, CL1_F, CL1_K, CL2_F, CL2_K, FC1_F, FC2_F]
+    net_parameters = [D, Fin, CL1_F, CL1_K, CL2_F, CL2_K, FC1_F, FC2_F]
 
     # Need to define graph_nn
 
@@ -74,6 +75,12 @@ if __name__ == "__main__":
         ecg_train_loader = DataLoader(ecg_dataset_simple(ptb_tdir_str, train_list,
                                                          Din, partitions=27, channels=channels),
                                       batch_size=batch_size, shuffle=True, num_workers=2)
+
+        ecg_train_loader_graph = DataLoader(ecg_dataset_simple(ptb_tdir_str, train_list,
+                                                               Din, partitions=27,
+                                                               channels=channels),
+                                            batch_size=1, shuffle=True, num_workers=2)
+
         ecg_train_loader2 = DataLoader(ecg_dataset_simple(ptb_tdir_str, train_list,
                                                           Din, partitions=27,
                                                           channels=channels),
@@ -95,7 +102,8 @@ if __name__ == "__main__":
         graph_nn.cuda()
         loss_fn = torch.nn.CrossEntropyLoss()
         simple_train = simple_trainer(simple_nn, graph_nn, ecg_train_loader, ecg_train_loader2,
-                                      ecg_test_loader, ecg_test_loader2, loss_fn)
+                                      ecg_train_loader_graph, ecg_test_loader, ecg_test_loader2,
+                                      loss_fn)
         simple_train.load_model()
         # simple_train.train_model(50, plt_fig=False)
         # simple_train.cnn_features_save(fname='/home/SharedData/Ark_git_files/btp_extra_files/ecg-analysis/cnn_features_train.pkl')
