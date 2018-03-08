@@ -44,6 +44,7 @@ class Graph_ConvNet_LeNet5(nn.Module):
         # pdb.set_trace()
         # graph CL1
         self.cl1 = nn.Linear(CL1_K * Fin1, CL1_F)
+        self.conv1_bn = torch.nn.BatchNorm1d(D, CL1_F)
         Fin = CL1_K
         Fout = CL1_F
         scale = np.sqrt(2.0 / (Fin+Fout))
@@ -54,6 +55,7 @@ class Graph_ConvNet_LeNet5(nn.Module):
 
         # graph CL2
         self.cl2 = nn.Linear(CL2_K*CL1_F, CL2_F)
+        self.conv2_bn = torch.nn.BatchNorm1d(D//p, CL2_F)
         Fin = CL2_K * CL1_F
         Fout = CL2_F
         scale = np.sqrt(2.0 / (Fin+Fout))
@@ -172,14 +174,17 @@ class Graph_ConvNet_LeNet5(nn.Module):
         # x = x.squeeze()
         # x = x.unsqueeze(2)  # B x V x Fin=1
         # pdb.set_trace()
+        # pdb.set_trace()
         x = self.graph_conv_cheby(x, self.cl1, L[0], lmax[0], self.CL1_F, self.CL1_K)
         # pdb.set_trace()
         x = F.relu(x)
+        x = self.conv1_bn(x)
         x = self.graph_max_pool(x, 2)
 
         # graph CL2
         x = self.graph_conv_cheby(x, self.cl2, L[1], lmax[1], self.CL2_F, self.CL2_K)
         x = F.relu(x)
+        x = self.conv2_bn(x)
         x = self.graph_max_pool(x, 2)
 
         # FC1
