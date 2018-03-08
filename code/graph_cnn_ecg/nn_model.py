@@ -126,6 +126,7 @@ class Graph_ConvNet_LeNet5(nn.Module):
 
         # transform to Chebyshev basis
         x0 = x.permute(1, 2, 0).contiguous()  # V x Fin x B
+        # pdb.set_trace()
         x0 = x0.view([V, Fin*B])            # V x Fin*B
         x = x0.unsqueeze(0)                 # 1 x V x Fin*B
 
@@ -136,6 +137,7 @@ class Graph_ConvNet_LeNet5(nn.Module):
         if K > 1:
             x1 = my_sparse_mm()(L, x0)              # V x Fin*B
             x = torch.cat((x, x1.unsqueeze(0)), 0)  # 2 x V x Fin*B
+        # pdb.set_trace()
         for k in range(2, K):
             x2 = 2 * my_sparse_mm()(L, x1) - x0
             x = torch.cat((x, x2.unsqueeze(0)), 0)  # M x Fin*B
@@ -150,7 +152,7 @@ class Graph_ConvNet_LeNet5(nn.Module):
         x = cl(x)                            # B*V x Fout
         # pdb.set_trace()
         x = x.view([B, V, Fout])             # B x V x Fout
-
+        # pdb.set_trace()
         return x
 
     # Max pooling of size p. Must be a power of 2.
@@ -171,7 +173,7 @@ class Graph_ConvNet_LeNet5(nn.Module):
         # x = x.unsqueeze(2)  # B x V x Fin=1
         # pdb.set_trace()
         x = self.graph_conv_cheby(x, self.cl1, L[0], lmax[0], self.CL1_F, self.CL1_K)
-
+        # pdb.set_trace()
         x = F.relu(x)
         x = self.graph_max_pool(x, 2)
 
@@ -200,7 +202,7 @@ class Graph_ConvNet_LeNet5(nn.Module):
             data = param * param
             l2_loss += data.sum()
 
-        loss += 0.5 * l2_regularization * l2_loss
+        # loss += 0.5 * l2_regularization * l2_loss
 
         return loss
 
@@ -245,7 +247,6 @@ class Graph_ConvNet_cl_fc(Graph_ConvNet_LeNet5):
         self.fc1.weight.data.uniform_(-scale, scale)
         self.fc1.bias.data.fill_(0.0)
         self.FC1Fin = FC1Fin
-
 
 
 class graph_conv_ecg(nn.Module):

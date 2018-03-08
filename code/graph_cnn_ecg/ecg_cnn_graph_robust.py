@@ -62,10 +62,10 @@ if __name__ == "__main__":
     D = 8
     Fin = 30
     CL1_F = 3
-    CL1_K = 5
+    CL1_K = 6
     CL2_F = 3
-    CL2_K = 10
-    FC1_F = 4
+    CL2_K = 16
+    FC1_F = 30
     FC2_F = 2
     net_parameters = [D, Fin, CL1_F, CL1_K, CL2_F, CL2_K, FC1_F, FC2_F]
 
@@ -79,7 +79,7 @@ if __name__ == "__main__":
         ecg_train_loader_graph = DataLoader(ecg_dataset_simple(ptb_tdir_str, train_list,
                                                                Din, partitions=27,
                                                                channels=channels),
-                                            batch_size=1, shuffle=True, num_workers=2)
+                                            batch_size=batch_size, shuffle=True, num_workers=2)
 
         ecg_train_loader2 = DataLoader(ecg_dataset_simple(ptb_tdir_str, train_list,
                                                           Din, partitions=27,
@@ -107,7 +107,7 @@ if __name__ == "__main__":
         simple_train.load_model()
         # simple_train.train_model(50, plt_fig=False)
         # simple_train.cnn_features_save(fname='/home/SharedData/Ark_git_files/btp_extra_files/ecg-analysis/cnn_features_train.pkl')
-        simple_train.graph_nn_train(L, lmax, perm)
+        simple_train.graph_nn_train(L, lmax, perm, num_epoch=50)
         # get all the last layer predn from the CNN
         # Put the weights onto the graph
         # graph structure to learn on is very small

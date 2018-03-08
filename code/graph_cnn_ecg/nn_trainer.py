@@ -262,12 +262,13 @@ class simple_trainer:
             # num_tr_iter = 0
             for ind, sample in enumerate(self.train_loader_graph):
                 instance = Variable(sample['sig'].cuda())
-                label = Variable(sample['label'].cuda())
+                label = Variable(sample['label'].cuda(), requires_grad=False)
                 # last_layer_features = self.get_nn_features(instance)
                 y_pred, channel_layer_outs = self.nn_model(instance)
-                inp_fin_outs = [channel_layer_outs[i]['fc1'] for i in range(6)]
+                inp_fin_outs1 = [channel_layer_outs[i]['fc1'] for i in range(6)]
                 # pdb.set_trace()
-                inp_fin_outs = torch.stack(inp_fin_outs)
+                inp_fin_outs = torch.stack(inp_fin_outs1)
+                inp_fin_outs = inp_fin_outs.detach()
                 inp_fin_outs = perm_data_torch2(inp_fin_outs, perm)
                 # inp_fin_outs.cuda()
                 inp_fin_outs = inp_fin_outs.permute(1, 0, 2)
@@ -276,12 +277,12 @@ class simple_trainer:
                 y_pred_graph = self.graph_model(inp_fin_outs, dr_val, L, lmax)
                 # y_pred_graph = y_pred.view(-1, 2)
                 y_pred_graph = y_pred_graph.view(-1, 2)
-                pdb.set_trace()
+                # pdb.set_trace()
                 loss = self.graph_model.loss(y_pred_graph, label, l2_reg)
                 loss_train = loss.data[0]
 
                 acc_train = self.graph_model.evaluation(y_pred_graph, label.data)
-                pdb.set_trace()
+                # pdb.set_trace()
                 loss.backward()
 
                 # global_step += self.batch_size
@@ -290,9 +291,10 @@ class simple_trainer:
                 running_loss += loss_train
                 running_accuray += acc_train
                 running_total += 1
+                # print('Run Total', running_total)
 
-        print('epoch= %d, loss(train)= %.3f, accuracy(train)= %.3f, time= %.3f, lr= %.5f' %
-              (epoch+1, running_loss/running_total, running_accuray/running_total))
+            print('epoch= %d, loss(train)= %.3f, accuracy(train)= %.3f' %
+                  (epoch+1, running_loss/running_total, running_accuray/running_total))
 
         # self.graph_model(channel_layer_outs, )
         # pdb.set_trace()
