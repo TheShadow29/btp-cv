@@ -330,8 +330,9 @@ class end_to_end_trainer:
                   .format(load_path, checkpoint['epoch']))
         else:
             print("=> no checkpoint found at '{}'".format(load_path))
+        return
 
-    def train_model(self, num_epoch=15):
+    def train_model(self, d, L, lmax, perm, num_epoch=15):
         print('TrainSet: ', len(self.train_loader))
         self.nn_model.train()
         curr_acc = 0
@@ -341,11 +342,12 @@ class end_to_end_trainer:
             num_tr_iter = 0
             for ind, sample in enumerate(self.train_loader):
                 instance = Variable(sample['sig'].cuda())
-                label = Variable(sample['sig'].cuda())
+                label = Variable(sample['label'].type(dtypeLong))
+                # pdb.set_trace()
                 self.optimizer.zero_grad()
-                y_pred = self.nn_model(instance)
-
+                y_pred = self.nn_model(instance, d, L, lmax, perm)
                 y_pred = y_pred.view(-1, 2)
+                # pdb.set_trace()
                 loss = self.loss_fn(y_pred, label)
                 loss.backward()
                 self.optimizer.step()
@@ -353,7 +355,7 @@ class end_to_end_trainer:
                 num_tr_iter += 1
             self.curr_epoch = self.start_epoch + epoch
             print('epoch', self.curr_epoch, running_loss/num_tr_iter)
-            curr_acc = self.test_model()
+            curr_acc = self.test_model(d, L, lmax, perm)
             is_best = False
 
             if curr_acc > best_acc:
@@ -367,14 +369,14 @@ class end_to_end_trainer:
                     'optimizer': self.optimizer.state_dict(),
                 }, is_best)
 
-    def test_model(self):
+    def test_model(self, d, L, lmax, perm):
         print('TestSet :', len(self.test_loader))
         num_corr = 0
         tot_num = 0
         self.nn_model.eval()
         for sample in self.test_loader:
             instance = Variable(sample['sig'].cuda())
-            y_pred = self.nn_model(instance)
+            y_pred = self.nn_model(instance, d, L, lmax, perm)
             y_pred = y_pred.view(-1, 2)
             _, label_pred = torch.max(y_pred.data, 1)
 

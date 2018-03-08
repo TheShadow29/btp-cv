@@ -351,6 +351,7 @@ def perm_data_torch(x, indices):
             xnew[:, i] = torch.zeros(N)
     return xnew
 
+
 def perm_data_torch2(x, indices):
     """
     Permute data matrix, i.e. exchange node ids,
@@ -372,4 +373,29 @@ def perm_data_torch2(x, indices):
         # Or -infty ?
         else:
             xnew[i, :, :] = torch.zeros(B, F)
+    return xnew
+
+
+def perm_data_torch3(x, indices):
+    """
+    Permute data matrix, i.e. exchange node ids,
+    so that binary unions form the clustering tree.
+    """
+    if indices is None:
+        return x
+    # pdb.set_trace()
+    B, V, F = x.shape
+    Mnew = len(indices)
+    assert Mnew >= V
+    xnew = torch.autograd.Variable(torch.cuda.FloatTensor(B, Mnew, F).zero_())
+    for i, j in enumerate(indices):
+        # Existing vertex, i.e. real data.
+        if j < V:
+            # pdb.set_trace()
+            xnew[:, i, :] = x[:, j, :]
+        # Fake vertex because of singeltons.
+        # They will stay 0 so that max pooling chooses the singelton.
+        # Or -infty ?
+        else:
+            xnew[:, i, :] = torch.zeros(B, F)
     return xnew

@@ -6,6 +6,7 @@ from lib.coarsening import lmax_L
 from lib.coarsening import rescale_L
 from torch.autograd import Variable
 import torch.nn.functional as F
+from lib.coarsening import perm_data_torch2
 
 
 class my_sparse_mm(torch.autograd.Function):
@@ -443,7 +444,7 @@ class complex_net(torch.nn.Module):
 class end_to_end_model(torch.nn.Module):
     def __init__(self, cnet_parameters, gnet_parameters):
         super(end_to_end_model, self).__init__()
-        Din, num_inp_channels, f, s, c1o, c2o, fc1o, fc2o = cnet_parameters
+        Din, num_inp_channels, f, s, c1o, c2o, fc1o = cnet_parameters
         self.num_inp_channels = num_inp_channels
 
         D, CL1_F, CL1_K, CL2_F, CL2_K, FC1_F, FC2_F = gnet_parameters
@@ -459,13 +460,13 @@ class end_to_end_model(torch.nn.Module):
         self.conv2_bn = torch.nn.BatchNorm1d(c2o)
 
         self.lin1_list = torch.nn.ModuleList()
-        self.lin2_list = torch.nn.ModuleList()
+        # self.lin2_list = torch.nn.ModuleList()
 
         for i in range(self.num_inp_channels):
             self.conv1_list.append(torch.nn.Conv1d(1, c1o, f, stride=s))
             self.conv2_list.append(torch.nn.Conv1d(c1o, c2o, f, stride=s))
             self.lin1_list.append(torch.nn.Linear(c2o*new_dim, fc1o))
-            self.lin2_list.append(torch.nn.Linear(fc1o, fc2o))
+            # self.lin2_list.append(torch.nn.Linear(fc1o, fc2o))
 
         # FC1Fin = CL2_F*(D//(p*p))
         # pdb.set_trace()
@@ -594,39 +595,83 @@ class end_to_end_model(torch.nn.Module):
         else:
             return x
 
-    def forward(self, inp, d, L, lmax):
-
+    def forward(self, inp, d, L, lmax, perm):
+        pdb.set_trace()
         num_channels = inp.shape[1]
-        out_list = []
-        for i in range(num_channels):
+        # out_list = []
+        if num_channels == 6:
+            out = F.max_pool1d(self.conv1_bn(F.relu(self.conv1_list[0](inp[:, [0], :]))), 2)
+            out = F.max_pool1d(self.conv2_bn(F.relu(self.conv2_list[0](out))), 2)
+            out = out.view(out.size(0), -1)
+            out = F.relu(self.lin1_list[0](out))
+            # out0 = out
+            cout_var = out
+            # out = F.max_pool1d(self.conv1_bn(F.relu(self.conv1_list[1](inp[:, [1], :]))), 2)
+            # out = F.max_pool1d(self.conv2_bn(F.relu(self.conv2_list[1](out))), 2)
+            # out = out.view(out.size(0), -1)
+            # out = F.relu(self.lin1_list[1](out))
+            # out1 = out
+
+            # out = F.max_pool1d(self.conv1_bn(F.relu(self.conv1_list[2](inp[:, [2], :]))), 2)
+            # out = F.max_pool1d(self.conv2_bn(F.relu(self.conv2_list[2](out))), 2)
+            # out = out.view(out.size(0), -1)
+            # out = F.relu(self.lin1_list[2](out))
+            # out2 = out
+
+            # out = F.max_pool1d(self.conv1_bn(F.relu(self.conv1_list[3](inp[:, [3], :]))), 2)
+            # out = F.max_pool1d(self.conv2_bn(F.relu(self.conv2_list[3](out))), 2)
+            # out = out.view(out.size(0), -1)
+            # out = F.relu(self.lin1_list[3](out))
+            # out3 = out
+
+            # out = F.max_pool1d(self.conv1_bn(F.relu(self.conv1_list[4](inp[:, [4], :]))), 2)
+            # out = F.max_pool1d(self.conv2_bn(F.relu(self.conv2_list[4](out))), 2)
+            # out = out.view(out.size(0), -1)
+            # out = F.relu(self.lin1_list[4](out))
+            # out4 = out
+
+            # out = F.max_pool1d(self.conv1_bn(F.relu(self.conv1_list[5](inp[:, [5], :]))), 2)
+            # out = F.max_pool1d(self.conv2_bn(F.relu(self.conv2_list[5](out))), 2)
+            # out = out.view(out.size(0), -1)
+            # out = F.relu(self.lin1_list[5](out))
+            # out5 = out
+
+        # cout_var = torch.stack([out0, out1, out2, out3, out4, out5])
+        b, f = out.shape
+        for i in range(1, num_channels):
             out = F.max_pool1d(self.conv1_bn(F.relu(self.conv1_list[i](inp[:, [i], :]))), 2)
             out = F.max_pool1d(self.conv2_bn(F.relu(self.conv2_list[i](out))), 2)
             out = out.view(out.size(0), -1)
             out = F.relu(self.lin1_list[i](out))
-            # out = self.lin2_list[i](out)
-            out_list.append(out)
-        cout_var = torch.stack(out_list)
+            cout_var = torch.cat((cout_var, out), 0)
 
-        x = cout_var
-
-        x = self.graph_conv_cheby(x, self.cl1, L[0], lmax[0], self.CL1_F, self.CL1_K)
+        # cout_var = torch.stack(out_list)
+        cout_var = cout_var.view(num_channels, b, f)
         # pdb.set_trace()
-        x = F.relu(x)
-        x = self.conv1_bn(x)
-        x = self.graph_max_pool(x, 2)
+        x = perm_data_torch2(cout_var, perm)
+        x = x[0, :, :]
+        # x = x.permute(1, 0, 2)
 
-        # graph CL2
-        x = self.graph_conv_cheby(x, self.cl2, L[1], lmax[1], self.CL2_F, self.CL2_K)
-        x = F.relu(x)
-        x = self.conv2_bn(x)
-        x = self.graph_max_pool(x, 2)
+        # x = self.graph_conv_cheby(x, self.cl1, L[0], lmax[0], self.CL1_F, self.CL1_K)
+        # # pdb.set_trace()
+        # x = F.relu(x)
+        # x = self.gconv1_bn(x)
+        # x = self.graph_max_pool(x, 2)
 
-        # FC1
-        x = x.view(-1, self.FC1Fin)
-        x = self.fc1(x)
-        x = F.relu(x)
-        x = nn.Dropout(d)(x)
+        # # graph CL2
+        # x = self.graph_conv_cheby(x, self.cl2, L[1], lmax[1], self.CL2_F, self.CL2_K)
+        # x = F.relu(x)
+        # x = self.gconv2_bn(x)
+        # x = self.graph_max_pool(x, 2)
+
+        # # FC1
+        # x = x.view(-1, self.FC1Fin)
+        # x = self.fc1(x)
+        # x = F.relu(x)
+        # x = nn.Dropout(d)(x)
 
         # FC2
+        # pdb.set_trace()
         x = self.fc2(x)
+        # pdb.set_trace()
         return x
