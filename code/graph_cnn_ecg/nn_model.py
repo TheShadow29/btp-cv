@@ -228,53 +228,6 @@ class Graph_ConvNet_LeNet5(nn.Module):
         return 100.0 * (class_predicted == test_l).sum() / y_predicted.size(0)
 
 
-class Graph_ConvNet_cl_fc(Graph_ConvNet_LeNet5):
-
-    def __init__(self, net_parameters):
-        super(Graph_ConvNet_cl_fc, self).__init__()
-        D, CL1_F, CL1_K, CL2_F, CL2_K, FC1_F, FC2_F = net_parameters
-        p = 2
-        FC1Fin = CL2_F*(D//p)
-
-        self.cl1 = nn.Linear(CL1_K, CL1_F)
-        Fin = CL1_K
-        Fout = CL1_F
-        scale = np.sqrt(2.0 / (Fin+Fout))
-        self.cl1.weight.data.uniform_(-scale, scale)
-        self.cl1.bias.data.fill_(0.0)
-        self.CL1_K = CL1_K
-        self.CL1_F = CL1_F
-
-        self.fc1 = nn.Linear(FC1Fin, FC1_F)
-        Fin = FC1Fin
-        Fout = FC1_F
-        scale = np.sqrt(2.0 / (Fin+Fout))
-        self.fc1.weight.data.uniform_(-scale, scale)
-        self.fc1.bias.data.fill_(0.0)
-        self.FC1Fin = FC1Fin
-
-
-class graph_conv_ecg(nn.Module):
-    def __init__(self, net_params):
-        print('Graph ConvNet Finale')
-        super(graph_conv_ecg, self).__init__()
-        D, cl1_f, cl1_k, cl2_f, cl2_k, fc1_fin, fc1_f, fc2_f = net_params
-
-        self.cl1 = torch.nn.Linear(cl1_k, cl1_f)
-
-        Fin = cl1_f
-        Fout = cl1_k
-        scale = np.sqrt(2.0 / (Fin+Fout))
-        self.cl1.weight.data.uniform_(-scale, scale)
-        self.cl1.bias.data.fill_(0.0)
-
-        self.cl2 = torch.nn.Linear(cl2_k * cl1_f, cl2_f)
-        Fin = cl2_k * cl1_f
-        Fout = cl2_f
-        self.cl2.weight.data.uniform_(-scale, scale)
-        self.cl2.bias.data.fill_(0.0)
-
-
 def calc_dim(din, f, s):
     return (din - f)//s + 1
 
@@ -486,3 +439,193 @@ class complex_net(torch.nn.Module):
 #             self.conv2_list[i].cuda()
 #             self.lin1_list[i].cuda()
 #             self.lin2_list[i].cuda()
+
+class end_to_end_model(torch.nn.Module):
+    def __init__(self, cnet_parameters, gnet_parameters):
+        super(end_to_end_model, self).__init__()
+        Din, num_inp_channels, f, s, c1o, c2o, fc1o, fc2o = cnet_parameters
+        self.num_inp_channels = num_inp_channels
+
+        D, CL1_F, CL1_K, CL2_F, CL2_K, FC1_F, FC2_F = gnet_parameters
+        p = 2
+        FC1Fin = CL2_F*(D//(p*p))
+
+        self.conv1_list = torch.nn.ModuleList()
+        new_dim = calc_dim(Din, f, s) // 2
+        self.conv1_bn = torch.nn.BatchNorm1d(c1o)
+
+        self.conv2_list = torch.nn.ModuleList()
+        new_dim = calc_dim(new_dim, f, s) // 2
+        self.conv2_bn = torch.nn.BatchNorm1d(c2o)
+
+        self.lin1_list = torch.nn.ModuleList()
+        self.lin2_list = torch.nn.ModuleList()
+
+        for i in range(self.num_inp_channels):
+            self.conv1_list.append(torch.nn.Conv1d(1, c1o, f, stride=s))
+            self.conv2_list.append(torch.nn.Conv1d(c1o, c2o, f, stride=s))
+            self.lin1_list.append(torch.nn.Linear(c2o*new_dim, fc1o))
+            self.lin2_list.append(torch.nn.Linear(fc1o, fc2o))
+
+        # FC1Fin = CL2_F*(D//(p*p))
+        # pdb.set_trace()
+        # graph CL1
+        self.cl1 = nn.Linear(CL1_K * fc1o, CL1_F)
+        self.gconv1_bn = torch.nn.BatchNorm1d(D, CL1_F)
+        Fin = CL1_K
+        Fout = CL1_F
+        scale = np.sqrt(2.0 / (Fin+Fout))
+        self.cl1.weight.data.uniform_(-scale, scale)
+        self.cl1.bias.data.fill_(0.0)
+        self.CL1_K = CL1_K
+        self.CL1_F = CL1_F
+
+        self.cl2 = nn.Linear(CL2_K*CL1_F, CL2_F)
+        self.gconv2_bn = torch.nn.BatchNorm1d(D//p, CL2_F)
+        Fin = CL2_K * CL1_F
+        Fout = CL2_F
+        scale = np.sqrt(2.0 / (Fin+Fout))
+        self.cl2.weight.data.uniform_(-scale, scale)
+        self.cl2.bias.data.fill_(0.0)
+        self.CL2_K = CL2_K
+        self.CL2_F = CL2_F
+
+        # FC1
+        self.fc1 = nn.Linear(FC1Fin, FC1_F)
+        Fin = FC1Fin
+        Fout = FC1_F
+        scale = np.sqrt(2.0 / (Fin+Fout))
+        self.fc1.weight.data.uniform_(-scale, scale)
+        self.fc1.bias.data.fill_(0.0)
+        # pdb.set_trace()
+        self.FC1Fin = FC1Fin
+
+        # FC2
+        self.fc2 = nn.Linear(FC1_F, FC2_F)
+        Fin = FC1_F
+        Fout = FC2_F
+        scale = np.sqrt(2.0 / (Fin+Fout))
+        self.fc2.weight.data.uniform_(-scale, scale)
+        self.fc2.bias.data.fill_(0.0)
+
+        # nb of parameters
+        nb_param = 18000
+        nb_param += CL1_K * CL1_F + CL1_F          # CL1
+        nb_param += CL2_K * CL1_F * CL2_F + CL2_F  # CL2
+        nb_param += FC1Fin * FC1_F + FC1_F        # FC1
+        nb_param += FC1_F * FC2_F + FC2_F         # FC2
+        print('nb of parameters=', nb_param, '\n')
+
+    def init_weights(self, W, Fin, Fout):
+
+        scale = np.sqrt(2.0 / (Fin+Fout))
+        W.uniform_(-scale, scale)
+
+        return W
+
+    def graph_conv_cheby(self, x, cl, L, lmax, Fout, K):
+
+        # parameters
+        # B = batch size
+        # V = nb vertices
+        # Fin = nb input features
+        # Fout = nb output features
+        # K = Chebyshev order & support size
+        # pdb.set_trace()
+        B, V, Fin = x.size()
+        B, V, Fin = int(B), int(V), int(Fin)
+
+        # rescale Laplacian
+        lmax = lmax_L(L)
+        L = rescale_L(L, lmax)
+
+        # convert scipy sparse matric L to pytorch
+        L = L.tocoo()
+        indices = np.column_stack((L.row, L.col)).T
+        indices = indices.astype(np.int64)
+        indices = torch.from_numpy(indices)
+        indices = indices.type(torch.LongTensor)
+        L_data = L.data.astype(np.float32)
+        L_data = torch.from_numpy(L_data)
+        L_data = L_data.type(torch.FloatTensor)
+        L = torch.sparse.FloatTensor(indices, L_data, torch.Size(L.shape))
+        L = Variable(L, requires_grad=False)
+        if torch.cuda.is_available():
+            L = L.cuda()
+
+        # transform to Chebyshev basis
+        x0 = x.permute(1, 2, 0).contiguous()  # V x Fin x B
+        # pdb.set_trace()
+        x0 = x0.view([V, Fin*B])            # V x Fin*B
+        x = x0.unsqueeze(0)                 # 1 x V x Fin*B
+
+        # def concat(x, x_):
+        #     x_ = x_.unsqueeze(0)            # 1 x V x Fin*B
+        #     return torch.cat((x, x_), 0)    # K x V x Fin*B
+
+        if K >= 1:
+            x1 = my_sparse_mm()(L, x0)              # V x Fin*B
+            x = torch.cat((x, x1.unsqueeze(0)), 0)  # 2 x V x Fin*B
+        # pdb.set_trace()
+        for k in range(2, K):
+            x2 = 2 * my_sparse_mm()(L, x1) - x0
+            x = torch.cat((x, x2.unsqueeze(0)), 0)  # M x Fin*B
+            x0, x1 = x1, x2
+
+        x = x.view([K, V, Fin, B])           # K x V x Fin x B
+        x = x.permute(3, 1, 2, 0).contiguous()  # B x V x Fin x K
+        x = x.view([B*V, Fin*K])             # B*V x Fin*K
+
+        # Compose linearly Fin features to get Fout features
+        # pdb.set_trace()
+        x = cl(x)                            # B*V x Fout
+        # pdb.set_trace()
+        x = x.view([B, V, Fout])             # B x V x Fout
+        # pdb.set_trace()
+        return x
+
+    # Max pooling of size p. Must be a power of 2.
+    def graph_max_pool(self, x, p):
+        if p > 1:
+            x = x.permute(0, 2, 1).contiguous()  # x = B x F x V
+            x = nn.MaxPool1d(p)(x)             # B x F x V/p
+            x = x.permute(0, 2, 1).contiguous()  # x = B x V/p x F
+            return x
+        else:
+            return x
+
+    def forward(self, inp, d, L, lmax):
+
+        num_channels = inp.shape[1]
+        out_list = []
+        for i in range(num_channels):
+            out = F.max_pool1d(self.conv1_bn(F.relu(self.conv1_list[i](inp[:, [i], :]))), 2)
+            out = F.max_pool1d(self.conv2_bn(F.relu(self.conv2_list[i](out))), 2)
+            out = out.view(out.size(0), -1)
+            out = F.relu(self.lin1_list[i](out))
+            # out = self.lin2_list[i](out)
+            out_list.append(out)
+        cout_var = torch.stack(out_list)
+
+        x = cout_var
+
+        x = self.graph_conv_cheby(x, self.cl1, L[0], lmax[0], self.CL1_F, self.CL1_K)
+        # pdb.set_trace()
+        x = F.relu(x)
+        x = self.conv1_bn(x)
+        x = self.graph_max_pool(x, 2)
+
+        # graph CL2
+        x = self.graph_conv_cheby(x, self.cl2, L[1], lmax[1], self.CL2_F, self.CL2_K)
+        x = F.relu(x)
+        x = self.conv2_bn(x)
+        x = self.graph_max_pool(x, 2)
+
+        # FC1
+        x = x.view(-1, self.FC1Fin)
+        x = self.fc1(x)
+        x = F.relu(x)
+        x = nn.Dropout(d)(x)
+
+        # FC2
+        x = self.fc2(x)
