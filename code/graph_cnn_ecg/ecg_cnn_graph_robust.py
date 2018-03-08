@@ -61,9 +61,9 @@ if __name__ == "__main__":
 
     D = 8
     Fin = 30
-    CL1_F = 3
+    CL1_F = 30
     CL1_K = 6
-    CL2_F = 3
+    CL2_F = 30
     CL2_K = 16
     FC1_F = 30
     FC2_F = 2
