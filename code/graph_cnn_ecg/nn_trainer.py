@@ -298,3 +298,89 @@ class simple_trainer:
 
         # self.graph_model(channel_layer_outs, )
         # pdb.set_trace()
+
+
+class end_to_end_trainer:
+    def __init__(self, nn_model, train_loader=None, test_loader=None,
+                 loss_fn=None, optimizer='adam'):
+        self.nn_model = nn_model
+        if torch.cuda.is_available():
+            self.nn_model.cuda()
+        self.train_loader = train_loader
+        self.test_loader = test_loader
+        self.loss_fn = loss_fn
+        self.start_epoch = 0
+        if optimizer == 'adam':
+            self.optimizer = torch.optim.Adam(self.nn_model.parameters())
+
+    def save_checkpoint(state, is_best, filename='checkpoint_e2e.pth.tar'):
+        torch.save(state, filename)
+        if is_best:
+            shutil.copyfile(filename, 'e2e_model_best.pth.tar')
+
+    def load_model(self, load_path='e2e_model_best.pth.tar'):
+        if os.path.isfile(load_path):
+            print("=> loading checkpoint '{}'".format(load_path))
+            checkpoint = torch.load(load_path)
+            self.start_epoch = checkpoint['epoch']
+            # best_prec1 = checkpoint['best_prec1']
+            self.nn_model.load_state_dict(checkpoint['state_dict'])
+            self.optimizer.load_state_dict(checkpoint['optimizer'])
+            print("=> loaded checkpoint '{}' (epoch {})"
+                  .format(load_path, checkpoint['epoch']))
+        else:
+            print("=> no checkpoint found at '{}'".format(load_path))
+
+    def train_model(self, num_epoch=15):
+        print('TrainSet: ', len(self.train_loader))
+        self.nn_model.train()
+        curr_acc = 0
+        best_acc = 0
+        for epoch in range(num_epoch):
+            running_loss = 0
+            num_tr_iter = 0
+            for ind, sample in enumerate(self.train_loader):
+                instance = Variable(sample['sig'].cuda())
+                label = Variable(sample['sig'].cuda())
+                self.optimizer.zero_grad()
+                y_pred = self.nn_model(instance)
+
+                y_pred = y_pred.view(-1, 2)
+                loss = self.loss_fn(y_pred, label)
+                loss.backward()
+                self.optimizer.step()
+                running_loss += loss.data[0]
+                num_tr_iter += 1
+            self.curr_epoch = self.start_epoch + epoch
+            print('epoch', self.curr_epoch, running_loss/num_tr_iter)
+            curr_acc = self.test_model()
+            is_best = False
+
+            if curr_acc > best_acc:
+                best_acc = curr_acc
+                is_best = True
+                save_checkpoint({
+                    'epoch': self.curr_epoch + 1,
+                    # 'arch': args.arch,
+                    'state_dict': self.nn_model.state_dict(),
+                    # 'best_prec1': best_prec1,
+                    'optimizer': self.optimizer.state_dict(),
+                }, is_best)
+
+    def test_model(self):
+        print('TestSet :', len(self.test_loader))
+        num_corr = 0
+        tot_num = 0
+        self.nn_model.eval()
+        for sample in self.test_loader:
+            instance = Variable(sample['sig'].cuda())
+            y_pred = self.nn_model(instance)
+            y_pred = y_pred.view(-1, 2)
+            _, label_pred = torch.max(y_pred.data, 1)
+
+            num_corr += (label_pred.cpu() == sample['label']).any()
+            # tot_num += label_pred.shape[0]
+            tot_num += 1
+        print(num_corr, tot_num, num_corr/tot_num)
+        self.nn_model.train()
+        return

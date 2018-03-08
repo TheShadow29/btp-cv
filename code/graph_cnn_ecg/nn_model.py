@@ -629,3 +629,4 @@ class end_to_end_model(torch.nn.Module):
 
         # FC2
         x = self.fc2(x)
+        return x
