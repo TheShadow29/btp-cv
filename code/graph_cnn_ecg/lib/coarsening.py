@@ -372,7 +372,7 @@ def perm_data_torch2(x, indices):
         # They will stay 0 so that max pooling chooses the singelton.
         # Or -infty ?
         else:
-            xnew[i, :, :] = torch.zeros(B, F)
+            xnew[i, :, :] = torch.autograd.Variable(torch.zeros(B, F))
     return xnew
 
 

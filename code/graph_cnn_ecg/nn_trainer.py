@@ -385,4 +385,4 @@ class end_to_end_trainer:
             tot_num += 1
         print(num_corr, tot_num, num_corr/tot_num)
         self.nn_model.train()
-        return
+        return num_corr / tot_num

@@ -7,36 +7,37 @@ import numpy as np
 import pdb
 import itertools
 
-def grid_graph(grid_side,number_edges,metric):
+
+def grid_graph(grid_side, number_edges, metric):
     """Generate graph of a grid"""
     z = grid(grid_side)
     pdb.set_trace()
     dist, idx = distance_sklearn_metrics(z, k=number_edges, metric=metric)
     A = adjacency(dist, idx)
-    print("nb edges: ",A.nnz)
+    print("nb edges: ", A.nnz)
     return A
 
 
 def grid(m, dtype=np.float32):
     """Return coordinates of grid points"""
     M = m**2
-    x = np.linspace(0,1,m, dtype=dtype)
-    y = np.linspace(0,1,m, dtype=dtype)
+    x = np.linspace(0, 1, m, dtype=dtype)
+    y = np.linspace(0, 1, m, dtype=dtype)
     xx, yy = np.meshgrid(x, y)
-    z = np.empty((M,2), dtype)
-    z[:,0] = xx.reshape(M)
-    z[:,1] = yy.reshape(M)
+    z = np.empty((M, 2), dtype)
+    z[:, 0] = xx.reshape(M)
+    z[:, 1] = yy.reshape(M)
     return z
 
 
 def distance_sklearn_metrics(z, k=4, metric='euclidean'):
     """Compute pairwise distances"""
-    #d = sklearn.metrics.pairwise.pairwise_distances(z, metric=metric, n_jobs=-2)
+    # d = sklearn.metrics.pairwise.pairwise_distances(z, metric=metric, n_jobs=-2)
     d = sklearn.metrics.pairwise.pairwise_distances(z, metric=metric, n_jobs=1)
     # k-NN
-    idx = np.argsort(d)[:,1:k+1]
+    idx = np.argsort(d)[:, 1:k+1]
     d.sort()
-    d = d[:,1:k+1]
+    d = d[:, 1:k+1]
     return d, idx
 
 
@@ -48,7 +49,7 @@ def adjacency(dist, idx):
     assert dist.max() <= 1
 
     # Pairwise distances
-    sigma2 = np.mean(dist[:,-1])**2
+    sigma2 = np.mean(dist[:, -1])**2
     dist = np.exp(- dist**2 / sigma2)
 
     # Weight matrix
@@ -85,6 +86,9 @@ def simple_graph(n=6, create_using=None, number_edges=2, metric='euclidean'):
     # return z
     # z[0, 1] =
     dist, idx = distance_sklearn_metrics(z, k=number_edges, metric=metric)
+    # pdb.set_trace()
+    if dist.max() > 1:
+        dist = dist / dist.max()
     A = adjacency(dist, idx)
     G = nx.from_scipy_sparse_matrix(A)
     nx.draw(G)

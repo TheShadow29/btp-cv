@@ -7,8 +7,9 @@ from data_loader import ecg_dataset_simple
 from nn_model import simple_net, complex_net, end_to_end_model
 from nn_model import Graph_ConvNet_LeNet5
 from nn_trainer import simple_trainer, end_to_end_trainer
-import torch.nn.functional as F
-import numpy as np
+# import torch.nn.functional as F
+# import numpy as np
+import pdb
 # import mat
 # import pathlib
 from pathlib import Path
@@ -50,7 +51,10 @@ if __name__ == "__main__":
     test_list = (control_list[contr_tr_pts:] + positive_list[post_tr_pts:] +
                  remainder_list[remain_tr_pts:])
 
-    small_graph = simple_graph()
+    small_graph = simple_graph(n=6, number_edges=5)
+
+    # pdb.set_trace()
+
     coarsening_levels = 2
     L, perm = coarsen(small_graph, coarsening_levels)
 
@@ -74,6 +78,7 @@ if __name__ == "__main__":
     CL2_K = 16
     FC1_F = 30
     FC2_F = 2
+    net_parameters = [D, Fin, CL1_F, CL1_K, CL2_F, CL2_K, FC1_F, FC2_F]
     gnet_parameters = [D, CL1_F, CL1_K, CL2_F, CL2_K, FC1_F, FC2_F]
 
     # Need to define graph_nn
@@ -102,23 +107,23 @@ if __name__ == "__main__":
                                       batch_size=1, shuffle=False, num_workers=0)
 
         # simple_nn = simple_net(Din, len(channels))
-        # simple_nn = complex_net(Din, len(channels))
-        # simple_nn.cuda()
+        simple_nn = complex_net(Din, len(channels))
+        simple_nn.cuda()
         # simple_nn.to_cuda()
-        # graph_nn = Graph_ConvNet_LeNet5(net_parameters)
-        # graph_nn.cuda()
+        graph_nn = Graph_ConvNet_LeNet5(net_parameters)
+        graph_nn.cuda()
         loss_fn = torch.nn.CrossEntropyLoss()
-        # simple_train = simple_trainer(simple_nn, graph_nn, ecg_train_loader, ecg_train_loader2,
-        # ecg_train_loader_graph, ecg_test_loader, ecg_test_loader2,
-        # loss_fn)
-        # simple_train.load_model()
+        simple_train = simple_trainer(simple_nn, graph_nn, ecg_train_loader, ecg_train_loader2,
+                                      ecg_train_loader_graph, ecg_test_loader, ecg_test_loader2,
+                                      loss_fn)
+        simple_train.load_model()
         # simple_train.train_model(50, plt_fig=False)
         # simple_train.cnn_features_save(fname='/home/SharedData/Ark_git_files/btp_extra_files/ecg-analysis/cnn_features_train.pkl')
-        # simple_train.graph_nn_train(L, lmax, perm, num_epoch=50)
-        e2e_nn = end_to_end_model(cnet_parameters, gnet_parameters)
-        e2e_trainer = end_to_end_trainer(e2e_nn, ecg_train_loader, ecg_test_loader, loss_fn)
-        e2e_trainer.load_model()
-        e2e_trainer.train_model(d, L, lmax, perm, num_epoch=50)
+        simple_train.graph_nn_train(L, lmax, perm, num_epoch=50)
+        # e2e_nn = end_to_end_model(cnet_parameters, gnet_parameters)
+        # e2e_trainer = end_to_end_trainer(e2e_nn, ecg_train_loader, ecg_test_loader, loss_fn)
+        # e2e_trainer.load_model()
+        # e2e_trainer.train_model(d, L, lmax, perm, num_epoch=50)
         # get all the last layer predn from the CNN
         # Put the weights onto the graph
         # graph structure to learn on is very small
