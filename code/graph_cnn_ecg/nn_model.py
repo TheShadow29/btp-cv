@@ -495,6 +495,13 @@ class end_to_end_model(torch.nn.Module):
             self.lin1_list.append(torch.nn.Linear(c2o*new_dim, fc1o))
             self.lin2_list.append(torch.nn.Linear(fc1o, 2))
 
+        # self.cnet_module_list = torch.nn.ModuleList([self.conv1_list,
+        #                                              self.conv2_list, self.lin1_list])
+        self.cnet_module_list = torch.nn.ModuleList()
+        for i in range(self.num_inp_channels):
+            tmp_list = torch.nn.ModuleList([self.conv1_list[i], self.conv2_list[i],
+                                            self.lin1_list[i], self.lin2_list[i]])
+            self.cnet_module_list.append(tmp_list)
         # FC1Fin = CL2_F*(D//(p*p))
         # pdb.set_trace()
         # graph CL1
@@ -536,6 +543,9 @@ class end_to_end_model(torch.nn.Module):
         self.fc2.weight.data.uniform_(-scale, scale)
         self.fc2.bias.data.fill_(0.0)
 
+        self.gcnet_module_list = torch.nn.ModuleList([self.cl1, self.cl2, self.fc1, self.fc2])
+        # for p in self.gcnet_module_list.parameters():
+        #     p.requires_grad = False
         # nb of parameters
         nb_param = 18000
         nb_param += CL1_K * CL1_F + CL1_F          # CL1
@@ -622,11 +632,14 @@ class end_to_end_model(torch.nn.Module):
         else:
             return x
 
-    def forward(self, inp, d, L, lmax, perm):
+    def forward(self, inp, d, L, lmax, perm, epoch_num):
+        return self.forward_2(inp, d, L, lmax, perm)
+
+    def forward_2(self, inp, d, L, lmax, perm):
         # pdb.set_trace()
         num_channels = inp.shape[1]
         out_list = []
-
+        pdb.set_trace()
         for i in range(0, num_channels):
             out = F.max_pool1d(self.conv1_bn(F.relu(self.conv1_list[i](inp[:, [i], :]))), 2)
             out = F.max_pool1d(self.conv2_bn(F.relu(self.conv2_list[i](out))), 2)
@@ -699,3 +712,33 @@ class end_to_end_model(torch.nn.Module):
         x = self.fc2(x[:, 0, :])
         # pdb.set_trace()
         return x
+
+
+class partial_end_to_end_model(end_to_end_model):
+    def __init__(self, cnet_parameters, gnet_parameters):
+        super(partial_end_to_end_model, self).__init__(cnet_parameters, gnet_parameters)
+        self.epoch_thresh = 50
+
+    def forward_1(self, inp):
+        out = F.max_pool1d(self.conv1_bn(F.relu(self.conv1_list[1](inp[:, [1], :]))), 2)
+        # out = out.detach()
+        out = F.max_pool1d(self.conv2_bn(F.relu(self.conv2_list[1](out))), 2)
+        out = out.view(out.size(0), -1)
+        out = F.relu(self.lin1_list[1](out))
+        out = F.relu(self.lin2_list[1](out))
+        return out
+
+    def forward(self, inp, d, L, lmax, perm, epoch_num):
+        # cnn_trained_bool = False
+        if epoch_num < self.epoch_thresh:
+            return self.forward_1(inp)
+        elif epoch_num == self.epoch_thresh:
+            l1 = [0, 2, 3, 4, 5]
+            pretrained_dict = self.cnet_module_list[1].state_dict()
+            for i in l1:
+                model_dict = self.cnet_module_list[i].state_dict()
+                pret_dict = {k: v for k, v in pretrained_dict.items() if k in model_dict}
+                model_dict.update(pret_dict)
+                self.cnet_module_list[i].load_state_dict(model_dict)
+        else:
+            return self.forward_2(inp, d, L, lmax, perm)

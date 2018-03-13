@@ -345,7 +345,8 @@ class end_to_end_trainer:
                 label = Variable(sample['label'].type(dtypeLong))
                 # pdb.set_trace()
                 self.optimizer.zero_grad()
-                y_pred = self.nn_model(instance, d, L, lmax, perm)
+                y_pred = self.nn_model(instance, d, L, lmax, perm,
+                                       self.start_epoch + epoch)
                 y_pred = y_pred.view(-1, 2)
                 # pdb.set_trace()
                 loss = self.loss_fn(y_pred, label)
@@ -376,7 +377,7 @@ class end_to_end_trainer:
         self.nn_model.eval()
         for sample in self.test_loader:
             instance = Variable(sample['sig'].cuda())
-            y_pred = self.nn_model(instance, d, L, lmax, perm)
+            y_pred = self.nn_model(instance, d, L, lmax, perm, self.curr_epoch)
             y_pred = y_pred.view(-1, 2)
             _, label_pred = torch.max(y_pred.data, 1)
 
