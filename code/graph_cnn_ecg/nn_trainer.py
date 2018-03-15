@@ -364,7 +364,7 @@ class end_to_end_trainer:
             if curr_acc > best_acc:
                 best_acc = curr_acc
                 is_best = True
-                save_checkpoint({
+                self.save_checkpoint({
                     'epoch': self.curr_epoch + 1,
                     # 'arch': args.arch,
                     'state_dict': self.nn_model.state_dict(),
