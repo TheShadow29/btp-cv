@@ -466,6 +466,12 @@ class end_to_end_model(torch.nn.Module):
     def __init__(self, cnet_parameters, gnet_parameters):
         super(end_to_end_model, self).__init__()
         Din, num_inp_channels, f, s, c1o, c2o, fc1o = cnet_parameters
+        self.Din = Din
+        self.c1o = c1o
+        self.c2o = c2o
+        self.fc1o = fc1o
+        self.f = f
+        self.s = s
         self.num_inp_channels = num_inp_channels
         # self.small_model0 = small_model(cnet_parameters)
         # self.small_model1 = small_model(cnet_parameters)
@@ -480,18 +486,23 @@ class end_to_end_model(torch.nn.Module):
 
         self.conv1_list = torch.nn.ModuleList()
         new_dim = calc_dim(Din, f, s) // 2
-        self.conv1_bn = torch.nn.BatchNorm1d(c1o)
+        self.conv1_bn_list = torch.nn.ModuleList()
+        # torch.nn.BatchNorm1d(c1o)
 
         self.conv2_list = torch.nn.ModuleList()
         new_dim = calc_dim(new_dim, f, s) // 2
-        self.conv2_bn = torch.nn.BatchNorm1d(c2o)
+        self.conv2_bn_list = torch.nn.ModuleList()
+        # = torch.nn.BatchNorm1d(c2o)
 
         self.lin1_list = torch.nn.ModuleList()
         self.lin2_list = torch.nn.ModuleList()
 
         for i in range(self.num_inp_channels):
+            # Need to change 2->1.
             self.conv1_list.append(torch.nn.Conv1d(1, c1o, f, stride=s))
+            self.conv1_bn_list.append(torch.nn.BatchNorm1d(c1o))
             self.conv2_list.append(torch.nn.Conv1d(c1o, c2o, f, stride=s))
+            self.conv2_bn_list.append(torch.nn.BatchNorm1d(c2o))
             self.lin1_list.append(torch.nn.Linear(c2o*new_dim, fc1o))
             self.lin2_list.append(torch.nn.Linear(fc1o, 2))
 
@@ -499,7 +510,8 @@ class end_to_end_model(torch.nn.Module):
         #                                              self.conv2_list, self.lin1_list])
         self.cnet_module_list = torch.nn.ModuleList()
         for i in range(self.num_inp_channels):
-            tmp_list = torch.nn.ModuleList([self.conv1_list[i], self.conv2_list[i],
+            tmp_list = torch.nn.ModuleList([self.conv1_list[i], self.conv1_bn_list[i],
+                                            self.conv2_list[i], self.conv2_bn_list[i],
                                             self.lin1_list[i], self.lin2_list[i]])
             self.cnet_module_list.append(tmp_list)
         # FC1Fin = CL2_F*(D//(p*p))
@@ -639,10 +651,11 @@ class end_to_end_model(torch.nn.Module):
         # pdb.set_trace()
         num_channels = inp.shape[1]
         out_list = []
-        pdb.set_trace()
+        # pdb.set_trace()
         for i in range(0, num_channels):
-            out = F.max_pool1d(self.conv1_bn(F.relu(self.conv1_list[i](inp[:, [i], :]))), 2)
-            out = F.max_pool1d(self.conv2_bn(F.relu(self.conv2_list[i](out))), 2)
+            out = F.max_pool1d(self.conv1_bn_list[i](
+                F.relu(self.conv1_list[i](inp[:, [i], :]))), 2)
+            out = F.max_pool1d(self.conv2_bn_list[i](F.relu(self.conv2_list[i](out))), 2)
             out = out.view(out.size(0), -1)
             # out = out.detach()
             out = F.relu(self.lin1_list[i](out))
@@ -717,15 +730,29 @@ class end_to_end_model(torch.nn.Module):
 class partial_end_to_end_model(end_to_end_model):
     def __init__(self, cnet_parameters, gnet_parameters):
         super(partial_end_to_end_model, self).__init__(cnet_parameters, gnet_parameters)
+        # self.conv1_complete = torch.nn.Conv1d(self.num_inp_channels,
+        #                                       self.c1o, self.f, stride=self.s)
+        # new_dim = calc_dim(self.Din, self.f, self.s) // 2
+        # self.conv2_complete = torch.nn.Conv1d(self.c1o, self.c2o, self.f, stride=self.s)
+        # new_dim = calc_dim(new_dim, self.f, self.s) // 2
+        # self.lin1_complete = torch.nn.Linear(self.c2o*new_dim, self.fc1o)
+        # self.lin2_complete = torch.nn.Linear(self.fc1o, 2)
+        # self.cnet_complete_module_list = torch.nn.ModuleList([self.conv1_complete,
+        #                                                      self.conv2_complete,
+        #                                                      self.lin1_complete,
+        #                                                       self.lin2_complete])
+        self.simple_nn_model = simple_net(self.Din, self.num_inp_channels)
         self.epoch_thresh = 50
 
     def forward_1(self, inp):
-        out = F.max_pool1d(self.conv1_bn(F.relu(self.conv1_list[1](inp[:, [1], :]))), 2)
-        # out = out.detach()
-        out = F.max_pool1d(self.conv2_bn(F.relu(self.conv2_list[1](out))), 2)
-        out = out.view(out.size(0), -1)
-        out = F.relu(self.lin1_list[1](out))
-        out = F.relu(self.lin2_list[1](out))
+        # out = F.max_pool1d(self.conv1_bn(F.relu(self.conv1_list[1](inp[:, [1], :]))), 2)
+        # out = F.max_pool1d(self.conv1_bn(F.relu(self.conv1_complete(inp))), 2)
+        # # out = out.detach()
+        # out = F.max_pool1d(self.conv2_bn(F.relu(self.conv2_complete(out))), 2)
+        # out = out.view(out.size(0), -1)
+        # out = F.relu(self.lin1_complete(out))
+        # out = F.relu(self.lin2_complete(out))
+        out, layer_outs = self.simple_nn_model.forward(inp)
         return out
 
     def forward(self, inp, d, L, lmax, perm, epoch_num):
@@ -733,12 +760,13 @@ class partial_end_to_end_model(end_to_end_model):
         if epoch_num < self.epoch_thresh:
             return self.forward_1(inp)
         elif epoch_num == self.epoch_thresh:
-            l1 = [0, 2, 3, 4, 5]
-            pretrained_dict = self.cnet_module_list[1].state_dict()
-            for i in l1:
-                model_dict = self.cnet_module_list[i].state_dict()
-                pret_dict = {k: v for k, v in pretrained_dict.items() if k in model_dict}
-                model_dict.update(pret_dict)
-                self.cnet_module_list[i].load_state_dict(model_dict)
+            # l1 = [0, 2, 3, 4, 5]
+            pretrained_dict = self.simple_nn_model.state_dict()
+            for i, m in enumerate(self.cnet_module_list):
+                # model_dict = m.state_dict()
+                # pret_dict = {k: v for k, v in pretrained_dict.items() if k in model_dict}
+                # model_dict.update(pret_dict)
+                # m.load_state_dict(model_dict)
+                m.load_state_dict(pretrained_dict)
         else:
             return self.forward_2(inp, d, L, lmax, perm)

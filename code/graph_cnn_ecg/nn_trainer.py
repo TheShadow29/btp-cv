@@ -213,6 +213,7 @@ class simple_trainer:
         print('TestSet :', len(self.test_loader))
         num_corr = 0
         tot_num = 0
+        self.nn_model.eval()
         for sample in self.test_loader:
             instance = Variable(sample['sig'].cuda())
             y_pred, pred_layer_outs = self.nn_model(instance)
@@ -226,6 +227,7 @@ class simple_trainer:
             # tot_num += label_pred.shape[0]
             tot_num += 1
         print(num_corr, tot_num, num_corr/tot_num)
+        self.nn_model.train()
         return num_corr/tot_num
 
     def cnn_features_save(self, fname='../data/cnn_features.pkl'):
