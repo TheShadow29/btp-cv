@@ -315,10 +315,12 @@ class end_to_end_trainer:
         if optimizer == 'adam':
             self.optimizer = torch.optim.Adam(self.nn_model.parameters())
 
-    def save_checkpoint(state, is_best, filename='checkpoint_e2e.pth.tar'):
+    def save_checkpoint1(state, is_best, filename='checkpoint_e2e.pth.tar'):
+        # f = open(filename, 'w')
         torch.save(state, filename)
         if is_best:
             shutil.copyfile(filename, 'e2e_model_best.pth.tar')
+        # f.close()
 
     def load_model(self, load_path='e2e_model_best.pth.tar'):
         if os.path.isfile(load_path):
@@ -364,13 +366,13 @@ class end_to_end_trainer:
             if curr_acc > best_acc:
                 best_acc = curr_acc
                 is_best = True
-                self.save_checkpoint({
+                save_checkpoint({
                     'epoch': self.curr_epoch + 1,
                     # 'arch': args.arch,
                     'state_dict': self.nn_model.state_dict(),
                     # 'best_prec1': best_prec1,
                     'optimizer': self.optimizer.state_dict(),
-                }, is_best)
+                }, is_best, 'e2e_checkpoint.pth.tar')
 
     def test_model(self, d, L, lmax, perm):
         print('TestSet :', len(self.test_loader))
