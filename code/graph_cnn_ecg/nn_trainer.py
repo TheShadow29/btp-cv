@@ -8,6 +8,7 @@ import json
 import os
 import pdb
 from lib.coarsening import perm_data_torch2
+import visdom
 
 
 if torch.cuda.is_available():
@@ -213,7 +214,7 @@ class simple_trainer:
         print('TestSet :', len(self.test_loader))
         num_corr = 0
         tot_num = 0
-        self.nn_model.eval()
+        # self.nn_model.eval()
         for sample in self.test_loader:
             instance = Variable(sample['sig'].cuda())
             y_pred, pred_layer_outs = self.nn_model(instance)
@@ -227,7 +228,7 @@ class simple_trainer:
             # tot_num += label_pred.shape[0]
             tot_num += 1
         print(num_corr, tot_num, num_corr/tot_num)
-        self.nn_model.train()
+        # self.nn_model.train()
         return num_corr/tot_num
 
     def cnn_features_save(self, fname='../data/cnn_features.pkl'):
@@ -314,6 +315,12 @@ class end_to_end_trainer:
         self.start_epoch = 0
         if optimizer == 'adam':
             self.optimizer = torch.optim.Adam(self.nn_model.parameters())
+        self.tovis = True
+        if self.tovis:
+            self.vis = visdom.Visdom()
+            self.loss_window = self.vis.line(X=torch.zeros((1)).cpu(), Y=torch.zeros((1)).cpu(),
+                                             opts=dict(xlabel='minibatches', ylabel='Loss',
+                                                       title='Training Loss', legend=['Loss']))
 
     def save_checkpoint1(state, is_best, filename='checkpoint_e2e.pth.tar'):
         # f = open(filename, 'w')
@@ -338,6 +345,7 @@ class end_to_end_trainer:
 
     def train_model(self, d, L, lmax, perm, num_epoch=15):
         print('TrainSet: ', len(self.train_loader))
+        self.tot_ind = len(self.train_loader)
         self.nn_model.train()
         curr_acc = 0
         best_acc = 0
@@ -358,6 +366,16 @@ class end_to_end_trainer:
                 self.optimizer.step()
                 running_loss += loss.data[0]
                 num_tr_iter += 1
+
+                if self.tovis:
+                    # pdb.set_trace()
+                    self.vis.line(
+                        X=torch.ones((1)).cpu() * (ind + (self.start_epoch + epoch)
+                                                   * self.tot_ind),
+                        Y=torch.Tensor([loss.data[0]]).cpu(),
+                        win=self.loss_window,
+                        update='append')
+
             self.curr_epoch = self.start_epoch + epoch
             print('epoch', self.curr_epoch, running_loss/num_tr_iter)
             curr_acc = self.test_model(d, L, lmax, perm)

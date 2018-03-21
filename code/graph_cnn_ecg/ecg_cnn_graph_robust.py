@@ -17,6 +17,7 @@ from cfg import all_vars
 from lib.grid_graph import simple_graph
 from lib.coarsening import coarsen
 from lib.coarsening import lmax_L
+from learn_graph import graph_learner
 # from lib.grid_graph import radial_graph
 
 if __name__ == "__main__":
@@ -50,8 +51,14 @@ if __name__ == "__main__":
                   remainder_list[:remain_tr_pts])
     test_list = (control_list[contr_tr_pts:] + positive_list[post_tr_pts:] +
                  remainder_list[remain_tr_pts:])
+    contr_list = (control_list[:contr_tr_pts])
+    ecg_control_loader = DataLoader(ecg_dataset_simple(ptb_tdir_str, contr_list,
+                                                       Din, partitions=27, channels=channels),
+                                    batch_size=batch_size, shuffle=True, num_workers=2)
 
-    small_graph = simple_graph(n=6, number_edges=5)
+    new_graph_learner = graph_learner(ecg_control_loader)
+    # small_graph = simple_graph(n=6, number_edges=5)
+    small_graph = new_graph_learner.get_graph()
 
     # pdb.set_trace()
 
@@ -106,8 +113,8 @@ if __name__ == "__main__":
                                                          partitions=27, channels=channels),
                                       batch_size=1, shuffle=False, num_workers=0)
 
-        simple_nn = simple_net(Din, len(channels))
-        # simple_nn = complex_net(Din, len(channels))
+        # simple_nn = simple_net(Din, len(channels))
+        simple_nn = complex_net(Din, len(channels))
         simple_nn.cuda()
         # simple_nn.to_cuda()
         graph_nn = Graph_ConvNet_LeNet5(net_parameters)
@@ -118,7 +125,7 @@ if __name__ == "__main__":
                                       loss_fn)
         # simple_train.load_model()
         simple_train.train_model(50, plt_fig=False)
-        # simple_train.cnn_features_save(fname='/home/SharedData/Ark_git_files/btp_extra_files/ecg-analysis/cnn_features_train.pkl')
+        simple_train.cnn_features_save(fname='/home/SharedData/Ark_git_files/btp_extra_files/cnn_features_train1.pkl')
         # simple_train.graph_nn_train(L, lmax, perm, num_epoch=50)
         # e2e_nn = end_to_end_model(cnet_parameters, gnet_parameters)
         # e2e_trainer = end_to_end_trainer(e2e_nn, ecg_train_loader, ecg_test_loader, loss_fn)
