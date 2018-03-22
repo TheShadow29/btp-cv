@@ -231,10 +231,14 @@ class simple_trainer:
         # self.nn_model.train()
         return num_corr/tot_num
 
-    def cnn_features_save(self, fname='../data/cnn_features.pkl'):
+    def cnn_features_save(self, train_bool=False, fname='../data/cnn_features.pkl'):
         out_train_list = dict()
         sample_count = 0
-        for ind, sample in enumerate(self.train_loader2):
+        loader = self.test_loader2
+        if train_bool:
+            loader = self.train_loader2
+
+        for ind, sample in enumerate(loader):
             # for ind, sample in enumerate(self.test_loader2):
             out_train = dict()
             instance = Variable(sample['sig'].cuda())
