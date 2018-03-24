@@ -133,8 +133,8 @@ if __name__ == "__main__":
         # e2e_nn = end_to_end_model(cnet_parameters, gnet_parameters)
         # e2e_nn = partial_end_to_end_model(cnet_parameters, gnet_parameters)
         e2e_nn = end_to_end_fc_model(cnet_parameters, gnet_parameters)
-        e2e_trainer = end_to_end_trainer(e2e_nn, ecg_train_loader, ecg_test_loader, loss_fn)
-        e2e_trainer.load_model()
+        e2e_trainer = end_to_end_trainer(e2e_nn, ecg_train_loader, ecg_test_loader, loss_fn, tovis=False)
+        # e2e_trainer.load_model()
         e2e_trainer.train_model(d, L, lmax, perm, num_epoch=100)
         # get all the last layer predn from the CNN
         # Put the weights onto the graph

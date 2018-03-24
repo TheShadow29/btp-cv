@@ -309,7 +309,7 @@ class simple_trainer:
 
 class end_to_end_trainer:
     def __init__(self, nn_model, train_loader=None, test_loader=None,
-                 loss_fn=None, optimizer='adam'):
+                 loss_fn=None, optimizer='adam', tovis=False):
         self.nn_model = nn_model
         if torch.cuda.is_available():
             self.nn_model.cuda()
@@ -319,7 +319,7 @@ class end_to_end_trainer:
         self.start_epoch = 0
         if optimizer == 'adam':
             self.optimizer = torch.optim.Adam(self.nn_model.parameters())
-        self.tovis = True
+        self.tovis = tovis
         if self.tovis:
             self.vis = visdom.Visdom()
             self.loss_window = self.vis.line(X=torch.zeros((1)).cpu(), Y=torch.zeros((1)).cpu(),

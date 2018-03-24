@@ -806,6 +806,7 @@ class end_to_end_fc_model(partial_end_to_end_model):
         # cout_var = cout_var.detach()
         cout_var = cout_var.view(num_channels, b, f)
         cout_var = cout_var.permute(1, 0, 2)
+        cout_var = cout_var.contiguous()
         cout_var = cout_var.view(b, num_channels * f)
         out1 = self.gfn(cout_var)
         out2 = self.gfn2(out1)
