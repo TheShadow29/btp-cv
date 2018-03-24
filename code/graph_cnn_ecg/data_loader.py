@@ -54,14 +54,21 @@ class ecg_dataset(Dataset):
 
 
 class ecg_dataset_simple(Dataset):
-    def __init__(self, tdir, patient_list, din, partitions=1, channels=[7]):
+    def __init__(self, tdir, patient_list, din, partitions=1, channels=[7],
+                 topreproc=False, preproc_params=None):
         self.tdir = tdir
         self.patient_list = patient_list
         self.batch_sig_len = din
         self.partitions = partitions
         self.channels = channels
+        self.topreproc = topreproc
+        self.preproc_mu = preproc_params[0]
+        self.preproc_sig = preproc_params[1]
         # self.batch_sig_len = batch_sig_len
         # self.disease
+
+    def preproc(self, dat):
+        return (dat - self.preproc_mu) / self.preproc_sig
 
     def __len__(self):
         return len(self.patient_list)*self.partitions
@@ -79,6 +86,8 @@ class ecg_dataset_simple(Dataset):
         sig, fields = wfdb.srdsamp(self.tdir + self.patient_list[idx], channels=self.channels,
                                    sampfrom=st_pt, sampto=end_pt)
         sig_out = sig.T.astype(np.float32)
+        if self.topreproc:
+            sig_out = self.preproc(sig_out)
         # if has mycardial infraction give out label 1, else 0
         # temporary setting, may use seq2seq at a later time
         # if 'Myocardial Infarction'fields['comments'][4]:
