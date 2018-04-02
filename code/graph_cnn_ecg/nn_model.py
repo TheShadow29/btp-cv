@@ -743,7 +743,7 @@ class partial_end_to_end_model(end_to_end_model):
             [self.conv1_complete, self.conv1_bn_complete, self.conv2_complete,
              self.conv2_bn_complete, self.lin1_complete, self.lin2_complete])
         # self.simple_nn_model = simple_net(self.Din, self.num_inp_channels)
-        self.epoch_thresh = 50
+        self.epoch_thresh = 15
 
     def forward_1(self, inp):
         # out = F.max_pool1d(self.conv1_bn(F.relu(self.conv1_list[1](inp[:, [1], :]))), 2)
@@ -835,3 +835,70 @@ class end_to_end_fc_model(partial_end_to_end_model):
                 return self.forward_3(inp)
         else:
             return self.forward_3(inp)
+
+
+class end_to_end_fc_model_no_bn(partial_end_to_end_model):
+    def __init__(self, cnet_parameters, gnet_parameters):
+        super(end_to_end_fc_model_no_bn, self).__init__(cnet_parameters, gnet_parameters)
+        self.gfn = torch.nn.Linear(30 * 6, 30)
+        self.gfn2 = torch.nn.Linear(30, 2)
+
+    def forward_1(self, inp):
+        # out = F.max_pool1d(self.conv1_bn(F.relu(self.conv1_list[1](inp[:, [1], :]))), 2)
+        out = F.max_pool1d(F.relu(self.conv1_complete(inp)), 2)
+        # out = out.detach()
+        out = F.max_pool1d(F.relu(self.conv2_complete(out)), 2)
+        out = out.view(out.size(0), -1)
+        out = F.relu(self.lin1_complete(out))
+        out = F.relu(self.lin2_complete(out))
+        # out, layer_outs = self.simple_nn_model.forward(inp)
+        return out
+
+    def forward(self, inp, d, L, lmax, perm, epoch_num):
+        # cnn_trained_bool = False
+        if epoch_num < self.epoch_thresh:
+            return self.forward_1(inp)
+        elif epoch_num == self.epoch_thresh:
+            # l1 = [0, 2, 3, 4, 5]
+            pretrained_dict = self.cnet_complete_module_list.state_dict()
+            # pdb.set_trace()
+            for i, m in enumerate(self.cnet_module_list):
+                # model_dict = m.state_dict()
+                pret_dict = {k: v for k, v in pretrained_dict.items()}
+                for k, v in pretrained_dict.items():
+                    if k == '0.weight':
+                        # pdb.set_trace()
+                        pret_dict[k] = v[:, [i], :]
+                # model_dict.update(pret_dict)
+                # m.load_state_dict(model_dict)
+                m.load_state_dict(pret_dict)
+                return self.forward_4(inp)
+        else:
+            return self.forward_4(inp)
+
+    def forward_4(self, inp):
+        num_channels = inp.shape[1]
+        out_list = []
+        # pdb.set_trace()
+        for i in range(0, num_channels):
+            out = F.max_pool1d(F.relu(self.conv1_list[i](inp[:, [i], :])), 2)
+            out = F.max_pool1d(F.relu(self.conv2_list[i](out)), 2)
+            out = out.view(out.size(0), -1)
+            # out = out.detach()
+            out = F.relu(self.lin1_list[i](out))
+            # out1 = self.lin2_list[i](out)
+            # cout_var = torch.cat((cout_var, out), 0)
+            out_list.append(out)
+
+        b, f = out.shape        #
+        # out_list = [out0, out1, out2, out3, out4, out5]
+        cout_var = torch.cat(out_list, 0)
+        # cout_var = cout_var.detach()
+        cout_var = cout_var.view(num_channels, b, f)
+        cout_var = cout_var.permute(1, 0, 2)
+        cout_var = cout_var.contiguous()
+        cout_var = cout_var.view(b, num_channels * f)
+        out1 = self.gfn(cout_var)
+        out2 = self.gfn2(out1)
+
+        return out2

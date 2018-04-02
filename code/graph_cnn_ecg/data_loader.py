@@ -62,13 +62,15 @@ class ecg_dataset_simple(Dataset):
         self.partitions = partitions
         self.channels = channels
         self.topreproc = topreproc
-        self.preproc_mu = preproc_params[0]
-        self.preproc_sig = preproc_params[1]
+        if self.topreproc:
+            self.preproc_mu = preproc_params[0]
+            self.preproc_sig = preproc_params[1]
         # self.batch_sig_len = batch_sig_len
         # self.disease
 
     def preproc(self, dat):
-        return (dat - self.preproc_mu) / self.preproc_sig
+        # pdb.set_trace()
+        return np.divide((dat.T - self.preproc_mu), self.preproc_sig).T
 
     def __len__(self):
         return len(self.patient_list)*self.partitions
@@ -87,7 +89,7 @@ class ecg_dataset_simple(Dataset):
                                    sampfrom=st_pt, sampto=end_pt)
         sig_out = sig.T.astype(np.float32)
         if self.topreproc:
-            sig_out = self.preproc(sig_out)
+            sig_out = self.preproc(sig_out).astype(np.float32)
         # if has mycardial infraction give out label 1, else 0
         # temporary setting, may use seq2seq at a later time
         # if 'Myocardial Infarction'fields['comments'][4]:
@@ -101,3 +103,7 @@ class ecg_dataset_simple(Dataset):
         # sample = {'sig': sig_out, 'label': out_label}
         sample = {'sig': sig_out, 'label': out_label, 'idx': idx, 'pidx': pidx}
         return sample
+
+
+# def beat_segmentation(sig):
+# sig_shape = sig.shape

@@ -23,15 +23,25 @@ def laplacian(W, normalized=True):
     d = W.sum(axis=0)
 
     # Laplacian matrix.
-    if not normalized:
-        D = scipy.sparse.diags(d.A.squeeze(), 0)
-        L = D - W
+    # pdb.set_trace()
+    if (d >= 0).all():
+        if not normalized:
+            D = scipy.sparse.diags(d.A.squeeze(), 0)
+            L = D - W
+        else:
+            d += np.spacing(np.array(0, W.dtype))
+            d = 1 / np.sqrt(d)
+            D = scipy.sparse.diags(d.A.squeeze(), 0)
+            I = scipy.sparse.identity(d.size, dtype=W.dtype)
+            L = I - D * W * D
     else:
-        d += np.spacing(np.array(0, W.dtype))
-        d = 1 / np.sqrt(d)
-        D = scipy.sparse.diags(d.A.squeeze(), 0)
-        I = scipy.sparse.identity(d.size, dtype=W.dtype)
-        L = I - D * W * D
+        L = np.zeros(W.shape, dtype=W.dtype)
+        for r in L.shape[0]:
+            for c in L.shape[1]:
+                if r == c:
+                    L[r, c] = 1
+                else:
+                    L[r, c] = -1 / np.sqrt(d[r] * d[c])
 
     assert np.abs(L - L.T).mean() < 1e-9
     assert type(L) is scipy.sparse.csr.csr_matrix

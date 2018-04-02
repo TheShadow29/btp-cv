@@ -6,6 +6,7 @@ from torch.utils.data import DataLoader
 from data_loader import ecg_dataset_simple
 from nn_model import simple_net, complex_net, end_to_end_model
 from nn_model import partial_end_to_end_model, end_to_end_fc_model
+from nn_model import end_to_end_fc_model_no_bn
 from nn_model import Graph_ConvNet_LeNet5
 from nn_trainer import simple_trainer, end_to_end_trainer
 # import torch.nn.functional as F
@@ -63,7 +64,7 @@ if __name__ == "__main__":
                                     batch_size=batch_size, shuffle=True, num_workers=2)
 
     new_graph_learner = graph_learner(ecg_control_loader)
-    new_graph = new_graph_learner.get_graph()
+    new_graph, mu, sigma = new_graph_learner.get_graph()
 
     coarsening_levels = 2
     L, perm = coarsen(new_graph, coarsening_levels)
@@ -95,7 +96,9 @@ if __name__ == "__main__":
     d = 0                     # dropout value
     with torch.cuda.device(1):
         ecg_train_loader = DataLoader(ecg_dataset_simple(ptb_tdir_str, train_list,
-                                                         Din, partitions=27, channels=channels),
+                                                         Din, partitions=27, channels=channels,
+                                                         topreproc=True,
+                                                         preproc_params=(mu, sigma)),
                                       batch_size=batch_size, shuffle=True, num_workers=2)
 
         ecg_train_loader_graph = DataLoader(ecg_dataset_simple(ptb_tdir_str, train_list,
@@ -109,7 +112,9 @@ if __name__ == "__main__":
                                        batch_size=1, shuffle=True, num_workers=0)
 
         ecg_test_loader = DataLoader(ecg_dataset_simple(ptb_tdir_str, test_list, Din,
-                                                        partitions=batch_size, channels=channels),
+                                                        partitions=27, channels=channels,
+                                                        topreproc=True,
+                                                        preproc_params=(mu, sigma)),
                                      batch_size=batch_size, shuffle=False, num_workers=2)
 
         ecg_test_loader2 = DataLoader(ecg_dataset_simple(ptb_tdir_str, test_list, Din,
@@ -133,6 +138,7 @@ if __name__ == "__main__":
         # e2e_nn = end_to_end_model(cnet_parameters, gnet_parameters)
         # e2e_nn = partial_end_to_end_model(cnet_parameters, gnet_parameters)
         e2e_nn = end_to_end_fc_model(cnet_parameters, gnet_parameters)
+        # e2e_nn = end_to_end_fc_model_no_bn(cnet_parameters, gnet_parameters)
         e2e_trainer = end_to_end_trainer(e2e_nn, ecg_train_loader, ecg_test_loader, loss_fn, tovis=False)
         # e2e_trainer.load_model()
         e2e_trainer.train_model(d, L, lmax, perm, num_epoch=100)
