@@ -322,8 +322,8 @@ class end_to_end_trainer:
         self.loss_fn = loss_fn
         self.start_epoch = 0
         if optimizer == 'adam':
-            self.optimizer = torch.optim.Adam(self.nn_model.parameters(),
-                                              lr=3e-4, weight_decay=1e-3)
+            self.optimizer = torch.optim.Adam(self.nn_model.parameters())
+
         self.tovis = tovis
         if self.tovis:
             self.vis = visdom.Visdom()
@@ -368,7 +368,7 @@ class end_to_end_trainer:
         for epoch in range(num_epoch):
             running_loss = 0
             num_tr_iter = 0
-            for ind, sample in enumerate(self.train_loader):
+            for ind, sample in tqdm(enumerate(self.train_loader)):
                 instance = Variable(sample['sig'].cuda())
                 label = Variable(sample['label'].type(dtypeLong))
                 # pdb.set_trace()
@@ -412,6 +412,10 @@ class end_to_end_trainer:
         print('TestSet :', len(self.test_loader))
         num_corr = 0
         tot_num = 0
+        false_0 = 0
+        false_1 = 0
+        true_0 = 0
+        true_1 = 0
         pt_dis_pred_dict = {}
         pt_dis_actual_dict = {}
         self.nn_model.eval()
@@ -469,8 +473,16 @@ class end_to_end_trainer:
             # pdb.set_trace()
             if fin_label_pred == v:
                 num_corr += 1
+            true_0 += (fin_label_pred == v) and (v == 0)
+            true_1 += (fin_label_pred == v) and (v == 1)
+            false_0 += (fin_label_pred != v) and (v == 0)
+            false_1 += (fin_label_pred != v) and (v == 1)
+
+            # conf = fin_label_count / len(pred_list)
+            # print(conf, fin_label_pred == v, v)
             tot_num += 1
         self.nn_model.train()
+        print(true_0, true_1, false_0, false_1)
         print(num_corr, tot_num, num_corr/tot_num)
         return num_corr / tot_num
 

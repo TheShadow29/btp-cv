@@ -136,8 +136,8 @@ if __name__ == "__main__":
         # simple_train.cnn_features_save(fname='/home/SharedData/Ark_git_files/btp_extra_files/ecg-analysis/cnn_features_train.pkl')
         # simple_train.graph_nn_train(L, lmax, perm, num_epoch=50)
         # e2e_nn = end_to_end_model(cnet_parameters, gnet_parameters)
-        # e2e_nn = partial_end_to_end_model(cnet_parameters, gnet_parameters)
-        e2e_nn = end_to_end_fc_model(cnet_parameters, gnet_parameters)
+        e2e_nn = partial_end_to_end_model(cnet_parameters, gnet_parameters)  #
+        # e2e_nn = end_to_end_fc_model(cnet_parameters, gnet_parameters)
         # e2e_nn = end_to_end_fc_model_no_bn(cnet_parameters, gnet_parameters)
         e2e_trainer = end_to_end_trainer(e2e_nn, ecg_train_loader, ecg_test_loader, loss_fn, tovis=False)
         # e2e_trainer.load_model()
