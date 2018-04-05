@@ -130,7 +130,8 @@ class ecg_dataset_complex(Dataset):
         for pat_idx in self.patient_list:
             sig, fields = wfdb.srdsamp(self.tdir + pat_idx,
                                        channels=self.channels)
-            pdb.set_trace()
+
+            # pdb.set_trace()
 
 
 def pan_tompkins_r_detection(sig, fs, toplt=False):
@@ -198,11 +199,19 @@ def pan_tompkins_r_detection(sig, fs, toplt=False):
     # 200 msec distance
 
     peak_locs = scs.find_peaks_cwt(ecg_m, widths=np.arange(1, 50), min_length=np.around(0.2 * fs))
+    peak_locs_fin = []
+    for pl in peak_locs:
+        # find the peak again in the small vicinity of the peak_locs
+        tmp_sig = ecg_m[pl-50:min(pl + 50, len(ecg_m))]
+        ind = np.argmax(tmp_sig)
+        peak_locs_fin.append(pl - 50 + ind)
+
     if toplt:
         plt.plot(ecg_m)
-        plt.scatter(peak_locs, ecg_m[peak_locs])
+        plt.scatter(peak_locs_fin, ecg_m[peak_locs_fin])
         plt.show()
-    return peak_locs, delay
+
+    return peak_locs_fin, delay
 
 
 if __name__ == '__main__':
@@ -211,4 +220,6 @@ if __name__ == '__main__':
     fpath = ptb_tdir / 'data' / 'patient104' / 's0306lre'
     sig, fields = wfdb.srdsamp(str(fpath))
     sig_ds = sig[np.arange(0, sig.shape[0], 5), :]
-    peak_locs, _ = pan_tompkins_r_detection(sig_ds[:, 0], 200, toplt=True)
+    peak_locs, _ = pan_tompkins_r_detection(sig_ds[:, 6], 200, toplt=True)
+    print('peak_locs', peak_locs)
+    print('diff_peak_locs', np.diff(peak_locs))
