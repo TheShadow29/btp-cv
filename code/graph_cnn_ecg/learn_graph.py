@@ -16,7 +16,9 @@ class graph_learner:
         self.adj_mat = np.zeros((num_nodes, num_nodes))
 
     def get_data(self):
+        # pdb.set_trace()
         for ind, sample in enumerate(self.train_data_loader):
+            # pdb.set_trace()
             instance = sample['sig']
             tmp = instance.sum(dim=0)
             self.X += tmp.cpu() / self.train_data_loader.batch_size

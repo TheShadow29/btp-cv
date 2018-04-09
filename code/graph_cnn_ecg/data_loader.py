@@ -120,51 +120,69 @@ class ecg_dataset_complex(Dataset):
         self.patient_list = patient_list
         self.din = din
         self.channels = channels
-        self.topreproc = topreproc
-        if self.topreproc:
-            self.preproc_mu = preproc_params[0]
-            self.preproc_sigma = preproc_params[1]
+        self.get_tot_signals()
+        self.curr_pat_idx = 0
 
-        self.one_fp_pass()
+    def get_tot_signals(self):
+        self.beats_in_sig = dict()
+        self.tot_beats_in_sig = list()
+        self.tot_beats_in_sig.append(0)
+        # self.idx_to_act_idx_map = dict()
+        tot_signals = 0
+        for p in self.patient_list:
+            a1 = np.load(self.tdir + p + '.npy')
+            tot_signals += a1.shape[0]
+            self.beats_in_sig[p] = a1.shape[0]
+            self.tot_beats_in_sig.append(tot_signals)
+        # self.tot_signals = tot_signals
 
-    def preproc_dataset(self):
-        self.st_end_pt_dict = {}
-        for pat_idx in self.patient_list:
-            sig, fields = wfdb.srdsamp(self.tdir + pat_idx,
-                                       channels=self.channels)
-            sig_ds = sig[np.arange(0, sig.shape[0], 5), :]
-            peak_locs = pan_tompkins_r_detection(sig_ds, 200, toplt=False)
-            st_pt = peak_locs[1:-2] - 50
-            end_pt = peak_locs[1:-2] + 80
-            self.st_end_pt_dict[pat_idx] = zip(st_pt, end_pt)
-        return
+    def __len__(self):
+        # return len(self.tot_beats_in_sig)
+        return self.tot_beats_in_sig[-1]
 
+    def __getitem__(self, idx):
+        act_idx = np.digitize(idx, self.tot_beats_in_sig) - 1
+        beat_idx = idx - self.tot_beats_in_sig[act_idx]
+        sample = self.get_sample(act_idx, beat_idx)
+        return sample
 
+    def get_sample(self, act_idx, beat_idx):
+        _, fields = wfdb.srdsamp(self.tdir + self.patient_list[act_idx], channels=[0])
+        if 'Myocardial infarction' in fields['comments'][4]:
+            # out_label[0] = 1
+            out_label = 1
+        else:
+            # out_label[0] = 0
+            out_label = 0
+        sig = np.load(self.tdir + self.patient_list[act_idx] + '.npy')
+        sig = sig[beat_idx, :, self.channels]
+        sig_out = sig.T.astype(np.float32)
+        sample = {'sig': sig_out, 'label': out_label, 'idx': act_idx, 'beat_idx': beat_idx}
+        return sample
 
+# if __name__ == '__main__':
+#     from pathlib import Path
+#     ptb_tdir = Path('/home/SharedData/Ark_git_files/btp_extra_files/ecg-analysis/')
+#     ptb_tdir_str = str(ptb_tdir / 'data') + '/'
 
+#     fpath1 = ptb_tdir / 'data' / 'patient104' / 's0306lre'
+#     fpath2 = ptb_tdir / 'data' / 'patient002' / 's0015lre'
 
-
-if __name__ == '__main__':
-    from pathlib import Path
-    ptb_tdir = Path('/home/SharedData/Ark_git_files/btp_extra_files/ecg-analysis/')
-    fpath1 = ptb_tdir / 'data' / 'patient104' / 's0306lre'
-    fpath2 = ptb_tdir / 'data' / 'patient002' / 's0015lre'
-
-    sig, fields = wfdb.srdsamp(str(fpath1))
-    # st_time = time.time()
-    sig_ds = sig[np.arange(0, sig.shape[0], 5), :]
-    ecg_m, peak_locs, ecg_h = pan_tompkins_r_detection(sig_ds[:, 6], 200, toplt=False)
-    baseline = baseline_removal(sig_ds[:, 6], 200)
-    sig_bs_removed = sig_ds[:, 6] - baseline
-    fig = plt.figure()
-    plt.subplot(2,3,1)
-    plt.plot(sig_ds[:, 6])
-    plt.subplot(2,3,2)
-    plt.plot(sig_bs_removed)
-    plt.scatter(peak_locs, sig_bs_removed[peak_locs])
-    plt.subplot(2,3,3)
-    plt.plot(baseline)
-    plt.show()
+#     sig, fields = wfdb.srdsamp(str(fpath1))
+#     # st_time = time.time()
+#     sig_ds = sig[np.arange(0, sig.shape[0], 5), :]
+#     ecg_m, peak_locs, ecg_h = pan_tompkins_r_detection(sig_ds[:, 6], 200, toplt=False)
+#     baseline = baseline_removal(sig_ds[:, 6], 200)
+#     sig_bs_removed = sig_ds[:, 6] - baseline
+#     fig = plt.figure()
+#     plt.subplot(2,3,1)
+#     plt.plot(sig_ds[:, 6])
+#     plt.subplot(2,3,2)
+#     plt.plot(sig_bs_removed)
+#     plt.scatter(peak_locs, sig_bs_removed[peak_locs])
+#     plt.subplot(2,3,3)
+#     plt.plot(baseline)
+#     plt.show()
     # end_time = time.time()
     # print('time taken', end_time - st_time)
     # fig = plt.figure()
