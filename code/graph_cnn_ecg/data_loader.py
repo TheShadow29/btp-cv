@@ -142,28 +142,6 @@ class ecg_dataset_complex(Dataset):
 
 
 
-def baseline_removal(sig, fs):
-    """
-    Assume signal is of dimension
-    N x M
-    N: no. of samples
-    M: no. of leads
-    Uses Daubechis wavelets 'db4/6/8' multilevel
-    Level is chosen such that the approximation filter
-    has frequency close to the DC
-    And we hope that this is close to the real output
-    """
-    baseline = scs.medfilt(sig, kernel_size=41)
-    baseline = scs.medfilt(baseline, kernel_size=121)
-    # fig = plt.figure()
-    # plt.subplot(2, 2, 1)
-    # plt.plot(sig)
-    # plt.subplot(2, 2, 2)
-    # plt.plot(sig - baseline)
-    # plt.subplot(2, 2, 3)
-    # plt.plot(baseline)
-    # plt.show()
-    return baseline
 
 
 if __name__ == '__main__':
