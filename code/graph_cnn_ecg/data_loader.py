@@ -8,6 +8,7 @@ from lib.coarsening import perm_data
 import matplotlib.pyplot as plt
 import scipy.signal as scs
 import scipy.interpolate as sci
+import time
 
 
 class ecg_dataset(Dataset):
@@ -127,11 +128,16 @@ class ecg_dataset_complex(Dataset):
         self.one_fp_pass()
 
     def preproc_dataset(self):
+        self.st_end_pt_dict = {}
         for pat_idx in self.patient_list:
             sig, fields = wfdb.srdsamp(self.tdir + pat_idx,
                                        channels=self.channels)
-
-            # pdb.set_trace()
+            sig_ds = sig[np.arange(0, sig.shape[0], 5), :]
+            peak_locs = pan_tompkins_r_detection(sig_ds, 200, toplt=False)
+            st_pt = peak_locs[1:-2] - 50
+            end_pt = peak_locs[1:-2] + 80
+            self.st_end_pt_dict[pat_idx] = zip(st_pt, end_pt)
+        return
 
 
 def pan_tompkins_r_detection(sig, fs, toplt=False):
@@ -190,7 +196,8 @@ def pan_tompkins_r_detection(sig, fs, toplt=False):
     # Moving average Y(nt) = (1/N)[x(nT-(N - 1)T)+ x(nT - (N - 2)T)+...+x(nT)]
     # pdb.set_trace()
     ecg_m = (np.convolve(ecg_s,
-                         np.ones((np.around(0.150 * fs).astype(int))) / np.around(0.150 * fs)))
+                         np.ones((np.around(0.150 * fs).astype(int))) / np.around(0.150 * fs),
+                         mode='same'))
     delay = delay + np.around(0.150 * fs)/2
 
     # Fiducial Mark
@@ -211,15 +218,73 @@ def pan_tompkins_r_detection(sig, fs, toplt=False):
         plt.scatter(peak_locs_fin, ecg_m[peak_locs_fin])
         plt.show()
 
-    return peak_locs_fin, delay
+    return ecg_m, peak_locs_fin, ecg_h
+
+
+def baseline_removal(sig, fs):
+    """
+    Assume signal is of dimension
+    N x M
+    N: no. of samples
+    M: no. of leads
+    Uses Daubechis wavelets 'db4/6/8' multilevel
+    Level is chosen such that the approximation filter
+    has frequency close to the DC
+    And we hope that this is close to the real output
+    """
+    baseline = scs.medfilt(sig, kernel_size=41)
+    baseline = scs.medfilt(baseline, kernel_size=121)
+    # fig = plt.figure()
+    # plt.subplot(2, 2, 1)
+    # plt.plot(sig)
+    # plt.subplot(2, 2, 2)
+    # plt.plot(sig - baseline)
+    # plt.subplot(2, 2, 3)
+    # plt.plot(baseline)
+    # plt.show()
+    return baseline
 
 
 if __name__ == '__main__':
     from pathlib import Path
     ptb_tdir = Path('/home/SharedData/Ark_git_files/btp_extra_files/ecg-analysis/')
-    fpath = ptb_tdir / 'data' / 'patient104' / 's0306lre'
-    sig, fields = wfdb.srdsamp(str(fpath))
+    fpath1 = ptb_tdir / 'data' / 'patient104' / 's0306lre'
+    fpath2 = ptb_tdir / 'data' / 'patient002' / 's0015lre'
+
+    sig, fields = wfdb.srdsamp(str(fpath1))
+    # st_time = time.time()
     sig_ds = sig[np.arange(0, sig.shape[0], 5), :]
-    peak_locs, _ = pan_tompkins_r_detection(sig_ds[:, 6], 200, toplt=True)
-    print('peak_locs', peak_locs)
-    print('diff_peak_locs', np.diff(peak_locs))
+    ecg_m, peak_locs, ecg_h = pan_tompkins_r_detection(sig_ds[:, 6], 200, toplt=False)
+    baseline = baseline_removal(sig_ds[:, 6], 200)
+    sig_bs_removed = sig_ds[:, 6] - baseline
+    fig = plt.figure()
+    plt.subplot(2,3,1)
+    plt.plot(sig_ds[:, 6])
+    plt.subplot(2,3,2)
+    plt.plot(sig_bs_removed)
+    plt.scatter(peak_locs, sig_bs_removed[peak_locs])
+    plt.subplot(2,3,3)
+    plt.plot(baseline)
+    plt.show()
+    # end_time = time.time()
+    # print('time taken', end_time - st_time)
+    # fig = plt.figure()
+    # plt.subplot(2, 2, 1)
+    # plt.plot(ecg_m)
+    # plt.scatter(peak_locs, ecg_m[peak_locs])
+
+    # plt.subplot(2, 2, 3)
+    # plt.plot(ecg_h)
+    # plt.show()
+    # print('peak_locs', peak_locs)
+    # # print('diff_peak_locs', np.diff(peak_locs))
+    # sig, fields = wfdb.srdsamp(str(fpath2))
+    # sig_ds = sig[np.arange(0, sig.shape[0], 5), :]
+    # ecg_m, peak_locs, ecg_h = pan_tompkins_r_detection(sig_ds[:, 6], 200, toplt=False)
+
+    # plt.subplot(2, 2, 2)
+    # plt.plot(ecg_m)
+    # plt.scatter(peak_locs, ecg_m[peak_locs])
+
+    # plt.subplot(2, 2, 4)
+    # plt.plot(ecg_h)
