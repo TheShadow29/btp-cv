@@ -1,3 +1,7 @@
+import json
+import munch
+
+
 def all_vars():
     all_var = dict()
     all_var['Din'] = 750
@@ -9,7 +13,8 @@ def all_vars():
     return all_var
 
 
-# Din = 1000
-# batch_size = 4
-# num_tr_points = 300
-# channels = [7, 8, 9]
+def process_config(config_file):
+    with open(config_file, 'r') as f:
+        config_dict = json.load(f)
+    config = munch.Munch(config_dict)
+    return config
