@@ -128,27 +128,98 @@ def pan_tompkins_r_detection(sig, fs, toplt=False):
     return ecg_m, peak_locs_fin
 
 
-class dat_file:
-    def __init__(self, fname, sig, st_pts):
-        # self.fname = fname
-        # self.sig = sig
-        # self.st_pts = st_pts
-        self.partition_signal(fname, sig, st_pts)
-        return
+def membership_function(z, a, m, c):
+    assert len(z.shape) == 1
+    id1 = np.where(z < a)
+    id2 = np.where((z >= a) & (z <= m))
+    id3 = np.where((z > m) & (z < c))
+    id4 = np.where(z >= c)
+    try:
+        assert len(id1[0]) + len(id2[0]) + len(id3[0]) + len(id4[0]) == z.shape[0]
+    except AssertionError as e:
+        pdb.set_trace()
 
-    def partition_signal(self, fname, sig, st_pts):
-        # list would contain all the beats
-        # For now taking 200 on the left and 600 on the right
-        sig_range = (40, 90)
-        self.sig_list = []
-        for stp in st_pts:
-            tmp_sig = sig[stp-sig_range[0]:stp + sig_range[1], :]
-            self.sig_list.append(tmp_sig)
-        self.sig_np = np.array(self.sig_list)
-        # pdb.set_trace()
-        # Shape : #cycles x #points in a cycle x #channels
-        np.save(fname, self.sig_np)
-        return
+    out = np.zeros(z.shape)
+    out[id1] = 0
+    out[id2] = (z[id2] - a) / (m - a)
+    out[id3] = - (z[id3] - m) / (c - m) + 1
+    out[id4] = 0
+    return out
+
+
+def fuzzy_info_gran(ecg_beat, M=9):
+    """
+    Using W. Pedrycz method
+    Input: Single ecg beat (multi-lead)
+    M: length of the subseqn
+    Output: Seqn of a/m/c for the beat (for each multi-lead)
+    Each seqn of size of 150
+    """
+    # N is the ecg-beat size
+    N = ecg_beat.shape[0]
+    m_list_tot = []
+    a_list_tot = []
+    c_list_tot = []
+    for ch in tqdm(range(ecg_beat.shape[1])):
+        m_list = []
+        a_list = []
+        c_list = []
+        for k in tqdm(range(N - M + 1)):
+            bij_k = ecg_beat[k:k+M, ch]
+            # pdb.set_trace()
+            assert len(bij_k) == M
+            mij_k = np.median(bij_k)
+            id1 = np.where(bij_k < mij_k)
+            id2 = np.where(bij_k > mij_k)
+            aij_all = bij_k[id1]
+            Q_best = -np.inf
+            for aij in aij_all:
+                # value of c doesn't matter
+                tmp1 = membership_function(bij_k[id1], aij, mij_k, np.inf)
+                assert len(tmp1.shape) == 1
+                tmp2 = np.sum(tmp1) / (mij_k - aij)
+                if Q_best < tmp2:
+                    aij_best = aij
+                    Q_best = tmp2
+
+            cij_all = bij_k[id2]
+            Q_bestc = -np.inf
+            for cij in cij_all:
+                # value of a doesn't matter
+                tmp1 = membership_function(bij_k[id2], -np.inf, mij_k, cij)
+                assert len(tmp1.shape) == 1
+                tmp2 = np.sum(tmp1) / (cij - mij_k)
+                if Q_bestc < tmp2:
+                    cij_best = cij
+                    Q_bestc = tmp2
+
+            m_list.append(mij_k)
+            a_list.append(aij_best)
+            c_list.append(cij_best)
+
+        assert len(m_list) == N - M + 1
+        m_list_tot.append(np.array(m_list))
+        a_list_tot.append(np.array(a_list))
+        c_list_tot.append(np.array(c_list))
+
+    assert len(m_list_tot) == ecg_beat.shape[1]
+    return m_list_tot, a_list_tot, c_list_tot
+
+
+def partition_signal(sig, st_pts, fname=None, to_save=False):
+    # list would contain all the beats
+    # For now taking 200 on the left and 600 on the right
+    sig_range = (40, 90)
+    sig_list = []
+    for stp in st_pts:
+        tmp_sig = sig[stp-sig_range[0]:stp + sig_range[1], :]
+        sig_list.append(tmp_sig)
+    sig_np = np.array(sig_list)
+    # pdb.set_trace()
+    # Shape : #cycles x #points in a cycle x #channels
+    if to_save:
+        np.save(fname, sig_np)
+    return sig_np
 
 
 if __name__ == "__main__":
@@ -161,22 +232,19 @@ if __name__ == "__main__":
     with open(patient_list_file, 'r') as f:
         patient_list = f.read().splitlines()
 
-    for ind, p in enumerate(tqdm(patient_list)):
-        sig, fields = wfdb.srdsamp(ptb_tdir_str + p)
-        sig_ds = sig[np.arange(0, sig.shape[0], 5), :]
-        sig_bp = bp_filt(sig_ds)
-        _, peak_locs = pan_tompkins_r_detection(sig_bp[:, 6], fs=200)
-        fname = ptb_tdir_str + p + '.npy'
-        fpath = Path(fname)
+    p = patient_list[45]
+    sig, fields = wfdb.srdsamp(ptb_tdir_str + p)
+    sig_ds = sig[np.arange(0, sig.shape[0], 5), :]
+    sig_bp = bp_filt(sig_ds)
+    _, peak_locs = pan_tompkins_r_detection(sig_bp[:, 6], fs=200)
+    sig_partitioned = partition_signal(sig_bp, peak_locs[1:-1])
+    m, a, c = fuzzy_info_gran(sig_partitioned[0, :, 6:8])
+    # for ind, p in enumerate(tqdm(patient_list)):
+    #     sig, fields = wfdb.srdsamp(ptb_tdir_str + p)
+    #     sig_ds = sig[np.arange(0, sig.shape[0], 5), :]
+    #     sig_bp = bp_filt(sig_ds)
+    #     _, peak_locs = pan_tompkins_r_detection(sig_bp[:, 6], fs=200)
+    #     fname = ptb_tdir_str + p + '.npy'
+    #     fpath = Path(fname)
 
-        dat_file(fname, sig_bp, peak_locs[1:-1])
-        # break
-        # fig = plt.figure()
-        # # plt.subplot(2,2,1)
-        # plt.plot(sig_bp[:, 6])
-        # plt.scatter(peak_locs, sig_bp[:, 6][peak_locs])
-        # plt.show()
-        # break
-        # print(ptb_tdir_str + p)
-        # break
-        # ecg_dataset_complex
+    #     dat_file(fname, sig_bp, peak_locs[1:-1])
