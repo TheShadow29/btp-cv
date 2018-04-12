@@ -743,7 +743,7 @@ class partial_end_to_end_model(end_to_end_model):
             [self.conv1_complete, self.conv1_bn_complete, self.conv2_complete,
              self.conv2_bn_complete, self.lin1_complete, self.lin2_complete])
         # self.simple_nn_model = simple_net(self.Din, self.num_inp_channels)
-        self.epoch_thresh = 1
+        self.epoch_thresh = 50
 
     def forward_1(self, inp):
         # out = F.max_pool1d(self.conv1_bn(F.relu(self.conv1_list[1](inp[:, [1], :]))), 2)

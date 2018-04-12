@@ -321,6 +321,8 @@ class end_to_end_trainer:
         self.test_loader = test_loader
         self.loss_fn = loss_fn
         self.start_epoch = 0
+        # Note: may need to change the below line
+        self.curr_epoch = 0
         if optimizer == 'adam':
             self.optimizer = torch.optim.Adam(self.nn_model.parameters())
 
@@ -368,7 +370,7 @@ class end_to_end_trainer:
         for epoch in range(num_epoch):
             running_loss = 0
             num_tr_iter = 0
-            for ind, sample in tqdm(enumerate(self.train_loader)):
+            for ind, sample in enumerate(tqdm(self.train_loader)):
                 instance = Variable(sample['sig'].cuda())
                 label = Variable(sample['label'].type(dtypeLong))
                 # pdb.set_trace()
@@ -419,11 +421,12 @@ class end_to_end_trainer:
         pt_dis_pred_dict = {}
         pt_dis_actual_dict = {}
         self.nn_model.eval()
-        for sample in self.test_loader:
+        for sample in tqdm(self.test_loader):
             instance = Variable(sample['sig'].cuda())
             y_pred = self.nn_model(instance, d, L, lmax, perm, self.curr_epoch)
             y_pred = y_pred.view(-1, 2)
             _, label_pred = torch.max(y_pred.data, 1)
+
             for ind1, sidx in enumerate(sample['idx']):
                 if pt_dis_actual_dict.get(sidx) is None:
                     pt_dis_actual_dict[sidx] = sample['label'][ind1]

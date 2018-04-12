@@ -155,53 +155,11 @@ class ecg_dataset_complex(Dataset):
             # out_label[0] = 0
             out_label = 0
         sig = np.load(self.tdir + self.patient_list[act_idx] + '.npy')
+        # try:
         sig = sig[beat_idx, :, self.channels]
-        sig_out = sig.T.astype(np.float32)
+        # except Exception as e:
+        # pdb.set_trace()
+        # pass
+        sig_out = sig.astype(np.float32)
         sample = {'sig': sig_out, 'label': out_label, 'idx': act_idx, 'beat_idx': beat_idx}
         return sample
-
-# if __name__ == '__main__':
-#     from pathlib import Path
-#     ptb_tdir = Path('/home/SharedData/Ark_git_files/btp_extra_files/ecg-analysis/')
-#     ptb_tdir_str = str(ptb_tdir / 'data') + '/'
-
-#     fpath1 = ptb_tdir / 'data' / 'patient104' / 's0306lre'
-#     fpath2 = ptb_tdir / 'data' / 'patient002' / 's0015lre'
-
-#     sig, fields = wfdb.srdsamp(str(fpath1))
-#     # st_time = time.time()
-#     sig_ds = sig[np.arange(0, sig.shape[0], 5), :]
-#     ecg_m, peak_locs, ecg_h = pan_tompkins_r_detection(sig_ds[:, 6], 200, toplt=False)
-#     baseline = baseline_removal(sig_ds[:, 6], 200)
-#     sig_bs_removed = sig_ds[:, 6] - baseline
-#     fig = plt.figure()
-#     plt.subplot(2,3,1)
-#     plt.plot(sig_ds[:, 6])
-#     plt.subplot(2,3,2)
-#     plt.plot(sig_bs_removed)
-#     plt.scatter(peak_locs, sig_bs_removed[peak_locs])
-#     plt.subplot(2,3,3)
-#     plt.plot(baseline)
-#     plt.show()
-    # end_time = time.time()
-    # print('time taken', end_time - st_time)
-    # fig = plt.figure()
-    # plt.subplot(2, 2, 1)
-    # plt.plot(ecg_m)
-    # plt.scatter(peak_locs, ecg_m[peak_locs])
-
-    # plt.subplot(2, 2, 3)
-    # plt.plot(ecg_h)
-    # plt.show()
-    # print('peak_locs', peak_locs)
-    # # print('diff_peak_locs', np.diff(peak_locs))
-    # sig, fields = wfdb.srdsamp(str(fpath2))
-    # sig_ds = sig[np.arange(0, sig.shape[0], 5), :]
-    # ecg_m, peak_locs, ecg_h = pan_tompkins_r_detection(sig_ds[:, 6], 200, toplt=False)
-
-    # plt.subplot(2, 2, 2)
-    # plt.plot(ecg_m)
-    # plt.scatter(peak_locs, ecg_m[peak_locs])
-
-    # plt.subplot(2, 2, 4)
-    # plt.plot(ecg_h)
