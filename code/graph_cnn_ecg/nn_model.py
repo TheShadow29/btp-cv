@@ -1,4 +1,5 @@
 import torch
+from torch.autograd import Variable
 import torch.nn as nn
 import numpy as np
 import pdb
@@ -7,6 +8,18 @@ from lib.coarsening import rescale_L
 from torch.autograd import Variable
 import torch.nn.functional as F
 from lib.coarsening import perm_data_torch2
+
+
+if torch.cuda.is_available():
+    print('cuda available')
+    dtypeFloat = torch.cuda.FloatTensor
+    dtypeLong = torch.cuda.LongTensor
+    torch.cuda.manual_seed(1)
+else:
+    print('cuda not available')
+    dtypeFloat = torch.FloatTensor
+    dtypeLong = torch.LongTensor
+    torch.manual_seed(1)
 
 
 class my_sparse_mm(torch.autograd.Function):
@@ -902,3 +915,54 @@ class end_to_end_fc_model_no_bn(partial_end_to_end_model):
         out2 = self.gfn2(out1)
 
         return out2
+
+
+class MLCNN(torch.nn.Module):
+    def __init__(self, config):
+        super().__init__()
+        self.config = config
+        self.channels = config['channels']
+        self.in_channels = len(self.channels)
+
+        self.build_model()
+
+    def build_model(self):
+        init_dim = self.config['Din']
+        oc1, oc2 = self.config['train']['arch']['num_kerns']
+        k1, k2 = self.config['train']['arch']['kern_size']
+        s1, s2 = self.config['train']['arch']['strides']
+        self.p1, self.p2 = self.config['train']['arch']['pool']
+        self.conv1 = torch.nn.Conv1d(1, oc1, k1, s1)
+        # self.bn1 = torch.nn.BatchNorm1d(oc1)
+        new_dim = calc_dim(init_dim, k1, s1)
+        new_dim = new_dim // self.p1
+        self.conv2 = torch.nn.Conv1d(oc1, oc2, k2, s2)
+        # self.bn2 = torch.nn.BatchNorm1d(oc2)
+        new_dim = calc_dim(new_dim, k2, s2)
+        new_dim = new_dim // self.p2
+        self.lin1 = torch.nn.Linear(new_dim * oc2 * self.in_channels, 2)
+
+
+    # def forward(self, inp):
+    #     out1 = self.sub2d_conv(inp, self.conv1, self.p1)
+    #     out1 = self.sub2d_conv(out1, self.conv2, self.p2)
+    #     out1 = out1.view(-1, out1.size(0))
+    #     out1 = self.lin1(out1)
+    #     return out1
+
+    def forward(self, inp):
+        bs, nch, vlen = inp.shape
+        out_list = []
+        for i in range(nch):
+            o1 = F.relu(F.max_pool1d(self.conv1(inp[:, [i], :]), self.p1))
+            o1 = F.relu(F.max_pool1d(self.conv2(o1), self.p2))
+            out_list.append(o1)
+        o2 = torch.cat(out_list, 0)
+        o2 = o2.view(nch, bs, o1.shape[1], o1.shape[2])
+        o2 = o2.permute(1, 0, 2, 3).contiguous()
+        # pdb.set_trace()
+        o2 = o2.view(o2.shape[0], -1)
+
+        o3 = self.lin1(o2)
+
+        return o3

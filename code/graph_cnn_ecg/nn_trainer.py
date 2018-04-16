@@ -507,3 +507,101 @@ class end_to_end_trainer:
         print(num_corr, tot_num, num_corr/tot_num)
         self.nn_model.train()
         return num_corr / tot_num
+
+
+class ml_cnn_trainer(end_to_end_trainer):
+    def __init__(self, config, train_loader, test_loader, nn_model,
+                 loss_fn=None, optimizer='adam', tovis=False):
+        self.config = config
+        super(ml_cnn_trainer, self).__init__(nn_model, train_loader, test_loader,
+                                             loss_fn, optimizer, tovis)
+
+    def train_model(self, num_epoch=15):
+        print('TrainSet: ', len(self.train_loader))
+        self.tot_ind = len(self.train_loader)
+        self.nn_model.train()
+        curr_acc = 0
+        best_acc = 0
+        for epoch in range(num_epoch):
+            running_loss = 0
+            num_tr_iter = 0
+            for ind, sample in enumerate(tqdm(self.train_loader)):
+                instance = Variable(sample['sig'].cuda())
+                label = Variable(sample['label'].type(dtypeLong))
+                # pdb.set_trace()
+                self.optimizer.zero_grad()
+                y_pred = self.nn_model(instance)
+                y_pred = y_pred.view(-1, 2)
+                # pdb.set_trace()
+                loss = self.loss_fn(y_pred, label)
+                loss.backward()
+                self.optimizer.step()
+                running_loss += loss.data[0]
+                num_tr_iter += 1
+
+                if self.tovis:
+                    # pdb.set_trace()
+                    self.vis.line(
+                        X=torch.ones((1)).cpu() * (ind + (self.start_epoch + epoch)
+                                                   * self.tot_ind),
+                        Y=torch.Tensor([loss.data[0]]).cpu(),
+                        win=self.loss_window,
+                        update='append')
+
+            self.curr_epoch = self.start_epoch + epoch
+            print('epoch', self.curr_epoch, running_loss/num_tr_iter)
+            curr_acc = self.test_model()
+            is_best = False
+
+            if curr_acc > best_acc:
+                best_acc = curr_acc
+                is_best = True
+                save_checkpoint({
+                    'epoch': self.curr_epoch + 1,
+                    # 'arch': args.arch,
+                    'state_dict': self.nn_model.state_dict(),
+                    # 'best_prec1': best_prec1,
+                    'optimizer': self.optimizer.state_dict(),
+                }, is_best, 'e2e_checkpoint.pth.tar')
+
+    def test_model(self):
+        print('TestSet :', len(self.test_loader))
+        num_corr = 0
+        tot_num = 0
+        false_0 = 0
+        false_1 = 0
+        true_0 = 0
+        true_1 = 0
+        pt_dis_pred_dict = {}
+        pt_dis_actual_dict = {}
+        self.nn_model.eval()
+        for sample in tqdm(self.test_loader):
+            instance = Variable(sample['sig'].cuda())
+            y_pred = self.nn_model(instance)
+            y_pred = y_pred.view(-1, 2)
+            _, label_pred = torch.max(y_pred.data, 1)
+
+            for ind1, sidx in enumerate(sample['idx']):
+                if pt_dis_actual_dict.get(sidx) is None:
+                    pt_dis_actual_dict[sidx] = sample['label'][ind1]
+                    pt_dis_pred_dict[sidx] = [label_pred[ind1]]
+                else:
+                    assert pt_dis_actual_dict[sidx] == sample['label'][ind1]
+                    pt_dis_pred_dict[sidx].append(label_pred[ind1])
+        for k, v in pt_dis_actual_dict.items():
+            pred_list = pt_dis_pred_dict[k]
+
+            pred_list_counter = collections.Counter(pred_list)
+            fin_label_pred, fin_label_count = pred_list_counter.most_common()[0]
+
+            if fin_label_pred == v:
+                num_corr += 1
+            true_0 += (fin_label_pred == v) and (v == 0)
+            true_1 += (fin_label_pred == v) and (v == 1)
+            false_0 += (fin_label_pred != v) and (v == 0)
+            false_1 += (fin_label_pred != v) and (v == 1)
+            tot_num += 1
+        self.nn_model.train()
+        print(true_0, true_1, false_0, false_1)
+        print(num_corr, tot_num, num_corr/tot_num)
+        return num_corr / tot_num

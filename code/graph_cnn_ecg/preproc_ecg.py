@@ -160,11 +160,11 @@ def fuzzy_info_gran(ecg_beat, M=9):
     m_list_tot = []
     a_list_tot = []
     c_list_tot = []
-    for ch in tqdm(range(ecg_beat.shape[1])):
+    for ch in range(ecg_beat.shape[1]):
         m_list = []
         a_list = []
         c_list = []
-        for k in tqdm(range(N - M + 1)):
+        for k in range(N - M + 1):
             bij_k = ecg_beat[k:k+M, ch]
             # pdb.set_trace()
             assert len(bij_k) == M
@@ -209,16 +209,34 @@ def fuzzy_info_gran(ecg_beat, M=9):
 def partition_signal(sig, st_pts, fname=None, to_save=False):
     # list would contain all the beats
     # For now taking 200 on the left and 600 on the right
-    sig_range = (40, 90)
+    # sig_range = (40, 90)
+    sig_range = (74, 75)
     sig_list = []
-    for stp in st_pts:
+    # asig_list = []
+    # msig_list = []
+    # csig_list = []
+    for stp in tqdm(st_pts):
         tmp_sig = sig[stp-sig_range[0]:stp + sig_range[1], :]
+        # m, a, c = fuzzy_info_gran(tmp_sig)
+        # m2 = np.swapaxes(m, 0, 1)
+        # a2 = np.swapaxes(a, 0, 1)
+        # c2 = np.swapaxes(c, 0, 1)
+
         sig_list.append(tmp_sig)
+        # asig_list.append(a2)
+        # msig_list.append(m2)
+        # csig_list.append(c2)
     sig_np = np.array(sig_list)
+    # asig_np = np.array(asig_list)
+    # msig_np = np.array(msig_list)
+    # csig_np = np.array(csig_list)
     # pdb.set_trace()
     # Shape : #cycles x #points in a cycle x #channels
     if to_save:
-        np.save(fname, sig_np)
+        np.save(fname + '_150.npy', sig_np)
+        # np.save(fname + '_a.npy', asig_np)
+        # np.save(fname + '_m.npy', msig_np)
+        # np.save(fname + '_c.npy', csig_np)
     return sig_np
 
 
@@ -232,19 +250,11 @@ if __name__ == "__main__":
     with open(patient_list_file, 'r') as f:
         patient_list = f.read().splitlines()
 
-    p = patient_list[45]
-    sig, fields = wfdb.srdsamp(ptb_tdir_str + p)
-    sig_ds = sig[np.arange(0, sig.shape[0], 5), :]
-    sig_bp = bp_filt(sig_ds)
-    _, peak_locs = pan_tompkins_r_detection(sig_bp[:, 6], fs=200)
-    sig_partitioned = partition_signal(sig_bp, peak_locs[1:-1])
-    m, a, c = fuzzy_info_gran(sig_partitioned[0, :, 6:8])
-    # for ind, p in enumerate(tqdm(patient_list)):
-    #     sig, fields = wfdb.srdsamp(ptb_tdir_str + p)
-    #     sig_ds = sig[np.arange(0, sig.shape[0], 5), :]
-    #     sig_bp = bp_filt(sig_ds)
-    #     _, peak_locs = pan_tompkins_r_detection(sig_bp[:, 6], fs=200)
-    #     fname = ptb_tdir_str + p + '.npy'
-    #     fpath = Path(fname)
+    for ind, p in enumerate(tqdm(patient_list)):
 
-    #     dat_file(fname, sig_bp, peak_locs[1:-1])
+        sig, fields = wfdb.srdsamp(ptb_tdir_str + p)
+        sig_ds = sig[np.arange(0, sig.shape[0], 4), :]
+        sig_bp = bp_filt(sig_ds)
+        _, peak_locs = pan_tompkins_r_detection(sig_bp[:, 6], fs=200)
+        fname = ptb_tdir_str + p
+        sig_partitioned = partition_signal(sig_bp, peak_locs[1:-1], fname=fname, to_save=True)
