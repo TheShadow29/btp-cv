@@ -209,6 +209,8 @@ class ecg_dataset_complex_PCA(ecg_dataset_complex):
         else:
             sig = np.dot(self.B_proj, sig.T)
         sig = sig.T
+        noise = np.random.normal(0, np.sqrt(sig.var()), sig.shape)
+        sig = sig + noise
         # except Exception as e:
         # pdb.set_trace()
         # pass

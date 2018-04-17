@@ -17,6 +17,17 @@ import pdb
 from pathlib import Path
 from cfg import process_config
 
+if torch.cuda.is_available():
+    print('cuda available')
+    dtypeFloat = torch.cuda.FloatTensor
+    dtypeLong = torch.cuda.LongTensor
+    torch.cuda.manual_seed(1)
+else:
+    print('cuda not available')
+    dtypeFloat = torch.FloatTensor
+    dtypeLong = torch.LongTensor
+    torch.manual_seed(1
+)
 
 def get_pca():
     A1 = np.random.random((149, 149))
@@ -70,23 +81,25 @@ if __name__ == "__main__":
             train_list.remove('patient095/s0377lre')
         elif x in test_list:
             test_list.remove('patient095/s0377lre')
-        ecg_train_loader = DataLoader(ecg_dataset_complex_PCA(ptb_tdir_str, train_list,
-                                                              control_list,
-                                                              positive_list,
-                                                              odd_subspace, even_subspace,
-                                                              Din, ds_type='train',
-                                                              channels=channels),
+        ecg_train_loader = DataLoader(ecg_dataset_complex(ptb_tdir_str, train_list,
+                                                          control_list,
+                                                          positive_list,
+                                                          Din,
+                                                          channels=channels),
                                       batch_size=batch_size, shuffle=True, num_workers=2)
 
-        ecg_test_loader = DataLoader(ecg_dataset_complex_PCA(ptb_tdir_str, test_list,
-                                                             control_list,
-                                                             positive_list,
-                                                             odd_subspace, even_subspace,
-                                                             Din, ds_type='test',
-                                                             channels=channels),
+        ecg_test_loader = DataLoader(ecg_dataset_complex(ptb_tdir_str, test_list,
+                                                         control_list,
+                                                         positive_list,
+                                                         Din,
+                                                         channels=channels),
                                      batch_size=batch_size, shuffle=False, num_workers=2)
 
-        loss_fn = torch.nn.CrossEntropyLoss()
+        tot = len(patient_list)
+        c1 = len(positive_list) / tot
+        c0 = len(control_list) / tot
+        loss_fn = torch.nn.CrossEntropyLoss(weight=torch.Tensor([c0, c1]).type(
+            dtypeFloat))
         # e2e_nn = end_to_end_fc_model_no_bn(cnet_parameters, gnet_parameters)
         ml_cnn_nn = MLCNN(config)
         # e2e_trainer = end_to_end_trainer(e2e_nn, ecg_train_loader,

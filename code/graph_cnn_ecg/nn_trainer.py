@@ -596,12 +596,17 @@ class ml_cnn_trainer(end_to_end_trainer):
 
             if fin_label_pred == v:
                 num_corr += 1
-            true_0 += (fin_label_pred == v) and (v == 0)
-            true_1 += (fin_label_pred == v) and (v == 1)
-            false_0 += (fin_label_pred != v) and (v == 0)
-            false_1 += (fin_label_pred != v) and (v == 1)
+            true_0 += (fin_label_pred == v) and (fin_label_pred == 0)
+            true_1 += (fin_label_pred == v) and (fin_label_pred == 1)
+            false_0 += (fin_label_pred != v) and (fin_label_pred == 0)
+            false_1 += (fin_label_pred != v) and (fin_label_pred == 1)
             tot_num += 1
         self.nn_model.train()
         print(true_0, true_1, false_0, false_1)
+        prec = true_1 / (false_1 + true_1)
+        rec = true_1 / (true_1 + false_0)
+        f1s = 2 * prec * rec / (prec + rec)
+
+        print(prec, rec, f1s)
         print(num_corr, tot_num, num_corr/tot_num)
         return num_corr / tot_num
