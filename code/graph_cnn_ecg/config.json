@@ -1,10 +1,10 @@
 {
 	"exp_name": "cnnLaplacian",
-	"data_dir": "/home/SharedData/Ark_git_files/btp_extra_files/ecg-analysis/",
-	"patient_file": "/home/SharedData/Ark_git_files/btp_extra_files/ecg-analysis/data/patients.txt",
-	"control_file": "/home/SharedData/Ark_git_files/btp_extra_files/ecg-analysis/control.txt",
-	"positive_file": "/home/SharedData/Ark_git_files/btp_extra_files/ecg-analysis/positive.txt",
-	"Din": 750,
+	"data_dir": "/home/SharedData/Ark_git_files/btp_extra_files/ptbdata",
+	"patient_file": "/home/SharedData/Ark_git_files/btp_extra_files/ptbdata/records.txt",
+	"control_file": "/home/SharedData/Ark_git_files/btp_extra_files/ptbdata/control.txt",
+	"positive_file": "/home/SharedData/Ark_git_files/btp_extra_files/ptbdata/gami.txt",
+	"Din": 150,
 	"batch_size": 4,
 	"num_tr_points": 300,
 	"channels": [6, 7, 8, 9, 10, 11]

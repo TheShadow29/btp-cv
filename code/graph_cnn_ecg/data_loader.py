@@ -114,14 +114,20 @@ class ecg_dataset_simple(Dataset):
 
 
 class ecg_dataset_complex(Dataset):
-    def __init__(self, tdir, patient_list, din, channels=[7], topreproc=False,
+    def __init__(self, tdir, patient_list, control_list, post_list,
+                 din, channels=[7], topreproc=False,
                  preproc_params=None):
         self.tdir = tdir
         self.patient_list = patient_list
+        self.control_list = control_list
+        self.post_list = post_list
         self.din = din
         self.channels = channels
         self.get_tot_signals()
         self.curr_pat_idx = 0
+
+    def get_fname(self, tdir, p):
+        return tdir + p + '_150.npy'
 
     def get_tot_signals(self):
         self.beats_in_sig = dict()
@@ -130,7 +136,7 @@ class ecg_dataset_complex(Dataset):
         # self.idx_to_act_idx_map = dict()
         tot_signals = 0
         for p in self.patient_list:
-            a1 = np.load(self.tdir + p + '.npy')
+            a1 = np.load(self.get_fname(self.tdir, p))
             tot_signals += a1.shape[0]
             self.beats_in_sig[p] = a1.shape[0]
             self.tot_beats_in_sig.append(tot_signals)
@@ -147,16 +153,62 @@ class ecg_dataset_complex(Dataset):
         return sample
 
     def get_sample(self, act_idx, beat_idx):
-        _, fields = wfdb.srdsamp(self.tdir + self.patient_list[act_idx], channels=[0])
-        if 'Myocardial infarction' in fields['comments'][4]:
-            # out_label[0] = 1
+        # _, fields = wfdb.srdsamp(self.tdir + self.patient_list[act_idx], channels=[0])
+        # if 'Myocardial infarction' in fields['comments'][4]:
+        #     # out_label[0] = 1
+        #     out_label = 1
+        # else:
+        #     # out_label[0] = 0
+        #     out_label = 0
+        if self.patient_list[act_idx] in self.post_list:
             out_label = 1
         else:
-            # out_label[0] = 0
             out_label = 0
-        sig = np.load(self.tdir + self.patient_list[act_idx] + '.npy')
+        sig = np.load(self.get_fname(self.tdir, self.patient_list[act_idx]))
         # try:
         sig = sig[beat_idx, :, self.channels]
+        # except Exception as e:
+        # pdb.set_trace()
+        # pass
+        sig_out = sig.astype(np.float32)
+        sample = {'sig': sig_out, 'label': out_label, 'idx': act_idx, 'beat_idx': beat_idx}
+        return sample
+
+
+class ecg_dataset_complex_PCA(ecg_dataset_complex):
+    def __init__(self, tdir, patient_list, control_list, post_list,
+                 a_s, b_s,
+                 din, ds_type='train', channels=[7], topreproc=False,
+                 preproc_params=None):
+        super().__init__(tdir, patient_list, control_list, post_list,
+                         din, channels=channels, topreproc=topreproc,
+                         preproc_params=preproc_params)
+        self.ds_type = ds_type
+        self.A_proj = np.dot(a_s, np.dot(np.linalg.inv(np.dot(a_s.T, a_s)), a_s.T))
+        self.B_proj = np.dot(b_s, np.dot(np.linalg.inv(np.dot(b_s.T, b_s)), b_s.T))
+        return
+
+    def get_sample(self, act_idx, beat_idx):
+        # _, fields = wfdb.srdsamp(self.tdir + self.patient_list[act_idx], channels=[0])
+        # if 'Myocardial infarction' in fields['comments'][4]:
+        #     # out_label[0] = 1
+        #     out_label = 1
+        # else:
+        #     # out_label[0] = 0
+        #     out_label = 0
+        if self.patient_list[act_idx] in self.post_list:
+            out_label = 1
+        else:
+            out_label = 0
+
+        sig = np.load(self.get_fname(self.tdir, self.patient_list[act_idx]))
+        # try:
+        sig = sig[beat_idx, :, self.channels]
+        if out_label == 1:
+            sig = np.dot(self.A_proj, sig.T)
+        else:
+            sig = np.dot(self.B_proj, sig.T)
+        sig = sig.T
         # except Exception as e:
         # pdb.set_trace()
         # pass

@@ -1,6 +1,7 @@
 import torch
 from torch.utils.data import DataLoader
 from data_loader import ecg_dataset_simple, ecg_dataset_complex
+from data_loader import ecg_dataset_complex_PCA
 from nn_model import simple_net, complex_net, end_to_end_model
 from nn_model import partial_end_to_end_model, end_to_end_fc_model
 from nn_model import end_to_end_fc_model_no_bn
@@ -9,12 +10,21 @@ from nn_model import Graph_ConvNet_LeNet5
 from nn_trainer import simple_trainer, end_to_end_trainer
 from nn_trainer import ml_cnn_trainer
 # import torch.nn.functional as F
-# import numpy as np
+import numpy as np
 import pdb
 # import mat
 # import pathlib
 from pathlib import Path
 from cfg import process_config
+
+
+def get_pca():
+    A1 = np.random.random((149, 149))
+    A1 = A1 + A1.T
+    U1, S1, V1 = np.linalg.svd(A1)
+    odd_subspace = U1[:, :75]
+    even_subspace = U1[:, 75:]
+    return odd_subspace, even_subspace
 
 
 if __name__ == "__main__":
@@ -51,21 +61,29 @@ if __name__ == "__main__":
     contr_list = (control_list[:contr_tr_pts])
 
     num_inp_channels = len(channels)
-
+    odd_subspace, even_subspace = get_pca()
     # pdb.set_trace()
-
+    # pdb.set_trace()
     with torch.cuda.device(1):
         x = 'patient095/s0377lre'
         if x in train_list:
             train_list.remove('patient095/s0377lre')
         elif x in test_list:
             test_list.remove('patient095/s0377lre')
-        ecg_train_loader = DataLoader(ecg_dataset_complex(ptb_tdir_str, train_list,
-                                                          Din, channels=channels),
+        ecg_train_loader = DataLoader(ecg_dataset_complex_PCA(ptb_tdir_str, train_list,
+                                                              control_list,
+                                                              positive_list,
+                                                              odd_subspace, even_subspace,
+                                                              Din, ds_type='train',
+                                                              channels=channels),
                                       batch_size=batch_size, shuffle=True, num_workers=2)
 
-        ecg_test_loader = DataLoader(ecg_dataset_complex(ptb_tdir_str, test_list, Din,
-                                                         channels=channels),
+        ecg_test_loader = DataLoader(ecg_dataset_complex_PCA(ptb_tdir_str, test_list,
+                                                             control_list,
+                                                             positive_list,
+                                                             odd_subspace, even_subspace,
+                                                             Din, ds_type='test',
+                                                             channels=channels),
                                      batch_size=batch_size, shuffle=False, num_workers=2)
 
         loss_fn = torch.nn.CrossEntropyLoss()

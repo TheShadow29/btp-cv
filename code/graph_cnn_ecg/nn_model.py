@@ -929,19 +929,22 @@ class MLCNN(torch.nn.Module):
     def build_model(self):
         init_dim = self.config['Din']
         oc1, oc2 = self.config['train']['arch']['num_kerns']
+        self.oc1 = oc1
+        self.oc2 = oc2
         k1, k2 = self.config['train']['arch']['kern_size']
         s1, s2 = self.config['train']['arch']['strides']
         self.p1, self.p2 = self.config['train']['arch']['pool']
         self.conv1 = torch.nn.Conv1d(1, oc1, k1, s1)
-        # self.bn1 = torch.nn.BatchNorm1d(oc1)
+        self.bn1 = torch.nn.BatchNorm1d(oc1)
         new_dim = calc_dim(init_dim, k1, s1)
         new_dim = new_dim // self.p1
+        self.dim1 = new_dim
         self.conv2 = torch.nn.Conv1d(oc1, oc2, k2, s2)
-        # self.bn2 = torch.nn.BatchNorm1d(oc2)
+        self.bn2 = torch.nn.BatchNorm1d(oc2)
         new_dim = calc_dim(new_dim, k2, s2)
         new_dim = new_dim // self.p2
+        self.dim2 = new_dim
         self.lin1 = torch.nn.Linear(new_dim * oc2 * self.in_channels, 2)
-
 
     # def forward(self, inp):
     #     out1 = self.sub2d_conv(inp, self.conv1, self.p1)
@@ -951,6 +954,13 @@ class MLCNN(torch.nn.Module):
     #     return out1
 
     def forward(self, inp):
+        bs, nch, vlen = inp.shape
+        o1 = self.bn1(F.relu(F.max_pool1d(self.conv1(inp.view(-1, 1, vlen)), self.p1)))
+        o1 = self.bn2(F.relu(F.max_pool1d(self.conv2(o1), self.p2)))
+        o1 = self.lin1(o1.view(-1, nch * self.dim2 * self.oc2))
+        return o1
+
+    def forward1(self, inp):
         bs, nch, vlen = inp.shape
         out_list = []
         for i in range(nch):
