@@ -177,7 +177,7 @@ class ecg_dataset_complex(Dataset):
 
 class ecg_dataset_very_simple(ecg_dataset_complex):
     def get_fname(self, tdir, p):
-        return tdir + p + '_db8_l4.npy'
+        return tdir + p + '_800.npy'
 
     def get_tot_signals(self):
         return

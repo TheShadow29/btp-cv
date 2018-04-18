@@ -9,6 +9,7 @@ from tsne import tsne
 from tqdm import tqdm
 import scipy.signal as signal
 import random
+import sys
 from mpl_toolkits.mplot3d import Axes3D
 
 
@@ -42,7 +43,9 @@ if __name__ == "__main__":
     outputs = []
     labels = []
 
-    for i, p in enumerate(tqdm(positive_list)):
+    # for i, p in enumerate(tqdm(positive_list)):
+    new_list = positive_list + control_list
+    for i, p in enumerate(tqdm(new_list)):
         # pdb.set_trace()
         sig, fields = wfdb.srdsamp(ptb_tdir_str + p, channels=[7], sampfrom=6000, sampto=9000)
         sig[:, 0] = filter_sig(sig[:, 0])
@@ -56,11 +59,28 @@ if __name__ == "__main__":
         index = output2[minima.index(sum_vals[len(sum_vals) // 2])]
         samples = sig[index - 200: index+600, 0]
 
-        output = wavedec(samples, wavelet='db8', level=4)
-        output = np.concatenate((output[0], output[1], output[2], output[3]))
-        np.save(ptb_tdir_str + p + '_db8_l4.npy', output)
+        tmp_sig = sig[output2, 0]
+        a2 = tmp_sig[np.argsort(tmp_sig)[:len(sum_vals)]]
+        a2 = a2[::-1]
+        try:
+            assert np.array_equiv(np.sort(a2), np.sort(np.ravel(sum_vals)))
+        except AssertionError as e:
+            pdb.set_trace()
+        # output = wavedec(samples, wavelet='db8', level=4)
+        # output = np.concatenate((output[0], output[1], output[2], output[3]))
+        # output = samples[np.arange(0, len(samples), 2)]
+        output = samples
+        np.save(ptb_tdir_str + p + '_800.npy', output)
+        # np.save(ptb_tdir_str + p + '_db8_l4.npy', output)
         outputs.append(output)
         labels.append(1)
+    sys.exit(0)
+    # break
+
+    # fig1 = plt.figure()
+    # plt.subplot(2, 2, 1)
+    # plt.plot(samples)
+    # plt.scatter(200, samples[200])
 
     for i, p in enumerate(tqdm(control_list)):
         sig, fields = wfdb.srdsamp(ptb_tdir_str + p, channels=[7], sampfrom=6000, sampto=9000)
@@ -74,6 +94,7 @@ if __name__ == "__main__":
             sum_vals = [x for x in minima if x < threshold]
             threshold += 0.1
         index = output2[minima.index(sum_vals[len(sum_vals) // 2])]
+        i1 = index
         max_found = False
         while max_found is False:
             if sig[index] > sig[index - 1] and \
@@ -85,14 +106,24 @@ if __name__ == "__main__":
                 max_found = True
             else:
                 index -= 1
+        i2 = index
         while abs(sig[index]) > 0.01:
             index -= 1
         samples = sig[index - 200: index+600, 0]
-        output = wavedec(samples, wavelet='db8', level=4)
-        output = np.concatenate((output[0], output[1], output[2], output[3]))
-        np.save(ptb_tdir_str + p + '_db8_l4.npy', output)
+        # output = wavedec(samples, wavelet='db8', level=4)
+        # output = np.concatenate((output[0], output[1], output[2], output[3]))
+        # output = samples[np.arange(0, len(samples), 2)]
+        output = samples
+        # np.save(ptb_tdir_str + p + '_db8_l4.npy', output)
         outputs.append(output)
         labels.append(0)
+        pdb.set_trace()
+        break
+
+    # plt.subplot(2, 2, 1)
+    # plt.plot(samples)
+    # plt.scatter(200, samples[200])
+    # plt.show()
 
     c = list(zip(outputs, labels))
     random.shuffle(c)

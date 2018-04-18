@@ -234,20 +234,32 @@ def filter_sig(input_sig):
 
 
 if __name__ == "__main__":
-    config = process_config('config.json')
+    config = process_config('config_mlcnn.json')
     ptb_tdir = Path(config.data_dir)
-
     ptb_tdir_str = str(ptb_tdir / 'data') + '/'
-
+    # ptb_dat_dir = ptb_tdir / 'data'
     patient_list_file = str(config.patient_file)
+    control_list_file = str(config.control_file)
+    positive_list_file = str(config.positive_file)
+
     with open(patient_list_file, 'r') as f:
         patient_list = f.read().splitlines()
+    with open(control_list_file, 'r') as f:
+        control_list = f.read().splitlines()
+    with open(positive_list_file, 'r') as f:
+        positive_list = f.read().splitlines()
 
-    for ind, p in enumerate(tqdm(patient_list)):
-
+    for ind, p in enumerate(tqdm(control_list)):
         sig, fields = wfdb.srdsamp(ptb_tdir_str + p)
-        sig_ds = sig[np.arange(0, sig.shape[0], 4), :]
-        sig_bp = bp_filt(sig_ds)
-        _, peak_locs = pan_tompkins_r_detection(sig_bp[:, 6], fs=200)
-        fname = ptb_tdir_str + p
-        sig_partitioned = partition_signal(sig_bp, peak_locs[1:-1], fname=fname, to_save=True)
+
+
+    # for ind, p in enumerate(tqdm(patient_list)):
+
+    #     sig, fields = wfdb.srdsamp(ptb_tdir_str + p)
+    #     sig_ds = sig[np.arange(0, sig.shape[0], 4), :]
+    #     sig_bp = bp_filt(sig_ds)
+    #     _, peak_locs = pan_tompkins_r_detection(sig_bp[:, 6], fs=200)
+    #     fname = ptb_tdir_str + p
+    #     sig_partitioned = partition_signal(sig_bp, peak_locs[1:-1], fname=fname, to_save=True)
+
+    # for ind, p in enumerate

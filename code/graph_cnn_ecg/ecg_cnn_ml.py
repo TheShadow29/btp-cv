@@ -80,14 +80,14 @@ if __name__ == "__main__":
         #     train_list.remove('patient095/s0377lre')
         # elif x in test_list:
         #     test_list.remove('patient095/s0377lre')
-        ecg_train_loader = DataLoader(ecg_dataset_very_simple(ptb_tdir_str, train_list,
+        ecg_train_loader = DataLoader(ecg_dataset_very_simple(ptb_tdir_str, test_list,
                                                               control_list,
                                                               positive_list,
                                                               Din,
                                                               channels=channels),
                                       batch_size=batch_size, shuffle=True, num_workers=2)
 
-        ecg_test_loader = DataLoader(ecg_dataset_very_simple(ptb_tdir_str, test_list,
+        ecg_test_loader = DataLoader(ecg_dataset_very_simple(ptb_tdir_str, train_list,
                                                              control_list,
                                                              positive_list,
                                                              Din,
@@ -104,7 +104,7 @@ if __name__ == "__main__":
         # e2e_trainer = end_to_end_trainer(e2e_nn, ecg_train_loader,
         # ecg_test_loader, loss_fn, tovis=False)
         ml_trainer = ml_cnn_trainer(config, ecg_train_loader, ecg_test_loader,
-                                    ml_cnn_nn, loss_fn, optimizer='sgd')
+                                    ml_cnn_nn, loss_fn, optimizer='adam')
         ml_trainer.train_model(num_epoch=30)
         # e2e_trainer.test_model(d, L, lmax, perm)
         # get all the last layer predn from the CNN
