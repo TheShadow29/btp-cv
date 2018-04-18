@@ -2,6 +2,7 @@ import torch
 from torch.utils.data import DataLoader
 from data_loader import ecg_dataset_simple, ecg_dataset_complex
 from data_loader import ecg_dataset_complex_PCA
+from data_loader import ecg_dataset_very_simple
 from nn_model import simple_net, complex_net, end_to_end_model
 from nn_model import partial_end_to_end_model, end_to_end_fc_model
 from nn_model import end_to_end_fc_model_no_bn
@@ -26,8 +27,8 @@ else:
     print('cuda not available')
     dtypeFloat = torch.FloatTensor
     dtypeLong = torch.LongTensor
-    torch.manual_seed(1
-)
+    torch.manual_seed(1)
+
 
 def get_pca():
     A1 = np.random.random((149, 149))
@@ -65,34 +66,32 @@ if __name__ == "__main__":
     remain_tr_pts = num_tr_points - contr_tr_pts - post_tr_pts
     remainder_list = list(set(patient_list) ^ set(control_list) ^ set(positive_list))
     # pdb.set_trace()
-    train_list = (control_list[:contr_tr_pts] + positive_list[:post_tr_pts] +
-                  remainder_list[:remain_tr_pts])
-    test_list = (control_list[contr_tr_pts:] + positive_list[post_tr_pts:] +
-                 remainder_list[remain_tr_pts:])
-    contr_list = (control_list[:contr_tr_pts])
-
+    train_list = (control_list[:contr_tr_pts] + positive_list[:post_tr_pts])
+    test_list = (control_list[contr_tr_pts:] + positive_list[post_tr_pts:])
+    # contr_list = (control_list[:contr_tr_pts])
+    # post_list = (positive_list[:post_tr_pts])
     num_inp_channels = len(channels)
     odd_subspace, even_subspace = get_pca()
     # pdb.set_trace()
     # pdb.set_trace()
     with torch.cuda.device(1):
-        x = 'patient095/s0377lre'
-        if x in train_list:
-            train_list.remove('patient095/s0377lre')
-        elif x in test_list:
-            test_list.remove('patient095/s0377lre')
-        ecg_train_loader = DataLoader(ecg_dataset_complex(ptb_tdir_str, train_list,
-                                                          control_list,
-                                                          positive_list,
-                                                          Din,
-                                                          channels=channels),
+        # x = 'patient095/s0377lre'
+        # if x in train_list:
+        #     train_list.remove('patient095/s0377lre')
+        # elif x in test_list:
+        #     test_list.remove('patient095/s0377lre')
+        ecg_train_loader = DataLoader(ecg_dataset_very_simple(ptb_tdir_str, train_list,
+                                                              control_list,
+                                                              positive_list,
+                                                              Din,
+                                                              channels=channels),
                                       batch_size=batch_size, shuffle=True, num_workers=2)
 
-        ecg_test_loader = DataLoader(ecg_dataset_complex(ptb_tdir_str, test_list,
-                                                         control_list,
-                                                         positive_list,
-                                                         Din,
-                                                         channels=channels),
+        ecg_test_loader = DataLoader(ecg_dataset_very_simple(ptb_tdir_str, test_list,
+                                                             control_list,
+                                                             positive_list,
+                                                             Din,
+                                                             channels=channels),
                                      batch_size=batch_size, shuffle=False, num_workers=2)
 
         tot = len(patient_list)

@@ -57,7 +57,8 @@ if __name__ == "__main__":
         samples = sig[index - 200: index+600, 0]
 
         output = wavedec(samples, wavelet='db8', level=4)
-        output = np.concatenate((output[0], output[1], output[2]))
+        output = np.concatenate((output[0], output[1], output[2], output[3]))
+        np.save(ptb_tdir_str + p + '_db8_l4.npy', output)
         outputs.append(output)
         labels.append(1)
 
@@ -88,7 +89,8 @@ if __name__ == "__main__":
             index -= 1
         samples = sig[index - 200: index+600, 0]
         output = wavedec(samples, wavelet='db8', level=4)
-        output = np.concatenate((output[0], output[1], output[2]))
+        output = np.concatenate((output[0], output[1], output[2], output[3]))
+        np.save(ptb_tdir_str + p + '_db8_l4.npy', output)
         outputs.append(output)
         labels.append(0)
 
@@ -100,6 +102,7 @@ if __name__ == "__main__":
     labels = np.array(labels)
 
     final = tsne(outputs, no_dims=3)
+    print(outputs[0].shape)
     fig = plt.figure()
     ax = Axes3D(fig)
     ax.scatter(final[:, 0], final[:, 1], final[:, 2], c=labels)

@@ -517,7 +517,6 @@ class ml_cnn_trainer(end_to_end_trainer):
         super(ml_cnn_trainer, self).__init__(nn_model, train_loader, test_loader,
                                              loss_fn, optimizer, tovis)
 
-
     def train_model(self, num_epoch=15):
         print('TrainSet: ', len(self.train_loader))
         self.tot_ind = len(self.train_loader)

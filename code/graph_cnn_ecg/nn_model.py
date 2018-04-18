@@ -955,6 +955,7 @@ class MLCNN(torch.nn.Module):
 
     def forward(self, inp):
         bs, nch, vlen = inp.shape
+        # pdb.set_trace()
         o1 = self.bn1(F.relu(F.max_pool1d(self.conv1(inp.view(-1, 1, vlen)), self.p1)))
         o1 = self.bn2(F.relu(F.max_pool1d(self.conv2(o1), self.p2)))
         o1 = self.lin1(o1.view(-1, nch * self.dim2 * self.oc2))

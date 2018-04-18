@@ -3,10 +3,10 @@
 	"data_dir": "/home/SharedData/Ark_git_files/btp_extra_files/ptbdata",
 	"patient_file": "/home/SharedData/Ark_git_files/btp_extra_files/ptbdata/records.txt",
 	"control_file": "/home/SharedData/Ark_git_files/btp_extra_files/ptbdata/control.txt",
-	"positive_file": "/home/SharedData/Ark_git_files/btp_extra_files/ptbdata/ami.txt",
+	"positive_file": "/home/SharedData/Ark_git_files/btp_extra_files/ptbdata/gami_records.txt",
 	"num_tr_points": 300,
-	"channels": [6, 7, 8, 9, 10, 11],
-	"Din": 149,
+	"channels": [7],
+	"Din": 452,
 	"train":
 	{
 		"arch":
@@ -18,7 +18,7 @@
 			"fc_inp_size": 576,
 			"fc_outp_size": 2
 		},
-		"batch_size": 65,
+		"batch_size": 4,
 		"lr": 1e-3,
 		"max_tr_it": 30
 	}

@@ -222,6 +222,17 @@ def partition_signal(sig, st_pts, fname=None, to_save=False):
     return sig_np
 
 
+def filter_sig(input_sig):
+    f_sample = 1000
+    f_cutoff = 25
+    b, a = scs.butter(6, f_cutoff / (f_sample / 2.0))
+    sig1 = scs.lfilter(b, a, input_sig)
+    sig11 = scs.medfilt(sig1, 201)
+    sig12 = scs.medfilt(sig11, 601)
+    sig1 = sig1 - sig12
+    return sig1
+
+
 if __name__ == "__main__":
     config = process_config('config.json')
     ptb_tdir = Path(config.data_dir)

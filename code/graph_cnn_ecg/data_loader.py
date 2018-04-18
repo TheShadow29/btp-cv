@@ -175,6 +175,43 @@ class ecg_dataset_complex(Dataset):
         return sample
 
 
+class ecg_dataset_very_simple(ecg_dataset_complex):
+    def get_fname(self, tdir, p):
+        return tdir + p + '_db8_l4.npy'
+
+    def get_tot_signals(self):
+        return
+
+    def __len__(self):
+        return len(self.patient_list)
+
+    def __getitem__(self, idx):
+        sample = self.get_sample(idx)
+        return sample
+
+    def get_sample(self, idx):
+        # if idx < self.tot_contr:
+        # out_label = 0
+        # sig = np.load(self.get_fname(self.tdir, self.control_list[idx]))
+        # elif idx >= self.tot_contr and idx < self.tot_contr + self.tot_post:
+        # out_label = 1
+        # sig = np.load(self.get_fname(self.tdir, self.post_list[idx - self.tot_contr]))
+
+        sig = np.load(self.get_fname(self.tdir, self.patient_list[idx]))
+        if self.patient_list[idx] in self.control_list:
+            out_label = 0
+        elif self.patient_list[idx] in self.post_list:
+            out_label = 1
+        # sig = sig[beat_idx, :, self.channels]
+        # except Exception as e:
+        # pdb.set_trace()
+        # pass
+        sig = sig[None, :]
+        sig_out = sig.astype(np.float32)
+        sample = {'sig': sig_out, 'label': out_label, 'idx': idx}
+        return sample
+
+
 class ecg_dataset_complex_PCA(ecg_dataset_complex):
     def __init__(self, tdir, patient_list, control_list, post_list,
                  a_s, b_s,
