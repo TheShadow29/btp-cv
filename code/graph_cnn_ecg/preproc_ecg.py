@@ -23,22 +23,25 @@ def bp_filt(sig, fs=200):
     N2 = 3
     b2, a2 = scs.butter(N2, Wn2, 'high')
 
-    ecg_l = np.zeros(sig.shape)
-    ecg_h = np.zeros(sig.shape)
+    # ecg_l = np.zeros(sig.shape)
+    # ecg_h = np.zeros(sig.shape)
     sig_out = np.zeros(sig.shape)
-    for i in range(n):
-        tmp_ecg_l = scs.filtfilt(b1, a1, sig[:, i])
-        ecg_l[:, i] = tmp_ecg_l / np.abs(tmp_ecg_l).max()
-        tmp_ecg_h = scs.filtfilt(b2, a2, ecg_l[:, i])
-        ecg_h[:, i] = tmp_ecg_h / np.abs(tmp_ecg_h).max()
-        sig_out_tmp, _ = baseline_removal(ecg_h[:, i])
-        sig_out[:, i] = sig_out_tmp
+    # for i in range(n):
+    tmp_ecg_l = scs.filtfilt(b1, a1, sig, axis=0)
+    # ecg_l[:, i] = tmp_ecg_l / np.abs(tmp_ecg_l).max()
+    tmp_ecg_h = scs.filtfilt(b2, a2, tmp_ecg_l, axis=0)
+    # ecg_h[:, i] = tmp_ecg_h / np.abs(tmp_ecg_h).max()
+    sig_out_tmp, _ = baseline_removal(tmp_ecg_h)
+    sig_out = sig_out_tmp
     return sig_out
 
 
 def baseline_removal(sig):
-    baseline = scs.medfilt(sig, kernel_size=41)
-    baseline = scs.medfilt(baseline, kernel_size=121)
+    _, nch = sig.shape
+    baseline = np.zeros(sig.shape)
+    for i in range(nch):
+        baseline[:, i] = scs.medfilt(sig[:, i], kernel_size=51)
+        baseline[:, i] = scs.medfilt(baseline[:, i], kernel_size=201)
     sig_out = sig - baseline
     return sig_out, baseline
 
@@ -62,27 +65,6 @@ def pan_tompkins_r_detection(sig, fs, toplt=False):
     delay = 0
     # becomes 1 when T-wave
 
-    # Noise cancelation(Filtering) % Filters (Filter in between 5-15 Hz)
-    # if fs == 200:
-    #     # remove mean signal
-    #     sig -= sig.mean()
-    #     Wn = 12 * 2 / fs
-    #     N = 3
-    #     # low pass filtering
-    #     b, a = scs.butter(N, Wn, 'low')
-    #     ecg_l = scs.filtfilt(b, a, sig)
-    #     ecg_l = ecg_l / np.abs(ecg_l).max()
-    #     # High pass filtering
-    #     Wn = 5 * 2 / fs
-    #     N = 3
-    #     b, a = scs.butter(N, Wn, 'high')
-    #     ecg_h = scs.filtfilt(b, a, ecg_l)
-    #     ecg_h = ecg_h / np.abs(ecg_h).max()
-
-    # else:
-    #     raise ValueError('fs must be 200Hz, downsample if required')
-
-    # derivative filter H(z) = (1/8T)(-z^(-2) - 2z^(-1) + 2z + z^(2))
     if fs != 200:
         int_c = (5-1) / (fs/40)
         f_interp = sci.interp1d(np.arange(0, 5), np.array([1, 2, 0, -2, -1]) * fs/8)

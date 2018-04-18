@@ -325,7 +325,8 @@ class end_to_end_trainer:
         self.curr_epoch = 0
         if optimizer == 'adam':
             self.optimizer = torch.optim.Adam(self.nn_model.parameters())
-
+        elif optimizer == 'sgd':
+            self.optimizer = torch.optim.SGD(self.nn_model.parameters(), lr=0.17)
         self.tovis = tovis
         if self.tovis:
             self.vis = visdom.Visdom()
@@ -515,6 +516,7 @@ class ml_cnn_trainer(end_to_end_trainer):
         self.config = config
         super(ml_cnn_trainer, self).__init__(nn_model, train_loader, test_loader,
                                              loss_fn, optimizer, tovis)
+
 
     def train_model(self, num_epoch=15):
         print('TrainSet: ', len(self.train_loader))

@@ -104,7 +104,8 @@ if __name__ == "__main__":
         ml_cnn_nn = MLCNN(config)
         # e2e_trainer = end_to_end_trainer(e2e_nn, ecg_train_loader,
         # ecg_test_loader, loss_fn, tovis=False)
-        ml_trainer = ml_cnn_trainer(config, ecg_train_loader, ecg_test_loader, ml_cnn_nn, loss_fn)
+        ml_trainer = ml_cnn_trainer(config, ecg_train_loader, ecg_test_loader,
+                                    ml_cnn_nn, loss_fn, optimizer='sgd')
         ml_trainer.train_model(num_epoch=30)
         # e2e_trainer.test_model(d, L, lmax, perm)
         # get all the last layer predn from the CNN

@@ -1,5 +1,5 @@
 {
-	"exp_name": "cnnLaplacian",
+	"exp_name": "MLCNN",
 	"data_dir": "/home/SharedData/Ark_git_files/btp_extra_files/ptbdata",
 	"patient_file": "/home/SharedData/Ark_git_files/btp_extra_files/ptbdata/records.txt",
 	"control_file": "/home/SharedData/Ark_git_files/btp_extra_files/ptbdata/control.txt",
