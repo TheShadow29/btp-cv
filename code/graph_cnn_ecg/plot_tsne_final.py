@@ -44,8 +44,9 @@ if __name__ == "__main__":
     labels = []
 
     # for i, p in enumerate(tqdm(positive_list)):
-    new_list = positive_list + control_list
-    for i, p in enumerate(tqdm(new_list)):
+    n1 = positive_list[:23] + control_list[:40]
+    n2 = positive_list[23:] + control_list[40:]
+    for i, p in enumerate(tqdm(n1)):
         # pdb.set_trace()
         sig, fields = wfdb.srdsamp(ptb_tdir_str + p, channels=[7], sampfrom=6000, sampto=9000)
         sig[:, 0] = filter_sig(sig[:, 0])
@@ -70,11 +71,11 @@ if __name__ == "__main__":
         # output = np.concatenate((output[0], output[1], output[2], output[3]))
         # output = samples[np.arange(0, len(samples), 2)]
         output = samples
-        np.save(ptb_tdir_str + p + '_800.npy', output)
+        # np.save(ptb_tdir_str + p + '_800.npy', output)
         # np.save(ptb_tdir_str + p + '_db8_l4.npy', output)
         outputs.append(output)
         labels.append(1)
-    sys.exit(0)
+    # sys.exit(0)
     # break
 
     # fig1 = plt.figure()
@@ -82,7 +83,8 @@ if __name__ == "__main__":
     # plt.plot(samples)
     # plt.scatter(200, samples[200])
 
-    for i, p in enumerate(tqdm(control_list)):
+    # for i, p in enumerate(tqdm(control_list)):
+    for i, p in enumerate(tqdm(n2)):
         sig, fields = wfdb.srdsamp(ptb_tdir_str + p, channels=[7], sampfrom=6000, sampto=9000)
         # sig = wfdb.rdsamp("negative/" + p, channels=[7], sampfrom=6000, sampto=9000)
         sig[:, 0] = filter_sig(sig[:, 0])
@@ -117,8 +119,8 @@ if __name__ == "__main__":
         # np.save(ptb_tdir_str + p + '_db8_l4.npy', output)
         outputs.append(output)
         labels.append(0)
-        pdb.set_trace()
-        break
+        # pdb.set_trace()
+        # break
 
     # plt.subplot(2, 2, 1)
     # plt.plot(samples)

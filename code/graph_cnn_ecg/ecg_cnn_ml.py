@@ -59,19 +59,22 @@ if __name__ == "__main__":
     Din = config.Din
     batch_size = config.train['batch_size']
     num_tr_points = config.num_tr_points
+    # frac_tr_points = config.frac_tr_points
     channels = config.channels
-
-    contr_tr_pts = int(num_tr_points*len(control_list)/len(patient_list))
-    post_tr_pts = int(num_tr_points*len(positive_list)/len(patient_list))
-    remain_tr_pts = num_tr_points - contr_tr_pts - post_tr_pts
-    remainder_list = list(set(patient_list) ^ set(control_list) ^ set(positive_list))
+    tot_contr_post = len(control_list) + len(positive_list)
+    # contr_tr_pts = int(frac_tr_points * len(control_list))
+    # post_tr_pts = int(frac_tr_points * len(positive_list))
+    contr_tr_pts = int(num_tr_points*len(control_list)/tot_contr_post)
+    post_tr_pts = int(num_tr_points*len(positive_list)/tot_contr_post)
+    # remain_tr_pts = num_tr_points - contr_tr_pts - post_tr_pts
+    # remainder_list = list(set(patient_list) ^ set(control_list) ^ set(positive_list))
     # pdb.set_trace()
     train_list = (control_list[:contr_tr_pts] + positive_list[:post_tr_pts])
     test_list = (control_list[contr_tr_pts:] + positive_list[post_tr_pts:])
     # contr_list = (control_list[:contr_tr_pts])
     # post_list = (positive_list[:post_tr_pts])
     num_inp_channels = len(channels)
-    odd_subspace, even_subspace = get_pca()
+    # odd_subspace, even_subspace = get_pca()
     # pdb.set_trace()
     # pdb.set_trace()
     with torch.cuda.device(1):
@@ -80,21 +83,21 @@ if __name__ == "__main__":
         #     train_list.remove('patient095/s0377lre')
         # elif x in test_list:
         #     test_list.remove('patient095/s0377lre')
-        ecg_train_loader = DataLoader(ecg_dataset_very_simple(ptb_tdir_str, test_list,
-                                                              control_list,
-                                                              positive_list,
-                                                              Din,
-                                                              channels=channels),
+        ecg_train_loader = DataLoader(ecg_dataset_complex(ptb_tdir_str, train_list,
+                                                          control_list,
+                                                          positive_list,
+                                                          Din,
+                                                          channels=channels),
                                       batch_size=batch_size, shuffle=True, num_workers=2)
 
-        ecg_test_loader = DataLoader(ecg_dataset_very_simple(ptb_tdir_str, train_list,
-                                                             control_list,
-                                                             positive_list,
-                                                             Din,
-                                                             channels=channels),
+        ecg_test_loader = DataLoader(ecg_dataset_complex(ptb_tdir_str, test_list,
+                                                         control_list,
+                                                         positive_list,
+                                                         Din,
+                                                         channels=channels),
                                      batch_size=batch_size, shuffle=False, num_workers=2)
 
-        tot = len(patient_list)
+        tot = tot_contr_post
         c1 = len(positive_list) / tot
         c0 = len(control_list) / tot
         loss_fn = torch.nn.CrossEntropyLoss(weight=torch.Tensor([c0, c1]).type(
@@ -104,7 +107,8 @@ if __name__ == "__main__":
         # e2e_trainer = end_to_end_trainer(e2e_nn, ecg_train_loader,
         # ecg_test_loader, loss_fn, tovis=False)
         ml_trainer = ml_cnn_trainer(config, ecg_train_loader, ecg_test_loader,
-                                    ml_cnn_nn, loss_fn, optimizer='adam')
+                                    ml_cnn_nn, loss_fn, optimizer='sgd')
+        # pdb.set_trace()
         ml_trainer.train_model(num_epoch=30)
         # e2e_trainer.test_model(d, L, lmax, perm)
         # get all the last layer predn from the CNN

@@ -526,6 +526,7 @@ class ml_cnn_trainer(end_to_end_trainer):
         for epoch in range(num_epoch):
             running_loss = 0
             num_tr_iter = 0
+            # pdb.set_trace()
             for ind, sample in enumerate(tqdm(self.train_loader)):
                 instance = Variable(sample['sig'].cuda())
                 label = Variable(sample['label'].type(dtypeLong))

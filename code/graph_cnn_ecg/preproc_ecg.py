@@ -249,8 +249,8 @@ if __name__ == "__main__":
     with open(positive_list_file, 'r') as f:
         positive_list = f.read().splitlines()
 
-    for ind, p in enumerate(tqdm(control_list)):
-        sig, fields = wfdb.srdsamp(ptb_tdir_str + p)
+    # for ind, p in enumerate(tqdm(control_list)):
+    #     sig, fields = wfdb.srdsamp(ptb_tdir_str + p)
 
 
     # for ind, p in enumerate(tqdm(patient_list)):
