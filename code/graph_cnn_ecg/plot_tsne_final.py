@@ -44,8 +44,10 @@ if __name__ == "__main__":
     labels = []
 
     # for i, p in enumerate(tqdm(positive_list)):
-    n1 = positive_list[:23] + control_list[:40]
-    n2 = positive_list[23:] + control_list[40:]
+    n1 = positive_list[:80] + control_list[:40]
+    # n1 = control_list[:40]
+    n2 = positive_list[80:] + control_list[40:]
+    # n2 = control_list[40:]
     for i, p in enumerate(tqdm(n1)):
         # pdb.set_trace()
         sig, fields = wfdb.srdsamp(ptb_tdir_str + p, channels=[7], sampfrom=6000, sampto=9000)
@@ -74,7 +76,11 @@ if __name__ == "__main__":
         # np.save(ptb_tdir_str + p + '_800.npy', output)
         # np.save(ptb_tdir_str + p + '_db8_l4.npy', output)
         outputs.append(output)
-        labels.append(1)
+        # labels.append(1)
+        if p in positive_list:
+            labels.append(1)
+        else:
+            labels.append(0)
     # sys.exit(0)
     # break
 
@@ -118,7 +124,12 @@ if __name__ == "__main__":
         output = samples
         # np.save(ptb_tdir_str + p + '_db8_l4.npy', output)
         outputs.append(output)
-        labels.append(0)
+        if p in positive_list:
+            labels.append(1)
+        else:
+            labels.append(0)
+
+        # labels.append(0)
         # pdb.set_trace()
         # break
 
