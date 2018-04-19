@@ -362,7 +362,11 @@ class end_to_end_trainer:
             print("=> no checkpoint found at '{}'".format(load_path))
         return
 
-    def train_model(self, d, L, lmax, perm, num_epoch=15):
+    def get_output(self, instance, d, L, lmax, perm, ep):
+        return self.nn_model(instance, d, L, lmax, perm, ep)
+
+    def train_model(self, d=None, L=None, lmax=None, perm=None, num_epoch=15):
+        # pdb.set_trace()
         print('TrainSet: ', len(self.train_loader))
         self.tot_ind = len(self.train_loader)
         self.nn_model.train()
@@ -376,8 +380,8 @@ class end_to_end_trainer:
                 label = Variable(sample['label'].type(dtypeLong))
                 # pdb.set_trace()
                 self.optimizer.zero_grad()
-                y_pred = self.nn_model(instance, d, L, lmax, perm,
-                                       self.start_epoch + epoch)
+                y_pred = self.get_output(instance, d, L, lmax, perm,
+                                         self.start_epoch + epoch)
                 y_pred = y_pred.view(-1, 2)
                 # pdb.set_trace()
                 loss = self.loss_fn(y_pred, label)
@@ -424,7 +428,7 @@ class end_to_end_trainer:
         self.nn_model.eval()
         for sample in tqdm(self.test_loader):
             instance = Variable(sample['sig'].cuda())
-            y_pred = self.nn_model(instance, d, L, lmax, perm, self.curr_epoch)
+            y_pred = self.get_output(instance, d, L, lmax, perm, self.curr_epoch)
             y_pred = y_pred.view(-1, 2)
             _, label_pred = torch.max(y_pred.data, 1)
 
@@ -435,58 +439,27 @@ class end_to_end_trainer:
                 else:
                     assert pt_dis_actual_dict[sidx] == sample['label'][ind1]
                     pt_dis_pred_dict[sidx].append(label_pred[ind1])
-            # act_in_dict = pt_dis_actual_dict.get(sample['idx'])
-            # pdb.set_trace()
-            # if act_in_dict is not None:
-            #     # assert act_in_dict == sample['label']
-            #     for ind1, sid in enumerate(sample['idx']):
-            #         assert pt_dis_pred_dict[sid] == sample['idx'][ind1]
-            # else:
-            #     # pt_dis_actual_dict[sample['idx']] = sample['label']
-            #     for ind1, sid in enumerate(sample['idx']):
-            #         if pt_dis_pred_dict.get(sid) is not None:
-            #             assert pt_dis_pred_dict[sid] == sample['idx'][ind1]
-            #         else:
-            #             pt_dis_actual_dict[sid] = sample['idx'][ind1]
 
-            # pred_in_dict = pt_dis_pred_dict.get(sample['idx'])
-            # if pred_in_dict is not None:
-            #     pred_in_dict.append(label_pred)
-            # else:
-            #     pt_dis_pred_dict[sample['idx']] = [label_pred]
-            # num_corr += (label_pred.cpu() == sample['label']).any()
-            # tot_num += label_pred.shape[0]
-            # tot_num += 1
-        # print(num_corr, tot_num, num_corr/tot_num)
-        # pdb.set_trace()
         for k, v in pt_dis_actual_dict.items():
             pred_list = pt_dis_pred_dict[k]
-            # if (np.array(pred_list) == 1).any():
-            #     fin_label_pred = 1
-            # else:
-            #     fin_label_pred = 0
-            # if fin_label_pred == v:
-            #     num_corr += 1
 
             pred_list_counter = collections.Counter(pred_list)
             fin_label_pred, fin_label_count = pred_list_counter.most_common()[0]
 
-            # if (pred_list == v).any():
-            # num_corr += 1
-            # num_corr += (np.array(pred_list) == v).any()
-            # pdb.set_trace()
             if fin_label_pred == v:
                 num_corr += 1
-            true_0 += (fin_label_pred == v) and (v == 0)
-            true_1 += (fin_label_pred == v) and (v == 1)
-            false_0 += (fin_label_pred != v) and (v == 0)
-            false_1 += (fin_label_pred != v) and (v == 1)
-
-            # conf = fin_label_count / len(pred_list)
-            # print(conf, fin_label_pred == v, v)
+            true_0 += (fin_label_pred == v) and (fin_label_pred == 0)
+            true_1 += (fin_label_pred == v) and (fin_label_pred == 1)
+            false_0 += (fin_label_pred != v) and (fin_label_pred == 0)
+            false_1 += (fin_label_pred != v) and (fin_label_pred == 1)
             tot_num += 1
         self.nn_model.train()
         print(true_0, true_1, false_0, false_1)
+        prec = true_1 / (false_1 + true_1)
+        rec = true_1 / (true_1 + false_0)
+        f1s = 2 * prec * rec / (prec + rec)
+
+        print(prec, rec, f1s)
         print(num_corr, tot_num, num_corr/tot_num)
         return num_corr / tot_num
 
@@ -517,98 +490,10 @@ class ml_cnn_trainer(end_to_end_trainer):
         super(ml_cnn_trainer, self).__init__(nn_model, train_loader, test_loader,
                                              loss_fn, optimizer, tovis)
 
-    def train_model(self, num_epoch=15):
-        print('TrainSet: ', len(self.train_loader))
-        self.tot_ind = len(self.train_loader)
-        self.nn_model.train()
-        curr_acc = 0
-        best_acc = 0
-        for epoch in range(num_epoch):
-            running_loss = 0
-            num_tr_iter = 0
-            # pdb.set_trace()
-            for ind, sample in enumerate(tqdm(self.train_loader)):
-                instance = Variable(sample['sig'].cuda())
-                label = Variable(sample['label'].type(dtypeLong))
-                # pdb.set_trace()
-                self.optimizer.zero_grad()
-                y_pred = self.nn_model(instance)
-                y_pred = y_pred.view(-1, 2)
-                # pdb.set_trace()
-                loss = self.loss_fn(y_pred, label)
-                loss.backward()
-                self.optimizer.step()
-                running_loss += loss.data[0]
-                num_tr_iter += 1
+    def get_output(self, instance, d, L, lmax, perm, ep):
+        return self.nn_model(instance)
 
-                if self.tovis:
-                    # pdb.set_trace()
-                    self.vis.line(
-                        X=torch.ones((1)).cpu() * (ind + (self.start_epoch + epoch)
-                                                   * self.tot_ind),
-                        Y=torch.Tensor([loss.data[0]]).cpu(),
-                        win=self.loss_window,
-                        update='append')
 
-            self.curr_epoch = self.start_epoch + epoch
-            print('epoch', self.curr_epoch, running_loss/num_tr_iter)
-            curr_acc = self.test_model()
-            is_best = False
-
-            if curr_acc > best_acc:
-                best_acc = curr_acc
-                is_best = True
-                save_checkpoint({
-                    'epoch': self.curr_epoch + 1,
-                    # 'arch': args.arch,
-                    'state_dict': self.nn_model.state_dict(),
-                    # 'best_prec1': best_prec1,
-                    'optimizer': self.optimizer.state_dict(),
-                }, is_best, 'e2e_checkpoint.pth.tar')
-
-    def test_model(self):
-        print('TestSet :', len(self.test_loader))
-        num_corr = 0
-        tot_num = 0
-        false_0 = 0
-        false_1 = 0
-        true_0 = 0
-        true_1 = 0
-        pt_dis_pred_dict = {}
-        pt_dis_actual_dict = {}
-        self.nn_model.eval()
-        for sample in tqdm(self.test_loader):
-            instance = Variable(sample['sig'].cuda())
-            y_pred = self.nn_model(instance)
-            y_pred = y_pred.view(-1, 2)
-            _, label_pred = torch.max(y_pred.data, 1)
-
-            for ind1, sidx in enumerate(sample['idx']):
-                if pt_dis_actual_dict.get(sidx) is None:
-                    pt_dis_actual_dict[sidx] = sample['label'][ind1]
-                    pt_dis_pred_dict[sidx] = [label_pred[ind1]]
-                else:
-                    assert pt_dis_actual_dict[sidx] == sample['label'][ind1]
-                    pt_dis_pred_dict[sidx].append(label_pred[ind1])
-        for k, v in pt_dis_actual_dict.items():
-            pred_list = pt_dis_pred_dict[k]
-
-            pred_list_counter = collections.Counter(pred_list)
-            fin_label_pred, fin_label_count = pred_list_counter.most_common()[0]
-
-            if fin_label_pred == v:
-                num_corr += 1
-            true_0 += (fin_label_pred == v) and (fin_label_pred == 0)
-            true_1 += (fin_label_pred == v) and (fin_label_pred == 1)
-            false_0 += (fin_label_pred != v) and (fin_label_pred == 0)
-            false_1 += (fin_label_pred != v) and (fin_label_pred == 1)
-            tot_num += 1
-        self.nn_model.train()
-        print(true_0, true_1, false_0, false_1)
-        prec = true_1 / (false_1 + true_1)
-        rec = true_1 / (true_1 + false_0)
-        f1s = 2 * prec * rec / (prec + rec)
-
-        print(prec, rec, f1s)
-        print(num_corr, tot_num, num_corr/tot_num)
-        return num_corr / tot_num
+class pe2e_trainer(ml_cnn_trainer):
+    def get_output(self, instance, d, L, lmax, perm, ep):
+        return self.nn_model(instance, L[0])

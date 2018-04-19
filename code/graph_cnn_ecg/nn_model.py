@@ -21,6 +21,8 @@ else:
     dtypeLong = torch.LongTensor
     torch.manual_seed(1)
 
+def isnan(x):
+    return x != x
 
 class my_sparse_mm(torch.autograd.Function):
     """
@@ -41,6 +43,38 @@ class my_sparse_mm(torch.autograd.Function):
         grad_input_dL_dW = torch.mm(grad_input, x.t())
         grad_input_dL_dx = torch.mm(W.t(), grad_input)
         return grad_input_dL_dW, grad_input_dL_dx
+
+
+class gconv(torch.nn.Module):
+    def __init__(self, in_c, out_c, kern):
+        super().__init__()
+        self.in_c = in_c
+        self.out_c = out_c
+        self.kern = kern
+        self.lin = torch.nn.Linear(in_c * kern, out_c)
+        return
+
+    def forward(self, inp, L):
+        B, V, Fin = inp.shape
+        x0 = inp.permute(1, 2, 0).contiguous()
+        x0 = x0.view([V, Fin*B])
+        x = x0.unsqueeze(0)
+
+        if self.kern > 1:
+            x1 = my_sparse_mm()(L, x0)              # V x Fin*B
+            x = torch.cat((x, x1.unsqueeze(0)), 0)  # 2 x V x Fin*B
+        for k in range(2, self.kern):
+            x2 = 2 * my_sparse_mm()(L, x1) - x0
+            x = torch.cat((x, x2.unsqueeze(0)), 0)  # M x Fin*B
+            x0, x1 = x1, x2
+
+        x = x.view([self.kern, V, Fin, B])           # K x V x Fin x B
+        x = x.permute(3, 1, 2, 0).contiguous()  # B x V x Fin x K
+        x = x.view([B*V, Fin*self.kern])             # B*V x Fin*K
+        # pdb.set_trace()
+        x = self.lin(x)
+        x = x.view([B, V, self.out_c])             # B x V x Fout
+        return x
 
 
 class Graph_ConvNet_LeNet5(nn.Module):
@@ -927,6 +961,9 @@ class MLCNN(torch.nn.Module):
         self.build_model()
 
     def build_model(self):
+        self.build_simple_model()
+
+    def build_simple_model(self):
         init_dim = self.config['Din']
         oc1, oc2 = self.config['train']['arch']['num_kerns']
         self.oc1 = oc1
@@ -946,13 +983,6 @@ class MLCNN(torch.nn.Module):
         self.dim2 = new_dim
         self.lin1 = torch.nn.Linear(new_dim * oc2 * self.in_channels, 2)
 
-    # def forward(self, inp):
-    #     out1 = self.sub2d_conv(inp, self.conv1, self.p1)
-    #     out1 = self.sub2d_conv(out1, self.conv2, self.p2)
-    #     out1 = out1.view(-1, out1.size(0))
-    #     out1 = self.lin1(out1)
-    #     return out1
-
     def forward(self, inp):
         bs, nch, vlen = inp.shape
         # pdb.set_trace()
@@ -961,19 +991,60 @@ class MLCNN(torch.nn.Module):
         o1 = self.lin1(o1.view(-1, nch * self.dim2 * self.oc2))
         return o1
 
-    def forward1(self, inp):
+
+class pe2e_graph_fixed(MLCNN):
+    def __init__(self, config):
+        super().__init__(config)
+        self.config = config
+        self.channels = config['channels']
+        self.in_channels = len(self.channels)
+        self.ep_thresh = config['train']['ep_thresh']
+        self.build_model()
+
+    def build_model(self):
+        self.build_simple_model()
+        self.ginit_dim = self.dim2 * self.oc2
+        self.build_graph_model()
+
+    def build_graph_model(self):
+        ginit_dim = self.ginit_dim
+        goc1, goc2 = self.config['train']['g_arch']['num_kerns']
+        self.goc1 = goc1
+        self.goc2 = goc2
+        gk1, gk2 = self.config['train']['g_arch']['kern_size']
+        gs1, gs2 = self.config['train']['g_arch']['strides']
+        self.gp1, self.gp2 = self.config['train']['g_arch']['pool']
+        self.gconv1 = gconv(ginit_dim, goc1, gk1)
+        self.gconv2 = gconv(goc1, goc2, gk2)
+        self.glin = torch.nn.Linear(self.in_channels * goc2, 2)
+
+    def forward(self, inp, L):
         bs, nch, vlen = inp.shape
-        out_list = []
-        for i in range(nch):
-            o1 = F.relu(F.max_pool1d(self.conv1(inp[:, [i], :]), self.p1))
-            o1 = F.relu(F.max_pool1d(self.conv2(o1), self.p2))
-            out_list.append(o1)
-        o2 = torch.cat(out_list, 0)
-        o2 = o2.view(nch, bs, o1.shape[1], o1.shape[2])
-        o2 = o2.permute(1, 0, 2, 3).contiguous()
-        # pdb.set_trace()
-        o2 = o2.view(o2.shape[0], -1)
+        o1 = self.bn1(F.relu(F.max_pool1d(self.conv1(inp.view(-1, 1, vlen)), self.p1)))
+        assert not isnan(o1).any()
+        o1 = self.bn2(F.relu(F.max_pool1d(self.conv2(o1), self.p2)))
+        assert not isnan(o1).any()
+        o1 = o1.view(bs, nch, -1)
+        o1 = self.gconv1(o1, L)
+        assert not isnan(o1).any()
+        o1 = self.gconv2(o1, L)
+        assert not isnan(o1).any()
+        o1 = self.glin(o1.view(-1, nch * self.goc2))
+        assert not isnan(o1).any()
+        return o1
 
-        o3 = self.lin1(o2)
 
-        return o3
+class only_graph_fixed(pe2e_graph_fixed):
+    def build_model(self):
+        self.ginit_dim = self.config['Din']
+        self.build_graph_model()
+
+    def forward(self, inp, L):
+        bs, nch, vlen = inp.shape
+        o1 = self.gconv1(inp, L)
+        assert not isnan(o1).any()
+        o1 = self.gconv2(o1, L)
+        assert not isnan(o1).any()
+        o1 = self.glin(o1.view(-1, nch * self.goc2))
+        assert not isnan(o1).any()
+        return o1

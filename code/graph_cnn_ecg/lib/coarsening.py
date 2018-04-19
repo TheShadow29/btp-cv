@@ -409,3 +409,27 @@ def perm_data_torch3(x, indices):
         else:
             xnew[:, i, :] = torch.zeros(B, F)
     return xnew
+
+
+def get_L_list_torch(L1):
+    L_list = []
+
+    for ind, L in enumerate(L1):
+        lmax = lmax_L(L)
+        L = rescale_L(L, lmax)
+        # convert scipy sparse matric L to pytorch
+        L = L.tocoo()
+        indices = np.column_stack((L.row, L.col)).T
+        indices = indices.astype(np.int64)
+        indices = torch.from_numpy(indices)
+        indices = indices.type(torch.LongTensor)
+        L_data = L.data.astype(np.float32)
+        L_data = torch.from_numpy(L_data)
+        L_data = L_data.type(torch.FloatTensor)
+        L = torch.sparse.FloatTensor(indices, L_data, torch.Size(L.shape))
+        L = torch.autograd.Variable(L, requires_grad=False)
+        if torch.cuda.is_available():
+            L = L.cuda()
+        L_list.append(L)
+
+    return L_list

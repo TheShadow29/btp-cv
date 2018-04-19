@@ -58,19 +58,24 @@ if __name__ == "__main__":
     # May need to do proper beat segmentation
     Din = config.Din
     batch_size = config.train['batch_size']
-    num_tr_points = config.num_tr_points
-    # frac_tr_points = config.frac_tr_points
+    # num_tr_points = config.num_tr_points
+    frac_tr_points = config.frac_tr_points
+    num_tr_points = int(frac_tr_points * len(patient_list))
     channels = config.channels
     tot_contr_post = len(control_list) + len(positive_list)
-    # contr_tr_pts = int(frac_tr_points * len(control_list))
-    # post_tr_pts = int(frac_tr_points * len(positive_list))
-    contr_tr_pts = int(num_tr_points*len(control_list)/tot_contr_post)
-    post_tr_pts = int(num_tr_points*len(positive_list)/tot_contr_post)
-    # remain_tr_pts = num_tr_points - contr_tr_pts - post_tr_pts
-    # remainder_list = list(set(patient_list) ^ set(control_list) ^ set(positive_list))
+    contr_tr_pts = int(frac_tr_points * len(control_list))
+    post_tr_pts = int(frac_tr_points * len(positive_list))
+    # contr_tr_pts = int(num_tr_points*len(control_list)/tot_contr_post)
+    # post_tr_pts = int(num_tr_points*len(positive_list)/tot_contr_post)
+    remain_tr_pts = num_tr_points - contr_tr_pts - post_tr_pts
+    remainder_list = list(set(patient_list) ^ set(control_list) ^ set(positive_list))
     # pdb.set_trace()
     train_list = (control_list[:contr_tr_pts] + positive_list[:post_tr_pts])
+    # train_list = (control_list[:contr_tr_pts] + positive_list[:post_tr_pts] +
+    #               remainder_list[:remain_tr_pts])
     test_list = (control_list[contr_tr_pts:] + positive_list[post_tr_pts:])
+    # test_list = (control_list[contr_tr_pts:] + positive_list[post_tr_pts:] +
+    #              remainder_list[remain_tr_pts:])
     # contr_list = (control_list[:contr_tr_pts])
     # post_list = (positive_list[:post_tr_pts])
     num_inp_channels = len(channels)
@@ -78,11 +83,11 @@ if __name__ == "__main__":
     # pdb.set_trace()
     # pdb.set_trace()
     with torch.cuda.device(1):
-        # x = 'patient095/s0377lre'
-        # if x in train_list:
-        #     train_list.remove('patient095/s0377lre')
-        # elif x in test_list:
-        #     test_list.remove('patient095/s0377lre')
+        x = 'patient095/s0377lre'
+        if x in train_list:
+            train_list.remove('patient095/s0377lre')
+        elif x in test_list:
+            test_list.remove('patient095/s0377lre')
         ecg_train_loader = DataLoader(ecg_dataset_complex(ptb_tdir_str, train_list,
                                                           control_list,
                                                           positive_list,
