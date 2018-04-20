@@ -21,8 +21,35 @@ else:
     dtypeLong = torch.LongTensor
     torch.manual_seed(1)
 
+
 def isnan(x):
     return x != x
+
+
+class loss_with_consensus(torch.nn.Module):
+    def __init__(self, loss_fn):
+        super().__init__()
+        self.existing_loss = loss_fn
+        # self.kld = torch.nn.KLDivLoss()
+
+    def forward(self, pred, labels):
+        # Assume pred is of size: B x 5 x 2
+        # Labels is of size: B x 1
+        B, cons, plen = pred.shape
+        pred_curr = pred[:, 0, :]
+        loss = self.existing_loss(pred_curr, labels)
+        pred_new = pred.view(B*cons, plen)
+        pred_new_ls = F.log_softmax(pred_new, dim=1)
+        pred_new_ls = pred_new_ls.view(B, cons, plen)
+        pred_curr_ls = pred_new_ls[:, 0, :]
+
+        for i in range(1, cons):
+            pred_tmp = pred_new_ls[:, i, :]
+            pred_tmp = pred_tmp.detach()
+            loss += F.kl_div(pred_curr_ls, pred_tmp)
+            # loss += self.kld(pred_tmp, pred_curr_ls)
+        return loss
+
 
 class my_sparse_mm(torch.autograd.Function):
     """
@@ -984,6 +1011,7 @@ class MLCNN(torch.nn.Module):
         self.lin1 = torch.nn.Linear(new_dim * oc2 * self.in_channels, 2)
 
     def forward(self, inp):
+        # pdb.set_trace()
         bs, nch, vlen = inp.shape
         # pdb.set_trace()
         o1 = self.bn1(F.relu(F.max_pool1d(self.conv1(inp.view(-1, 1, vlen)), self.p1)))

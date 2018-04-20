@@ -10,6 +10,7 @@ from nn_model import MLCNN
 from nn_model import Graph_ConvNet_LeNet5
 from nn_trainer import simple_trainer, end_to_end_trainer
 from nn_trainer import ml_cnn_trainer
+from nn_trainer import ml_cnn_consensus_trainer
 # import torch.nn.functional as F
 import numpy as np
 import pdb
@@ -17,6 +18,8 @@ import pdb
 # import pathlib
 from pathlib import Path
 from cfg import process_config
+from nn_model import loss_with_consensus
+
 
 if torch.cuda.is_available():
     print('cuda available')
@@ -92,6 +95,7 @@ if __name__ == "__main__":
                                                           control_list,
                                                           positive_list,
                                                           Din,
+                                                          num_consensus=config['cons'],
                                                           channels=channels),
                                       batch_size=batch_size, shuffle=True, num_workers=2)
 
@@ -99,23 +103,25 @@ if __name__ == "__main__":
                                                          control_list,
                                                          positive_list,
                                                          Din,
+                                                         num_consensus=config['cons'],
                                                          channels=channels),
                                      batch_size=batch_size, shuffle=False, num_workers=2)
 
         tot = tot_contr_post
         c1 = len(positive_list) / tot
         c0 = len(control_list) / tot
-        loss_fn = torch.nn.CrossEntropyLoss(weight=torch.Tensor([c0, c1]).type(
+        loss_ce = torch.nn.CrossEntropyLoss(weight=torch.Tensor([c0, c1]).type(
             dtypeFloat))
+        loss_fn = loss_with_consensus(loss_ce)
         # e2e_nn = end_to_end_fc_model_no_bn(cnet_parameters, gnet_parameters)
         ml_cnn_nn = MLCNN(config)
         # e2e_trainer = end_to_end_trainer(e2e_nn, ecg_train_loader,
         # ecg_test_loader, loss_fn, tovis=False)
-        ml_trainer = ml_cnn_trainer(config, ecg_train_loader, ecg_test_loader,
-                                    ml_cnn_nn, loss_fn, optimizer='sgd')
+        ml_trainer = ml_cnn_consensus_trainer(config, ecg_train_loader, ecg_test_loader,
+                                              ml_cnn_nn, loss_fn, optimizer='adam')
         # pdb.set_trace()
         ml_trainer.train_model(num_epoch=30)
-        # e2e_trainer.test_model(d, L, lmax, perm)
+        # ml_trainer.test_model()
         # get all the last layer predn from the CNN
         # Put the weights onto the graph
         # graph structure to learn on is very small

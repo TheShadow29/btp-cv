@@ -115,7 +115,7 @@ class ecg_dataset_simple(Dataset):
 
 class ecg_dataset_complex(Dataset):
     def __init__(self, tdir, patient_list, control_list, post_list,
-                 din, channels=[7], topreproc=False,
+                 din, channels=[7], num_consensus=0, topreproc=False,
                  preproc_params=None):
         self.tdir = tdir
         self.patient_list = patient_list
@@ -124,6 +124,7 @@ class ecg_dataset_complex(Dataset):
         self.din = din
         self.channels = channels
         self.get_tot_signals()
+        self.num_consensus = num_consensus
         self.curr_pat_idx = 0
 
     def get_fname(self, tdir, p):
@@ -166,7 +167,18 @@ class ecg_dataset_complex(Dataset):
             out_label = 0
         sig = np.load(self.get_fname(self.tdir, self.patient_list[act_idx]))
         # try:
-        sig = sig[beat_idx, :, self.channels]
+        tot_beats = sig.shape[0]
+        beat_ids = []
+        beat_ids.append(beat_idx)
+        for i in range(1, self.num_consensus):
+            beat_ids.append((beat_idx - i) % tot_beats)
+            beat_ids.append((beat_idx + i) % tot_beats)
+        # sig = sig[beat_idx, :, self.channels]
+        beat_ids = np.array(beat_ids)
+        sig = sig[:, :, self.channels]
+        sig = sig[beat_ids, :, :]
+        sig = sig.transpose((0, 2, 1))
+        # sig = sig[beat_idx, :, :]
         # except Exception as e:
         # pdb.set_trace()
         # pass
