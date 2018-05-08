@@ -112,7 +112,8 @@ if __name__ == "__main__":
         c0 = len(control_list) / tot
         loss_ce = torch.nn.CrossEntropyLoss(weight=torch.Tensor([c0, c1]).type(
             dtypeFloat))
-        loss_fn = loss_with_consensus(loss_ce)
+        loss_fn = loss_with_consensus(loss_ce, config)
+        loss_fn.cuda()
         # e2e_nn = end_to_end_fc_model_no_bn(cnet_parameters, gnet_parameters)
         ml_cnn_nn = MLCNN(config)
         # e2e_trainer = end_to_end_trainer(e2e_nn, ecg_train_loader,

@@ -6,6 +6,7 @@ from pathlib import Path
 from scipy.stats.stats import pearsonr
 import itertools
 from scipy import sparse
+import g_learner
 
 
 class graph_learner:
@@ -20,8 +21,8 @@ class graph_learner:
             instance = sample['sig']
             tmp = instance.sum(dim=0)
             # pdb.set_trace()
-            self.X += tmp.cpu() / self.train_data_loader.batch_size
-            self.X2 += np.square(tmp.cpu()) / self.train_data_loader.batch_size
+            self.X += tmp.cpu().squeeze(0) / self.train_data_loader.batch_size
+            self.X2 += np.square(tmp.cpu().squeeze(0)) / self.train_data_loader.batch_size
             # pdb.set_trace()
         self.X = self.X / (ind + 1)
         self.X2 = self.X2 / (ind + 1)
@@ -45,3 +46,22 @@ class graph_learner:
         # L_mat = D_mat - self.adj_mat
         # return sparse.csr_matrix(L_mat)
         return sparse.csr_matrix(self.adj_mat), self.mean_vals, self.sigma
+
+    def get_gl_graph(self):
+        self.get_data()
+        self.node_vals = self.X.T
+        self.mean_vals = np.mean(self.X, axis=1)
+        self.mean_vals2 = np.mean(self.X2, axis=1)
+        self.sigma = np.sqrt(self.mean_vals2 - np.square(self.mean_vals))
+
+        for sample in self.train_data_loader:
+            inst = sample['sig']
+            inst = inst.squeeze(1)
+            B, num_nodes, vlen = inst.shape
+            inst = inst.permute(0, 2, 1).contiguous()
+            inst = inst.view(B * vlen, num_nodes)
+            L, Y, nit = g_learner.gl_sig_model(inst.cpu().numpy(), 10, 0.012, 0.79)
+            L[np.abs(L) < 1e-4] = 0
+            break
+        print("Returning Learned Laplacian", nit)
+        return sparse.csr_matrix(L), self.mean_vals, self.sigma

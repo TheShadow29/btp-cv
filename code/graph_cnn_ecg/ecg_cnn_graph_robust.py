@@ -63,14 +63,16 @@ if __name__ == "__main__":
     test_list = (control_list[contr_tr_pts:] + positive_list[post_tr_pts:])
     num_inp_channels = len(channels)
 
-    ecg_control_loader = DataLoader(ecg_dataset_complex(ptb_tdir_str, control_list,
-                                                        control_list, positive_list,
-                                                        Din, channels=channels),
-                                    batch_size=batch_size, shuffle=True, num_workers=2)
+    ec_tmp = ecg_dataset_complex(ptb_tdir_str, control_list, control_list, positive_list,
+                                 Din, channels=channels)
+    ecg_control_loader = DataLoader(ec_tmp,
+                                    batch_size=len(control_list), shuffle=True, num_workers=2)
     # pdb.set_trace()
     new_graph_learner = graph_learner(ecg_control_loader,
                                       inp_dim=Din, num_nodes=num_inp_channels)
-    new_graph, mu, sigma = new_graph_learner.get_graph()
+    # new_graph, mu, sigma = new_graph_learner.get_graph()
+    # pdb.set_trace()
+    new_graph, _, _ = new_graph_learner.get_gl_graph()
 
     coarsening_levels = 2
     L1, perm = coarsen(new_graph, coarsening_levels)

@@ -39,110 +39,64 @@ if __name__ == "__main__":
     with open(positive_list_file, 'r') as f:
         positive_list = f.read().splitlines()
 
-    # May need to do proper beat segmentation
-    Din = config.Din
-    batch_size = config.batch_size
-    num_tr_points = config.num_tr_points
-    channels = config.channels
 
-    contr_tr_pts = int(num_tr_points*len(control_list)/len(patient_list))
-    post_tr_pts = int(num_tr_points*len(positive_list)/len(patient_list))
+    Din = config.Din
+    batch_size = config.train['batch_size']
+    frac_tr_points = config.frac_tr_points
+    num_tr_points = int(frac_tr_points * len(patient_list))
+    channels = config.channels
+    tot_contr_post = len(control_list) + len(positive_list)
+    contr_tr_pts = int(frac_tr_points * len(control_list))
+    post_tr_pts = int(frac_tr_points * len(positive_list))
     remain_tr_pts = num_tr_points - contr_tr_pts - post_tr_pts
     remainder_list = list(set(patient_list) ^ set(control_list) ^ set(positive_list))
+    train_list = (control_list[:contr_tr_pts] + positive_list[:post_tr_pts])
+    test_list = (control_list[contr_tr_pts:] + positive_list[post_tr_pts:])
+    num_inp_channels = len(channels)
 
-    train_list = (control_list[:contr_tr_pts] + positive_list[:post_tr_pts] +
-                  remainder_list[:remain_tr_pts])
-    test_list = (control_list[contr_tr_pts:] + positive_list[post_tr_pts:] +
-                 remainder_list[remain_tr_pts:])
-    contr_list = (control_list[:contr_tr_pts])
-    # small_graph = simple_graph(n=6, number_edges=5)
-
-    # pdb.set_trace()
-    # a1 = ecg_dataset_complex(ptb_tdir_str, contr_list, Din, channels=channels)
-    ecg_control_loader = DataLoader(ecg_dataset_complex(ptb_tdir_str, contr_list,
+    ecg_control_loader = DataLoader(ecg_dataset_complex(ptb_tdir_str, control_list,
+                                                        control_list, positive_list,
                                                         Din, channels=channels),
-                                    batch_size=batch_size, shuffle=False, num_workers=2)
+                                    batch_size=batch_size, shuffle=True, num_workers=2)
 
-    new_graph_learner = graph_learner(ecg_control_loader, inp_dim=Din)
+    new_graph_learner = graph_learner(ecg_control_loader,
+                                      inp_dim=Din, num_nodes=num_inp_channels)
     new_graph, mu, sigma = new_graph_learner.get_graph()
 
     coarsening_levels = 2
-    L, perm = coarsen(new_graph, coarsening_levels)
+    L1, perm = coarsen(new_graph, coarsening_levels)
 
-    lmax = []
-    for i in range(coarsening_levels):
-        lmax.append(lmax_L(L[i]))
-    print('lmax: ' + str([lmax[i] for i in range(coarsening_levels)]))
-
-    num_inp_channels = 6
-    f = 3
-    s = 1
-    c1o = 6
-    c2o = 16
-    fc1o = 30
-    cnet_parameters = [Din, num_inp_channels, f, s, c1o, c2o, fc1o]
-    D = 8
-    Fin = 30
-    CL1_F = 40
-    CL1_K = 6
-    CL2_F = 50
-    CL2_K = 16
-    FC1_F = 30
-    FC2_F = 2
-    net_parameters = [D, Fin, CL1_F, CL1_K, CL2_F, CL2_K, FC1_F, FC2_F]
-    gnet_parameters = [D, CL1_F, CL1_K, CL2_F, CL2_K, FC1_F, FC2_F]
-
-    # Need to define graph_nn
-    d = 0                     # dropout value
     with torch.cuda.device(1):
+        L = get_L_list_torch(L1)
+        x = 'patient095/s0377lre'
+        if x in train_list:
+            train_list.remove('patient095/s0377lre')
+        elif x in test_list:
+            test_list.remove('patient095/s0377lre')
         ecg_train_loader = DataLoader(ecg_dataset_complex(ptb_tdir_str, train_list,
-                                                          Din, channels=channels),
+                                                          control_list,
+                                                          positive_list,
+                                                          Din,
+                                                          channels=channels),
                                       batch_size=batch_size, shuffle=True, num_workers=2)
 
-        ecg_train_loader_graph = DataLoader(ecg_dataset_complex(ptb_tdir_str, train_list,
-                                                                Din, channels=channels),
-                                            batch_size=batch_size, shuffle=True, num_workers=2)
-
-        ecg_train_loader2 = DataLoader(ecg_dataset_complex(ptb_tdir_str, train_list,
-                                                           Din,
-                                                           channels=channels),
-                                       batch_size=1, shuffle=True, num_workers=0)
-
-        test_list.remove('patient095/s0377lre')
-        ecg_test_loader = DataLoader(ecg_dataset_complex(ptb_tdir_str, test_list, Din,
+        ecg_test_loader = DataLoader(ecg_dataset_complex(ptb_tdir_str, test_list,
+                                                         control_list,
+                                                         positive_list,
+                                                         Din,
                                                          channels=channels),
-                                     batch_size=batch_size, shuffle=False, num_workers=0)
+                                     batch_size=batch_size, shuffle=False, num_workers=2)
 
-        ecg_test_loader2 = DataLoader(ecg_dataset_complex(ptb_tdir_str, test_list, Din,
-                                                          channels=channels),
-                                      batch_size=1, shuffle=False, num_workers=0)
+        tot = tot_contr_post
+        c1 = len(positive_list) / tot
+        c0 = len(control_list) / tot
+        loss_fn = torch.nn.CrossEntropyLoss(weight=torch.Tensor([c0, c1]).type(dtypeFloat))
+        # e2e_nn = end_to_end_fc_model_no_bn(cnet_parameters, gnet_parameters)
+        # ml_cnn_nn = pe2e_graph_fixed(config)
+        ml_cnn_nn = only_graph_fixed(config)
+        # e2e_trainer = end_to_end_trainer(e2e_nn, ecg_train_loader,
+        # ecg_test_loader, loss_fn, tovis=False)
+        ml_trainer = pe2e_trainer(config, ecg_train_loader, ecg_test_loader,
+                                  ml_cnn_nn, loss_fn, optimizer='adam')
 
-        # simple_nn = simple_net(Din, len(channels))
-        # simple_nn = complex_net(Din, len(channels))
-        # simple_nn.cuda()
-        # simple_nn.to_cuda()
-        # graph_nn = Graph_ConvNet_LeNet5(net_parameters)
-        # graph_nn.cuda()
-        loss_fn = torch.nn.CrossEntropyLoss()
-        # simple_train = simple_trainer(simple_nn, graph_nn, ecg_train_loader, ecg_train_loader2,
-        # ecg_train_loader_graph, ecg_test_loader, ecg_test_loader2,
-        # loss_fn)
-        # simple_train.load_model()
-        # simple_train.train_model(50, plt_fig=False)
-        # simple_train.cnn_features_save(fname='/home/SharedData/Ark_git_files/btp_extra_files/ecg-analysis/cnn_features_train.pkl')
-        # simple_train.graph_nn_train(L, lmax, perm, num_epoch=50)
-        # e2e_nn = end_to_end_model(cnet_parameters, gnet_parameters)
-        # e2e_nn = partial_end_to_end_model(cnet_parameters, gnet_parameters)  #
-        # e2e_nn = end_to_end_fc_model(cnet_parameters, gnet_parameters)
-        e2e_nn = end_to_end_fc_model_no_bn(cnet_parameters, gnet_parameters)
-        e2e_trainer = end_to_end_trainer(e2e_nn, ecg_train_loader, ecg_test_loader, loss_fn, tovis=False)
-        # e2e_trainer.load_model()
-        e2e_trainer.train_model(d, L, lmax, perm, num_epoch=100)
-        # e2e_trainer.test_model(d, L, lmax, perm)
-        # get all the last layer predn from the CNN
-        # Put the weights onto the graph
-        # graph structure to learn on is very small
-        # Basically equivalent to making N different
-        # GCNs and working with them.
-        # Take the graph and extrapolate it backwards
-        # Use LeNet like structure here as well
+        ml_trainer.train_model(num_epoch=30, L=L)

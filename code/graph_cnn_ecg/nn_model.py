@@ -27,6 +27,23 @@ def isnan(x):
 
 
 class loss_with_consensus(torch.nn.Module):
+    def __init__(self, loss_fn, config=None):
+        super().__init__()
+        self.existing_loss = loss_fn
+        self.config = config
+        self.num_c = config['cons']
+        self.lin = torch.nn.Linear(2*(2 * self.num_c - 1), 2)
+
+    def forward(self, pred, labels):
+        B, cons, plen = pred.shape
+        pred = pred.view(B, cons * plen)
+        # pdb.set_trace()
+        fin_pred = self.lin(pred)
+        loss = self.existing_loss(fin_pred, labels)
+        return loss
+
+
+class loss_with_consensus2(torch.nn.Module):
     def __init__(self, loss_fn):
         super().__init__()
         self.existing_loss = loss_fn
@@ -1047,6 +1064,7 @@ class pe2e_graph_fixed(MLCNN):
         self.glin = torch.nn.Linear(self.in_channels * goc2, 2)
 
     def forward(self, inp, L):
+        inp = inp.squeeze(1)
         bs, nch, vlen = inp.shape
         o1 = self.bn1(F.relu(F.max_pool1d(self.conv1(inp.view(-1, 1, vlen)), self.p1)))
         assert not isnan(o1).any()
@@ -1068,6 +1086,7 @@ class only_graph_fixed(pe2e_graph_fixed):
         self.build_graph_model()
 
     def forward(self, inp, L):
+        inp = inp.squeeze(1)
         bs, nch, vlen = inp.shape
         o1 = self.gconv1(inp, L)
         assert not isnan(o1).any()

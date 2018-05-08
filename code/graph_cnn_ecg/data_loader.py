@@ -154,13 +154,6 @@ class ecg_dataset_complex(Dataset):
         return sample
 
     def get_sample(self, act_idx, beat_idx):
-        # _, fields = wfdb.srdsamp(self.tdir + self.patient_list[act_idx], channels=[0])
-        # if 'Myocardial infarction' in fields['comments'][4]:
-        #     # out_label[0] = 1
-        #     out_label = 1
-        # else:
-        #     # out_label[0] = 0
-        #     out_label = 0
         if self.patient_list[act_idx] in self.post_list:
             out_label = 1
         else:
