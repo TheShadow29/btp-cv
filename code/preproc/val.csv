@@ -1,0 +1,105 @@
+,0,Disease,Localization,Loc_Disease,Loc_Disease_label
+403,patient180/s0490_re,Healthy control,no,Healthy control|no,12
+63,patient023/s0080lre,Myocardial infarction,inferior,Myocardial infarction|inferior,4
+332,patient118/s0183_re,Heart failure (NYHA 3),no,Heart failure (NYHA 3)|no,17
+7,patient005/s0021are,Myocardial infarction,anterior,Myocardial infarction|anterior,1
+177,patient060/s0209lre,Myocardial infarction,antero-septal,Myocardial infarction|antero-septal,3
+286,patient094/s0376lre,Myocardial infarction,antero-lateral,Myocardial infarction|antero-lateral,7
+251,patient085/s0296lre,Myocardial infarction,posterior,Myocardial infarction|posterior,10
+203,patient073/s0238lre,Myocardial infarction,antero-lateral,Myocardial infarction|antero-lateral,7
+180,patient063/s0214lre,Myocardial infarction,antero-lateral,Myocardial infarction|antero-lateral,7
+465,patient231/s0455_re,Myocardial infarction,infero-lateral,Myocardial infarction|infero-lateral,5
+298,patient097/s0384lre,Myocardial infarction,anterior,Myocardial infarction|anterior,1
+237,patient081/s0270lre,Myocardial infarction,anterior,Myocardial infarction|anterior,1
+482,patient241/s0470_re,Healthy control,no,Healthy control|no,12
+230,patient079/s0269lre,Myocardial infarction,postero-lateral,Myocardial infarction|postero-lateral,9
+276,patient092/s0358lre,Myocardial infarction,inferior,Myocardial infarction|inferior,4
+101,patient034/s0109lre,Myocardial infarction,antero-septal,Myocardial infarction|antero-septal,3
+114,patient038/s0125lre,Myocardial infarction,antero-lateral,Myocardial infarction|antero-lateral,7
+105,patient035/s0110lre,Myocardial infarction,inferior,Myocardial infarction|inferior,4
+331,patient117/s0292lre,Healthy control,no,Healthy control|no,12
+543,patient291/s0554_re,Myocardial infarction,inferior,Myocardial infarction|inferior,4
+167,patient053/s0191lre,Myocardial infarction,antero-septal,Myocardial infarction|antero-septal,3
+217,patient076/s0253lre,Myocardial infarction,antero-lateral,Myocardial infarction|antero-lateral,7
+544,patient292/s0555_re,Myocardial infarction,antero-lateral,Myocardial infarction|antero-lateral,7
+44,patient017/s0053lre,Myocardial infarction,infero-lateral,Myocardial infarction|infero-lateral,5
+34,patient013/s0072lre,Myocardial infarction,antero-septal,Myocardial infarction|antero-septal,3
+170,patient054/s0197lre,Myocardial infarction,infero-lateral,Myocardial infarction|infero-lateral,5
+79,patient028/s0090lre,Myocardial infarction,anterior,Myocardial infarction|anterior,1
+289,patient095/s0373lre,Myocardial infarction,inferior,Myocardial infarction|inferior,4
+58,patient021/s0073lre,Myocardial infarction,inferior,Myocardial infarction|inferior,4
+24,patient010/s0042lre,Myocardial infarction,anterior,Myocardial infarction|anterior,1
+303,patient098/s0409lre,Myocardial infarction,inferior,Myocardial infarction|inferior,4
+493,patient251/s0486_re,Healthy control,no,Healthy control|no,12
+174,patient057/s0198lre,Myocardial infarction,inferior,Myocardial infarction|inferior,4
+436,patient205/s0426_re,Myocardial infarction,no,Myocardial infarction|no,11
+520,patient276/s0526_re,Healthy control,no,Healthy control|no,12
+213,patient075/s0248lre,Myocardial infarction,inferior,Myocardial infarction|inferior,4
+334,patient120/s0331lre,Myocardial infarction,antero-septal,Myocardial infarction|antero-septal,3
+496,patient252/s0487_re,Healthy control,no,Healthy control|no,12
+339,patient126/s0154_re,Palpitation,no,Palpitation|no,19
+502,patient258/s0494_re,Dysrhythmia,no,Dysrhythmia|no,15
+448,patient216/s0438_re,Hypertrophy,no,Hypertrophy|no,23
+365,patient152/s0004_re,Myocardial infarction,infero-postero-lateral,Myocardial infarction|infero-postero-lateral,2
+175,patient058/s0216lre,Myocardial infarction,antero-septal,Myocardial infarction|antero-septal,3
+82,patient029/s0092lre,Myocardial infarction,antero-septal,Myocardial infarction|antero-septal,3
+40,patient015/s0152lre,Myocardial infarction,infero-lateral,Myocardial infarction|infero-lateral,5
+209,patient074/s0245lre,Myocardial infarction,infero-lateral,Myocardial infarction|infero-lateral,5
+305,patient099/s0388lre,Myocardial infarction,antero-lateral,Myocardial infarction|antero-lateral,7
+132,patient043/s0141lre,Myocardial infarction,lateral,Myocardial infarction|lateral,8
+223,patient078/s0255lre,Myocardial infarction,inferior,Myocardial infarction|inferior,4
+74,patient026/s0088lre,Myocardial infarction,inferior,Myocardial infarction|inferior,4
+463,patient229/s0453_re,Healthy control,no,Healthy control|no,12
+288,patient095/s0369lre,Myocardial infarction,inferior,Myocardial infarction|inferior,4
+474,patient236/s0462_re,Healthy control,no,Healthy control|no,12
+22,patient009/s0035_re,Myocardial infarction,infero-lateral,Myocardial infarction|infero-lateral,5
+383,patient168/s0032_re,Dysrhythmia,no,Dysrhythmia|no,15
+0,patient001/s0010_re,Myocardial infarction,infero-latera,Myocardial infarction|infero-latera,0
+12,patient006/s0022lre,Myocardial infarction,anterior,Myocardial infarction|anterior,1
+186,patient066/s0225lre,Myocardial infarction,inferior,Myocardial infarction|inferior,4
+196,patient069/s0284lre,Myocardial infarction,antero-lateral,Myocardial infarction|antero-lateral,7
+525,patient279/s0531_re,Healthy control,no,Healthy control|no,12
+39,patient015/s0057lre,Myocardial infarction,infero-lateral,Myocardial infarction|infero-lateral,5
+548,patient294/s0559_re,Myocardial infarction,inferior,Myocardial infarction|inferior,4
+394,patient175/s0009_re,Bundle branch block,no,Bundle branch block|no,24
+454,patient222/s0444_re,Cardiomyopathy,no,Cardiomyopathy|no,20
+187,patient066/s0231lre,Myocardial infarction,inferior,Myocardial infarction|inferior,4
+253,patient085/s0298lre,Myocardial infarction,posterior,Myocardial infarction|posterior,10
+344,patient130/s0166_re,Stable angina,no,Stable angina|no,21
+152,patient048/s0180lre,Myocardial infarction,antero-lateral,Myocardial infarction|antero-lateral,7
+198,patient071/s0236lre,Myocardial infarction,infero-lateral,Myocardial infarction|infero-lateral,5
+140,patient045/s0148lre,Myocardial infarction,infero-lateral,Myocardial infarction|infero-lateral,5
+38,patient015/s0047lre,Myocardial infarction,infero-lateral,Myocardial infarction|infero-lateral,5
+321,patient109/s0349lre,Dysrhythmia,no,Dysrhythmia|no,15
+235,patient081/s0264lre,Myocardial infarction,anterior,Myocardial infarction|anterior,1
+310,patient100/s0407lre,Myocardial infarction,inferior,Myocardial infarction|inferior,4
+233,patient080/s0265lre,Myocardial infarction,infero-postero-lateral,Myocardial infarction|infero-postero-lateral,2
+359,patient147/s0211_re,Dysrhythmia,no,Dysrhythmia|no,15
+360,patient148/s0335lre,Myocardial infarction,no,Myocardial infarction|no,11
+292,patient096/s0379lre,Myocardial infarction,antero-lateral,Myocardial infarction|antero-lateral,7
+347,patient135/s0334lre,Myocardial infarction,no,Myocardial infarction|no,11
+194,patient069/s0233lre,Myocardial infarction,antero-lateral,Myocardial infarction|antero-lateral,7
+529,patient280/s0535_re,Myocardial infarction,no,Myocardial infarction|no,11
+137,patient044/s0146lre,Myocardial infarction,anterior,Myocardial infarction|anterior,1
+293,patient096/s0381lre,Myocardial infarction,antero-lateral,Myocardial infarction|antero-lateral,7
+408,patient182/s0308lre,Healthy control,no,Healthy control|no,12
+185,patient065/s0282lre,Myocardial infarction,infero-postero-lateral,Myocardial infarction|infero-postero-lateral,2
+446,patient214/s0436_re,Healthy control,no,Healthy control|no,12
+210,patient074/s0406lre,Myocardial infarction,infero-lateral,Myocardial infarction|infero-lateral,5
+479,patient239/s0467_re,Healthy control,no,Healthy control|no,12
+120,patient040/s0130lre,Myocardial infarction,inferior,Myocardial infarction|inferior,4
+309,patient100/s0401lre,Myocardial infarction,inferior,Myocardial infarction|inferior,4
+434,patient203/s0424_re,Bundle branch block,no,Bundle branch block|no,24
+247,patient084/s0281lre,Myocardial infarction,antero-septal,Myocardial infarction|antero-septal,3
+64,patient023/s0081lre,Myocardial infarction,inferior,Myocardial infarction|inferior,4
+382,patient167/s0200_re,Cardiomyopathy,no,Cardiomyopathy|no,20
+352,patient140/s0019_re,Myocardial infarction,no,Myocardial infarction|no,11
+141,patient045/s0155lre,Myocardial infarction,infero-lateral,Myocardial infarction|infero-lateral,5
+335,patient121/s0311lre,Healthy control,no,Healthy control|no,12
+470,patient233/s0482_re,Healthy control,no,Healthy control|no,12
+410,patient184/s0363lre,Healthy control,no,Healthy control|no,12
+424,patient197/s0350lre,Myocardial infarction,antero-septal,Myocardial infarction|antero-septal,3
+166,patient052/s0190lre,Myocardial infarction,infero-lateral,Myocardial infarction|infero-lateral,5
+317,patient105/s0303lre,Healthy control,no,Healthy control|no,12
+113,patient037/s0120lre,Myocardial infarction,anterior,Myocardial infarction|anterior,1
+192,patient068/s0228lre,Myocardial infarction,antero-lateral,Myocardial infarction|antero-lateral,7
