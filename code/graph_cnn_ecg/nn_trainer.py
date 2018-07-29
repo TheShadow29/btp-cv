@@ -385,8 +385,10 @@ class end_to_end_trainer:
             running_loss = 0
             num_tr_iter = 0
             for ind, sample in enumerate(tqdm(self.train_loader)):
-                instance = Variable(sample['sig'].cuda())
-                label = Variable(sample['label'].type(dtypeLong))
+#                 instance = Variable(sample['sig'].cuda())
+#                 label = Variable(sample['label'].type(dtypeLong))
+                instance = Variable(sample[0])
+                label = Variable(sample[1])
                 instance = self.proc_inp(instance)
                 # pdb.set_trace()
                 self.optimizer.zero_grad()
@@ -438,7 +440,8 @@ class end_to_end_trainer:
         pt_dis_actual_dict = {}
         self.nn_model.eval()
         for sample in tqdm(self.test_loader):
-            instance = Variable(sample['sig'].cuda())
+#             instance = Variable(sample['sig'].cuda())
+            instance = Variable(sample[0]).cuda()
             instance = self.proc_inp(instance)
 
             y_pred = self.get_output(instance, d, L, lmax, perm, self.curr_epoch)

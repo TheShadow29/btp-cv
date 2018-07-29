@@ -69,36 +69,6 @@ class PTBValData(PTBData):
         x,y = self.get_x(act_idx, pidx),self.get_y(act_idx)
         return self.get(self.transform, x, y)
     
-class GPTBValData(PTBData):
-    def __init__(self, tdir, csv_file, L, transform=None, num_patches=50):
-        self.tdir = tdir
-        self.csv_file = csv_file
-        self.fnames, self.labels, self.classes = csv_source(self.tdir, self.csv_file, suffix='_beats.npy')
-        self.num_patches = num_patches
-        self.L = L
-        super().__init__(tdir=tdir, csv_file=csv_file, transform=transform)
-    
-    def get_n(self):
-        return len(self.fnames) * self.num_patches
-    
-    def __getitem__(self, idx):
-        act_idx = idx // self.num_patches
-        pidx = idx % self.num_patches
-        x,y = self.get_x(act_idx, pidx),self.get_y(act_idx)
-        x, y = self.get(self.transform, x, y)
-        return x, self.L, y
-
-class GPTBModelData(ImageData):
-    @classmethod
-    def from_dataset(cls, tdir, tmp_tdir, trn_csv, val_csv, test_csv, bs, num_workers, L, tfms=None):
-        trn_ds = GPTBValData(tdir, trn_csv, L, tfms[0], num_patches=10)
-        val_ds = GPTBValData(tdir, val_csv, L, tfms[1])
-        fix_ds = GPTBValData(tdir, trn_csv, L, tfms[1])
-        aug_ds = GPTBValData(tdir, val_csv, L, tfms[0])
-        test_ds = GPTBValData(tdir, test_csv, L, tfms[1])
-        test_aug_ds = GPTBValData(tdir, test_csv, L, tfms[0])
-        res = [trn_ds, val_ds, fix_ds, aug_ds, test_ds, test_aug_ds]
-        return cls(tmp_tdir, res, bs, num_workers, classes=trn_ds.classes)
     
 class PTBModelData(ImageData):
     @classmethod
@@ -205,7 +175,3 @@ tfms = tfms_from_stats1d(stats, 149)
 
 data = PTBModelData.from_dataset(BPATH, PATH, trn_csv, val_csv, test_csv, bs=16, num_workers=4, tfms=tfms)
 data2 = PTBModelData.from_dataset(BPATH, PATH, trn_csv, test_csv, val_csv, bs=16, num_workers=4, tfms=tfms)
-
-L = np.random.random((15,15))
-
-gdata = GPTBModelData.from_dataset(BPATH, PATH, trn_csv, val_csv, test_csv, bs=16, num_workers=4, L=L, tfms=tfms)
